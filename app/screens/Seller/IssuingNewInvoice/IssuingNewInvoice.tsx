@@ -1,0 +1,156 @@
+import React, { useState } from "react";
+import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import colors from "../../../config/colors";
+import Button from "../../../components/Button";
+import TextInput from "../../../components/TextInput";
+import { NavigationProp, useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { AppNavigationProp, RootStackParamList } from "../../../StackNavigator";
+
+const IssuingNewInvoice = () => {
+  const [showProductCodeModal, setShowProductCodeModal] =
+    useState<boolean>(false);
+  const [showProductNameModal, setShowProductNameModal] =
+    useState<boolean>(false);
+  const navigation = useNavigation<AppNavigationProp>();
+  return (
+    <View style={{ flex: 1, padding: 10 }}>
+      {/* <TouchableOpacity
+        style={styles.addNewCustomerBox}
+        onPress={() => setShowCustomerModal(true)}
+      >
+        <MaterialIcons name="add-circle" size={35} color={colors.primary} />
+        <Text style={{ fontSize: 18 }}>افزودن خریدار جدید</Text>
+      </TouchableOpacity> */}
+      <View
+        style={{
+          flexDirection: "row-reverse",
+          justifyContent: "space-between",
+        }}
+      >
+        <TextInput
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="default"
+          placeholder="جستجوی خریدار"
+          onChangeText={() => {}}
+          width={"75%"}
+        ></TextInput>
+        <Button title="جستجو" onPress={() => {}} />
+      </View>
+      <TextInput
+        autoCapitalize="none"
+        autoCorrect={false}
+        keyboardType="default"
+        placeholder="توضیحات فاکتور"
+        onChangeText={() => {}}
+        numberOfLines={4}
+        multiline={true}
+        style={{ width: "100%", height: 100 }}
+      ></TextInput>
+      <View
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: 10,
+        }}
+      >
+        <View style={styles.buttonsBox}>
+          <Button
+            title="دوربین"
+            onPress={() => navigation.navigate("BarCodeScanner")}
+            style={{ width: "30%" }}
+          />
+          <Button
+            title="کد کالا"
+            onPress={() => setShowProductCodeModal(true)}
+            style={{ width: "30%" }}
+          />
+          <Button
+            title=" نام کالا"
+            onPress={() => setShowProductNameModal(true)}
+            style={{ width: "30%" }}
+          />
+        </View>
+        <View style={styles.buttonsBox}>
+          <Button
+            title="ثبت"
+            onPress={() => {}}
+            style={{ width: "100%" }}
+            color="success"
+          />
+          {/* <Button
+            title="انصراف"
+            onPress={() => {}}
+            style={{ width: "30%" }}
+            color="info"
+          />
+          <Button
+            title="خروج"
+            onPress={() => navigation.goBack()}
+            style={{ width: "30%" }}
+            color="danger"
+          /> */}
+        </View>
+      </View>
+      <Modal visible={showProductCodeModal} animationType="slide">
+        <View style={{ padding: 20 }}>
+          <Button
+            title="بستن"
+            onPress={() => setShowProductCodeModal(false)}
+            color="danger"
+          />
+          <TextInput
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="default"
+            placeholder="کد کالا را وارد کنید"
+            onChangeText={() => {}}
+            style={{ width: "100%" }}
+          ></TextInput>
+        </View>
+      </Modal>
+      <Modal visible={showProductNameModal} animationType="slide">
+        <View style={{ padding: 20 }}>
+          <Button
+            title="بستن"
+            onPress={() => setShowProductNameModal(false)}
+            color="danger"
+          />
+          <TextInput
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="default"
+            placeholder="نام کالا را وارد کنید"
+            onChangeText={() => {}}
+            style={{ width: "100%" }}
+          ></TextInput>
+        </View>
+      </Modal>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  addNewCustomerBox: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    borderRadius: 15,
+    padding: 10,
+    marginHorizontal: 80,
+    marginVertical: 20,
+  },
+  buttonsBox: {
+    flexDirection: "row-reverse",
+    justifyContent: "space-between",
+  },
+});
+
+export default IssuingNewInvoice;
