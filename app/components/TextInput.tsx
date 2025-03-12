@@ -8,11 +8,13 @@ import colors from "../config/colors";
 interface AppTextInputProps extends TextInputProps {
   icon?: string; // Icon name for MaterialCommunityIcons
   width?: string | number; // Allow both string (e.g., "100%") and number (e.g., 300)
+  height?: string | number;
 }
 
 const AppTextInput: React.FC<AppTextInputProps> = ({
   icon,
   width = "100%",
+  height,
   ...otherProps
 }) => {
   return (
@@ -27,7 +29,10 @@ const AppTextInput: React.FC<AppTextInputProps> = ({
       )}
       <TextInput
         placeholderTextColor={defaultStyles.colors.medium}
-        style={[defaultStyles.text, { textAlign: "right" }]}
+        style={[
+          defaultStyles.text,
+          { textAlign: "right", height: height as any },
+        ]}
         textAlign="right"
         {...otherProps}
       />

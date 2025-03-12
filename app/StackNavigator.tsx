@@ -15,13 +15,17 @@ import {
   createStackNavigator,
   CardStyleInterpolators,
 } from "@react-navigation/stack";
+import CustomerInfo from "./screens/Seller/IssuingNewInvoice/CustomerInfo";
+import ProductProperties from "./screens/Seller/IssuingNewInvoice/ProductProperties";
+import { IProduct } from "./config/types";
 
 // Define your navigation param list
 export type RootStackParamList = {
   Home: undefined;
   IssuingNewInvoic: undefined;
   BarCodeScanner: undefined;
-  // Add other screen names here as needed
+  CustomerInfo: undefined;
+  ProductProperties: { product: IProduct };
 };
 
 export type AppNavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -90,6 +94,26 @@ const StackNavigator = () => {
         name="BarCodeScanner"
         component={BarcodeScanner}
         options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="CustomerInfo"
+        component={CustomerInfo}
+        options={{
+          headerTitleAlign: "center",
+          headerTitleStyle: styles.headerTitleStyle,
+          headerStyle: styles.headerStyle,
+          title: "مشخصات خریدار",
+        }}
+      />
+      <Stack.Screen
+        name="ProductProperties"
+        component={ProductProperties}
+        options={{
+          headerTitleAlign: "center",
+          headerTitleStyle: styles.headerTitleStyle,
+          headerStyle: styles.headerStyle,
+          title: "جزئیات کالا",
+        }}
       />
     </Stack.Navigator>
   );

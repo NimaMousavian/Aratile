@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  FlatList,
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import colors from "../../../config/colors";
 import Button from "../../../components/Button";
@@ -7,6 +14,43 @@ import TextInput from "../../../components/TextInput";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AppNavigationProp, RootStackParamList } from "../../../StackNavigator";
+import { IProduct } from "../../../config/types";
+import ProductItem from "../../../components/ProductItem";
+
+const sampleProducts: IProduct[] = [
+  {
+    id: 1,
+    name: "محصول اول",
+    accountableInventory: "1574",
+    physicalInventory: "1484",
+    grade: "یک",
+    price: 3659000,
+  },
+  {
+    id: 2,
+    name: "محصول دوم",
+    accountableInventory: "1574",
+    physicalInventory: "1484",
+    grade: "یک",
+    price: 3659000,
+  },
+  {
+    id: 3,
+    name: "محصول سوم",
+    accountableInventory: "1574",
+    physicalInventory: "1484",
+    grade: "یک",
+    price: 3659000,
+  },
+  {
+    id: 4,
+    name: "محصول چهارم",
+    accountableInventory: "1574",
+    physicalInventory: "1484",
+    grade: "یک",
+    price: 3659000,
+  },
+];
 
 const IssuingNewInvoice = () => {
   const [showProductCodeModal, setShowProductCodeModal] =
@@ -37,7 +81,10 @@ const IssuingNewInvoice = () => {
           onChangeText={() => {}}
           width={"75%"}
         ></TextInput>
-        <Button title="جستجو" onPress={() => {}} />
+        <Button
+          title="جستجو"
+          onPress={() => navigation.navigate("CustomerInfo")}
+        />
       </View>
       <TextInput
         autoCapitalize="none"
@@ -128,6 +175,11 @@ const IssuingNewInvoice = () => {
             onChangeText={() => {}}
             style={{ width: "100%" }}
           ></TextInput>
+          <FlatList
+            data={sampleProducts}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => <ProductItem product={item} />}
+          />
         </View>
       </Modal>
     </View>
