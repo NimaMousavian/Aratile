@@ -1,97 +1,108 @@
-import React, { ReactElement } from "react";
+import React from "react";
 import {
   Dimensions,
   FlatList,
   Image,
-  Linking,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
+  Platform,
 } from "react-native";
 import colors from "../../config/colors";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../../StackNavigator";
 
-interface Item {
+interface MenuItem {
   id: number;
   name: string;
-  screenName?: keyof RootStackParamList;
+  icon: keyof typeof MaterialIcons.glyphMap;
+  iconColor?: string;
 }
 
-const items: Item[] = [
+type FontWeight = "700" | "600" | "500" | "bold" | "semi-bold" | string;
+
+const getFontFamily = (baseFont: string, weight: FontWeight): string => {
+  if (Platform.OS === "android") {
+    switch (weight) {
+      case "700":
+      case "bold":
+        return "Yekan_Bakh_Bold";
+      case "500":
+      case "600":
+      case "semi-bold":
+        return "Yekan_Bakh_Bold";
+      default:
+        return "Yekan_Bakh_Regular";
+    }
+  }
+  return baseFont;
+};
+
+const items: MenuItem[] = [
   {
     id: 1,
     name: "صدور فاکتور جدید",
-    screenName: "IssuingNewInvoic",
+    icon: "receipt",
+    iconColor: "#4a90e2",
   },
-
   {
     id: 2,
     name: "فاکتور های صادر شده",
+    icon: "description",
+    iconColor: "#4a90e2",
   },
   {
     id: 3,
     name: "فاکتور های ارجاع شده از صندوق",
+    icon: "assignment-return",
+    iconColor: "#4a90e2",
   },
   {
     id: 4,
     name: "پیش فاکتور ها",
+    icon: "article",
+    iconColor: "#4a90e2",
   },
   {
     id: 5,
     name: "راس گیر چک",
+    icon: "account-balance",
+    iconColor: "#4a90e2",
   },
   {
     id: 6,
     name: "ماشین حساب",
+    icon: "calculate",
+    iconColor: "#4a90e2",
   },
   {
     id: 7,
     name: "درخواست تامین",
+    icon: "shopping-cart",
+    iconColor: "#4a90e2",
   },
   {
     id: 8,
     name: "مشاهده درخواست های تامین",
+    icon: "visibility",
+    iconColor: "#4a90e2",
   },
 ];
 
-const openCalculator = async () => {
-  // Example URL scheme (hypothetical, as calculator apps vary by OS and device)
-  const calculatorUrl =
-    "intent://com.android.calculator2#Intent;scheme=android-app;end";
-
-  try {
-    const supported = await Linking.sendIntent(calculatorUrl);
-    console.log(supported);
-
-    // if (supported) {
-    //   await Linking.openURL(calculatorUrl);
-    // } else {
-    //   console.log("Calculator app cannot be opened or scheme not supported");
-    // }
-  } catch (error) {
-    console.error("An error occurred:", error);
-  }
-};
-
 const screenWidth = Dimensions.get("window").width;
 const numColumns = 2;
-const itemMargin = 10; // Total horizontal margin per item (5 left + 5 right)
+const itemMargin = 10;
 const itemWidth = (screenWidth - (numColumns + 1) * itemMargin) / numColumns;
 
-type HomeScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  "Home"
->;
-
-const HomeScreen = (): ReactElement => {
-  const navigation = useNavigation<HomeScreenNavigationProp>();
-  const renderItem = ({ item }: { item: Item }): ReactElement => {
+const HomeScreen: React.FC = () => {
+  const renderItem = ({ item }: { item: MenuItem }) => {
     return (
-      <TouchableOpacity style={styles.gridItem} onPress={openCalculator}>
+      <TouchableOpacity style={styles.gridItem}>
+        <MaterialIcons
+          name={item.icon}
+          size={40}
+          color={item.iconColor || colors.primary}
+        />
         <Text style={styles.gridText}>{item.name}</Text>
       </TouchableOpacity>
     );
@@ -99,32 +110,23 @@ const HomeScreen = (): ReactElement => {
 
   return (
     <View style={styles.container}>
-      <View
-        style={{
-          alignContent: "center",
-          justifyContent: "center",
-          flexDirection: "row",
-          paddingTop: 10,
-        }}
-      >
+      <View style={styles.logoContainer}>
         <Image
-          style={{
-            width: 100,
-            height: 36,
-            alignContent: "center",
-            justifyContent: "center",
-            flexDirection: "row",
-          }}
+          style={styles.logo}
           source={require("../../../assets/aratile_logo_2.png")}
         />
       </View>
+
       <View style={styles.headerBox}>
         <View style={styles.infoBox}>
-          <MaterialIcons name="person" size={30} color={colors.gray} />
-          <Text style={{ marginTop: 7, fontSize: 18 }}>خانم پوردایی</Text>
+          <View style={styles.avatarCircle}>
+            <MaterialIcons name="person" size={26} color="#666666" />
+          </View>
+          <Text style={styles.userName}>خانم پوردایی</Text>
         </View>
-        <MaterialIcons name="edit" size={24} color={colors.gray} />
+        <MaterialIcons name="create" size={24} color="#666666" />
       </View>
+
       <FlatList
         data={items}
         numColumns={2}
@@ -138,36 +140,70 @@ const HomeScreen = (): ReactElement => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingTop: 50 },
+  container: {
+    flex: 1,
+    paddingTop: 50,
+    backgroundColor: "#ffffff",
+  },
+  logoContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 10,
+  },
+  logo: {
+    width: 100,
+    height: 36,
+  },
   list: {
     padding: itemMargin,
   },
   gridItem: {
     margin: 5,
-    padding: 20,
+    padding: 15,
     width: itemWidth,
     height: 150,
     flexDirection: "column",
     justifyContent: "center",
     alignItems: "center",
-    gap: 10,
-    backgroundColor: colors.gray,
+    gap: 15,
+    backgroundColor: "#F2F2F2",
     borderRadius: 15,
+    borderWidth: 1,
+    borderColor: "#E4E4E4",
   },
   gridText: {
     textAlign: "center",
-    fontSize: 20,
+    fontSize: 16,
+    fontWeight: Platform.OS === "ios" ? "700" : "normal",
+    fontFamily: getFontFamily("Yekan_Bakh_Bold", "700"),
   },
   headerBox: {
     flexDirection: "row-reverse",
     justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 20,
     marginVertical: 20,
   },
   infoBox: {
     flexDirection: "row-reverse",
-    alignContent: "center",
+    alignItems: "center",
     gap: 10,
+  },
+  userName: {
+    fontSize: 18,
+    fontWeight: Platform.OS === "ios" ? "700" : "normal",
+    color: "#666666",
+    fontFamily: getFontFamily("Yekan_Bakh_Bold", "700"),
+  },
+  avatarCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#f0f0f0",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
   },
   columnWrapper: {
     flexDirection: "row-reverse",
