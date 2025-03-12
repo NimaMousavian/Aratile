@@ -10,11 +10,11 @@ import { useState, useEffect, useCallback } from "react";
 import * as SplashScreen from "expo-splash-screen";
 import HomeScreen from "./app/screens/Seller/HomeScreen";
 import IssuingNewInvoice from "./app/screens/Seller/IssuingNewInvoice/IssuingNewInvoice";
+import StackNavigator from "./app/StackNavigator";
 
 I18nManager.forceRTL(true);
 
 SplashScreen.preventAutoHideAsync();
-
 
 type RootStackParamList = {
   Home: undefined;
@@ -56,29 +56,7 @@ export default function App(): JSX.Element {
   return (
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <NavigationContainer>
-        <Stack.Navigator
-          initialRouteName="Home"
-          screenOptions={{
-            headerShown: false,
-            cardStyle: { backgroundColor: "#FFFFFF" },
-            gestureEnabled: true,
-            gestureDirection: "horizontal-inverted",
-            cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
-            transitionSpec: {
-              open: {
-                animation: "timing",
-                config: { duration: 350 },
-              },
-              close: {
-                animation: "timing",
-                config: { duration: 350 },
-              },
-            },
-          }}
-        >
-          <Stack.Screen name="Home" component={HomeScreen} />
-          <Stack.Screen name="IssuingNewInvoic" component={IssuingNewInvoice} />
-        </Stack.Navigator>
+        <StackNavigator />
       </NavigationContainer>
       <StatusBar style="auto" />
     </View>

@@ -11,12 +11,15 @@ import {
 } from "react-native";
 import colors from "../../config/colors";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useNavigation } from "@react-navigation/native";
+import { AppNavigationProp, RootStackParamList } from "../../StackNavigator";
 
 interface MenuItem {
   id: number;
   name: string;
   icon: keyof typeof MaterialIcons.glyphMap;
   iconColor?: string;
+  screenName?: keyof RootStackParamList;
 }
 
 type FontWeight = "700" | "600" | "500" | "bold" | "semi-bold" | string;
@@ -44,6 +47,7 @@ const items: MenuItem[] = [
     name: "صدور فاکتور جدید",
     icon: "receipt",
     iconColor: "#4a90e2",
+    screenName: "IssuingNewInvoic",
   },
   {
     id: 2,
@@ -95,9 +99,14 @@ const itemMargin = 10;
 const itemWidth = (screenWidth - (numColumns + 1) * itemMargin) / numColumns;
 
 const HomeScreen: React.FC = () => {
+  const navigation = useNavigation<AppNavigationProp>();
+
   const renderItem = ({ item }: { item: MenuItem }) => {
     return (
-      <TouchableOpacity style={styles.gridItem}>
+      <TouchableOpacity
+        style={styles.gridItem}
+        onPress={() => navigation.navigate(item.screenName ?? "Home")}
+      >
         <MaterialIcons
           name={item.icon}
           size={40}
