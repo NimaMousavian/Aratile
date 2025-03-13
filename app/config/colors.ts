@@ -7,6 +7,7 @@ export type ColorKeys =
   | "light"
   | "danger"
   | "success"
+  | "warning"
   | "primaryLight"
   | "info";
 
@@ -23,5 +24,6 @@ export default {
   dark: "#0c0c0c",
   danger: "#ff5252",
   success: "#37c85a",
+  warning: "#eaa315",
   info: "#2696d9",
 };

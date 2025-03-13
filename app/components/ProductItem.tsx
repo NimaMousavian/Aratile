@@ -1,11 +1,12 @@
-import React from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import React, { useState } from "react";
+import { Modal, StyleSheet, TouchableOpacity, View } from "react-native";
 import colors from "../config/colors";
 import { IProduct } from "../config/types";
 import AppText from "./Text";
 import { toPersianDigits } from "../utils/converters";
 import { useNavigation } from "@react-navigation/native";
 import { AppNavigationProp } from "../StackNavigator";
+import ProductProperties from "../screens/Seller/IssuingNewInvoice/ProductProperties";
 
 interface IProps {
   product: IProduct;
@@ -13,11 +14,11 @@ interface IProps {
 
 const ProductItem: React.FC<IProps> = ({ product }) => {
   const navigation = useNavigation<AppNavigationProp>();
+  const [productPropertiesShow, setProductPropertiesShow] =
+    useState<boolean>(false);
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        onPress={() => navigation.navigate("ProductProperties", { product })}
-      >
+      <TouchableOpacity onPress={() => setProductPropertiesShow(true)}>
         <AppText style={{ fontSize: 18, fontFamily: "Yekan_Bakh_Bold" }}>
           {product.name}
         </AppText>
@@ -43,6 +44,12 @@ const ProductItem: React.FC<IProps> = ({ product }) => {
           <AppText>{toPersianDigits(product.price.toString())}</AppText>
         </View>
       </TouchableOpacity>
+      <Modal visible={productPropertiesShow} animationType="slide">
+        <ProductProperties
+          product={product}
+          onClose={() => setProductPropertiesShow(false)}
+        />
+      </Modal>
     </View>
   );
 };

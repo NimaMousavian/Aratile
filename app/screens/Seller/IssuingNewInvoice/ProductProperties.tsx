@@ -14,9 +14,12 @@ type ProductPropertiesRouteProp = RouteProp<
   "ProductProperties"
 >;
 
-const ProductProperties = () => {
-  const route = useRoute<ProductPropertiesRouteProp>();
-  const product = route.params.product;
+interface IProps {
+  product: IProduct;
+  onClose: () => void;
+}
+
+const ProductProperties: React.FC<IProps> = ({ product, onClose }) => {
   return (
     <View style={styles.container}>
       <View style={styles.prductContainer}>
@@ -80,13 +83,15 @@ const ProductProperties = () => {
       >
         <AppButton
           title="ثبت کالا"
-          onPress={() => {}}
+          onPress={() => {
+            onClose();
+          }}
           color="success"
           style={{ width: "48%" }}
         />
         <AppButton
           title="انصراف"
-          onPress={() => {}}
+          onPress={onClose}
           color="danger"
           style={{ width: "48%" }}
         />

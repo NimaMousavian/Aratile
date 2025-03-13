@@ -84,6 +84,7 @@ const items: MenuItem[] = [
     name: "درخواست تامین",
     icon: "shopping-cart",
     iconColor: "#4a90e2",
+    screenName: "SupplyRequest",
   },
   {
     id: 8,

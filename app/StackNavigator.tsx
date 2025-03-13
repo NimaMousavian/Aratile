@@ -18,6 +18,7 @@ import {
 import CustomerInfo from "./screens/Seller/IssuingNewInvoice/CustomerInfo";
 import ProductProperties from "./screens/Seller/IssuingNewInvoice/ProductProperties";
 import { IProduct } from "./config/types";
+import SupplyRequest from "./screens/Seller/SupplyRequest";
 
 // Define your navigation param list
 export type RootStackParamList = {
@@ -25,7 +26,8 @@ export type RootStackParamList = {
   IssuingNewInvoic: undefined;
   BarCodeScanner: undefined;
   CustomerInfo: undefined;
-  ProductProperties: { product: IProduct };
+  ProductProperties: undefined;
+  SupplyRequest: undefined;
 };
 
 export type AppNavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -38,7 +40,7 @@ const StackNavigator = () => {
     <Stack.Navigator
       initialRouteName="Home"
       screenOptions={{
-        // headerShown: false,
+        headerShown: false,
         cardStyle: { backgroundColor: "#FFFFFF" },
         gestureEnabled: true,
         gestureDirection: "horizontal-inverted",
@@ -105,16 +107,7 @@ const StackNavigator = () => {
           title: "مشخصات خریدار",
         }}
       />
-      <Stack.Screen
-        name="ProductProperties"
-        component={ProductProperties}
-        options={{
-          headerTitleAlign: "center",
-          headerTitleStyle: styles.headerTitleStyle,
-          headerStyle: styles.headerStyle,
-          title: "جزئیات کالا",
-        }}
-      />
+      <Stack.Screen name="SupplyRequest" component={SupplyRequest} />
     </Stack.Navigator>
   );
 };

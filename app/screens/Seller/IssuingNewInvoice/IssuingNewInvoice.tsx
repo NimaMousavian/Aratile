@@ -16,6 +16,8 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AppNavigationProp, RootStackParamList } from "../../../StackNavigator";
 import { IProduct } from "../../../config/types";
 import ProductItem from "../../../components/ProductItem";
+import AppButton from "../../../components/Button";
+import ProductPreview from "../../../components/ProductPreview";
 
 const sampleProducts: IProduct[] = [
   {
@@ -57,9 +59,43 @@ const IssuingNewInvoice = () => {
     useState<boolean>(false);
   const [showProductNameModal, setShowProductNameModal] =
     useState<boolean>(false);
+  const [selectedProducts, setSelectedProducts] = useState<IProduct[]>([
+    {
+      id: 1,
+      name: "محصول اول",
+      accountableInventory: "1574",
+      physicalInventory: "1484",
+      grade: "یک",
+      price: 3659000,
+    },
+    {
+      id: 2,
+      name: "محصول دوم",
+      accountableInventory: "1574",
+      physicalInventory: "1484",
+      grade: "یک",
+      price: 3659000,
+    },
+    {
+      id: 3,
+      name: "محصول سوم",
+      accountableInventory: "1574",
+      physicalInventory: "1484",
+      grade: "یک",
+      price: 3659000,
+    },
+    {
+      id: 4,
+      name: "محصول سوم",
+      accountableInventory: "1574",
+      physicalInventory: "1484",
+      grade: "یک",
+      price: 3659000,
+    },
+  ]);
   const navigation = useNavigation<AppNavigationProp>();
   return (
-    <View style={{ flex: 1, padding: 10 }}>
+    <View style={{ flex: 1, padding: 10, paddingTop: 50 }}>
       {/* <TouchableOpacity
         style={styles.addNewCustomerBox}
         onPress={() => setShowCustomerModal(true)}
@@ -96,15 +132,17 @@ const IssuingNewInvoice = () => {
         multiline={true}
         style={{ width: "100%", height: 100 }}
       ></TextInput>
-      <View
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          padding: 10,
-        }}
-      >
+      <FlatList
+        data={selectedProducts}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <ProductPreview
+            title={item.name}
+            orderCount={item.accountableInventory}
+          />
+        )}
+      />
+      <View>
         <View style={styles.buttonsBox}>
           <Button
             title="دوربین"
@@ -143,6 +181,7 @@ const IssuingNewInvoice = () => {
           /> */}
         </View>
       </View>
+
       <Modal visible={showProductCodeModal} animationType="slide">
         <View style={{ padding: 20 }}>
           <Button
@@ -158,10 +197,16 @@ const IssuingNewInvoice = () => {
             onChangeText={() => {}}
             style={{ width: "100%" }}
           ></TextInput>
+          <AppButton title="جستجو" onPress={() => {}} color="success" />
+          <FlatList
+            data={sampleProducts}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => <ProductItem product={item} />}
+          />
         </View>
       </Modal>
       <Modal visible={showProductNameModal} animationType="slide">
-        <View style={{ padding: 20 }}>
+        <View style={{ padding: 20, flex: 1 }}>
           <Button
             title="بستن"
             onPress={() => setShowProductNameModal(false)}
@@ -175,6 +220,7 @@ const IssuingNewInvoice = () => {
             onChangeText={() => {}}
             style={{ width: "100%" }}
           ></TextInput>
+          <AppButton title="جستجو" onPress={() => {}} color="success" />
           <FlatList
             data={sampleProducts}
             keyExtractor={(item) => item.id.toString()}
