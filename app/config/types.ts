@@ -6,3 +6,13 @@ export interface IProduct {
   grade: string;
   price: number;
 }
+
+export interface ISupplyRequest {
+  id: number;
+  title: string;
+  requestCount: number;
+  grade: string;
+  status: string;
+  dateCreated: string;
+  dateModified: string;
+}
