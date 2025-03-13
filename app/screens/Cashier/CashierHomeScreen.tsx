@@ -12,7 +12,10 @@ import {
 import colors from "../../config/colors";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useNavigation } from "@react-navigation/native";
-import { AppNavigationProp, RootStackParamList } from "../../StackNavigator";
+import { RootStackParamList } from "../../StackNavigator";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+
+type AppNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 interface MenuItem {
   id: number;
@@ -41,56 +44,48 @@ const getFontFamily = (baseFont: string, weight: FontWeight): string => {
   return baseFont;
 };
 
-const items: MenuItem[] = [
+const cashierItems: MenuItem[] = [
   {
     id: 1,
-    name: "صدور فاکتور جدید",
-    icon: "receipt",
+    name: "دریافت فاکتور جدید",
+    icon: "receipt-long",
     iconColor: "#1C3F64",
-    screenName: "IssuingNewInvoic",
+    screenName: "ReceiveNewInvoice",
   },
   {
     id: 2,
-    name: "فاکتور های صادر شده",
-    icon: "description",
+    name: "فاکتور های نهایی شده",
+    icon: "done-all",
     iconColor: "#1C3F64",
+    screenName: "FinalizedInvoices",
   },
   {
     id: 3,
-    name: "فاکتور های ارجاع شده از صندوق",
-    icon: "assignment-return",
+    name: "فاکتور های لغو شده",
+    icon: "cancel",
     iconColor: "#1C3F64",
+    screenName: "CanceledInvoices",
   },
   {
     id: 4,
-    name: "پیش فاکتور ها",
-    icon: "article",
+    name: "فاکتور های بسته شده",
+    icon: "inventory",
     iconColor: "#1C3F64",
+    screenName: "ClosedInvoices",
   },
   {
     id: 5,
-    name: "راس گیر چک",
-    icon: "account-balance",
+    name: "فاکتور های تعلیق شده",
+    icon: "pause-circle-outline",
     iconColor: "#1C3F64",
+    screenName: "SuspendedInvoices",
   },
   {
     id: 6,
-    name: "ماشین حساب",
-    icon: "calculate",
+    name: "راس گیر چک",
+    icon: "account-balance",
     iconColor: "#1C3F64",
-  },
-  {
-    id: 7,
-    name: "درخواست تامین",
-    icon: "shopping-cart",
-    iconColor: "#1C3F64",
-    screenName: "SupplyRequest",
-  },
-  {
-    id: 8,
-    name: "مشاهده درخواست های تامین",
-    icon: "visibility",
-    iconColor: "#1C3F64",
+    screenName: "CheckCalculator",
   },
 ];
 
@@ -99,7 +94,7 @@ const numColumns = 2;
 const itemMargin = 10;
 const itemWidth = (screenWidth - (numColumns + 1) * itemMargin) / numColumns;
 
-const HomeScreen: React.FC = () => {
+const CashierHomeScreen: React.FC = () => {
   const navigation = useNavigation<AppNavigationProp>();
 
   const renderItem = ({ item }: { item: MenuItem }) => {
@@ -132,13 +127,15 @@ const HomeScreen: React.FC = () => {
           <View style={styles.avatarCircle}>
             <MaterialIcons name="person" size={26} color="#666666" />
           </View>
-          <Text style={styles.userName}>خانم پوردایی</Text>
+          <Text style={styles.userName}>خانم صندوقدار</Text>
         </View>
         <MaterialIcons name="create" size={24} color="#666666" />
       </View>
 
+      \
+
       <FlatList
-        data={items}
+        data={cashierItems}
         numColumns={2}
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
@@ -163,6 +160,14 @@ const styles = StyleSheet.create({
   logo: {
     width: 100,
     height: 36,
+  },
+  screenTitle: {
+    fontSize: 22,
+    textAlign: "center",
+    marginBottom: 20,
+    fontWeight: Platform.OS === "ios" ? "700" : "normal",
+    fontFamily: getFontFamily("Yekan_Bakh_Bold", "700"),
+    color: "#333333",
   },
   list: {
     padding: itemMargin,
@@ -221,4 +226,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default HomeScreen;
+export default CashierHomeScreen;
