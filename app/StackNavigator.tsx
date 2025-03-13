@@ -141,8 +141,7 @@ const StackNavigator: React.FC = () => {
           headerShown: false,
           // title: "صفحه اصلی صندوقدار",
           // headerTitleAlign: "center",
-          headerTitleStyle: styles.headerTitleStyle,
-          headerStyle: styles.headerStyle,
+     
         }}
       />
       <Stack.Screen

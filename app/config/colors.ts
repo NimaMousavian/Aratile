@@ -23,7 +23,6 @@ export default {
   gray: "#c8c8c8",
   dark: "#0c0c0c",
   danger: "#ff5252",
-  success: "#37c85a",
-  warning: "#eaa315",
+  success: "#238B45",
   info: "#2696d9",
 };

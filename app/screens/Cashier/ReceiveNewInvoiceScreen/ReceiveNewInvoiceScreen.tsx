@@ -8,7 +8,6 @@ import {
   Platform,
   SafeAreaView,
   StatusBar,
-  Image,
   Linking,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
@@ -17,6 +16,8 @@ import { RootStackParamList } from "../../../StackNavigator";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { LinearGradient } from "expo-linear-gradient";
 import colors from "../../../config/colors";
+import IconButton from "../../../components/iconButton";
+import ProductCard from "../../../components/ProductCard"; // Import your ProductCard component
 
 type ReceiveNewInvoiceNavigationProp =
   NativeStackNavigationProp<RootStackParamList>;
@@ -88,6 +89,7 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
       <SafeAreaView style={styles.safeAreaTop} />
       <SafeAreaView style={styles.safeAreaBottom}>
         <View style={styles.container}>
+
           <ScrollView
             style={[
               styles.content,
@@ -95,12 +97,8 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
             ]}
             showsVerticalScrollIndicator={false}
           >
-            <View
-              style={[
-                styles.card,
-                Platform.OS === "android" && styles.androidCardAdjustment,
-              ]}
-            >
+
+            <View style={[styles.card, Platform.OS === 'android' && styles.androidCardAdjustment]}>
               <View style={styles.cardHeaderSection}>
                 <View style={styles.invoiceNumberBadge}>
                   <Text style={styles.invoiceNumberLabel}>شماره فاکتور:</Text>
@@ -113,12 +111,8 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
               </View>
             </View>
 
-            <View
-              style={[
-                styles.purchasesecondaryCard,
-                Platform.OS === "android" && styles.androidCardAdjustment,
-              ]}
-            >
+
+            <View style={[styles.purchasesecondaryCard, Platform.OS === 'android' && styles.androidCardAdjustment]}>
               <LinearGradient
                 colors={[colors.secondary, colors.primary]}
                 style={styles.purchasesecondaryHeader}
@@ -190,6 +184,7 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
 
                 <View style={styles.divider} />
 
+
                 <View style={styles.noteContainer}>
                   <MaterialIcons
                     name="error-outline"
@@ -206,6 +201,7 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
               </View>
             </View>
 
+
             <View style={styles.productsSection}>
               <View style={styles.sectionHeader}>
                 <MaterialIcons
@@ -216,118 +212,58 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                 <Text style={styles.sectionHeaderText}>اطلاعات محصولات</Text>
               </View>
 
+          
               {productData.map((product) => (
-                <View
+                <ProductCard
                   key={product.id}
-                  style={[
-                    styles.productCard,
-                    Platform.OS === "android" && styles.androidCardAdjustment,
+                  title={product.title}
+                  // titleIcon={{
+                  //   name: "inventory",
+                  //   color: colors.primary,
+                  // }}
+                  fields={[
+                    {
+                      icon: "qr-code",
+                      iconColor: colors.secondary,
+                      label: "کد محصول:",
+                      value: product.code,
+                    },
+                    {
+                      icon: "straighten",
+                      iconColor: colors.secondary,
+                      label: "مقدار:",
+                      value: product.quantity,
+                    },
+                    {
+                      icon: "palette",
+                      iconColor: colors.secondary,
+                      label: "طیف رنگی:",
+                      value: product.hasColorSpectrum ? "دارد" : "ندارد",
+                      valueColor: product.hasColorSpectrum ? colors.success : colors.danger,
+                    },
                   ]}
-                >
-                  <View style={styles.productTitleContainer}>
-                    <View style={styles.productTitleRow}>
-                      <Text style={styles.productTitle}>{product.title}</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.productDetailsContainer}>
-                    <View style={styles.infoWithImageContainer}>
-                      <View style={styles.infoSection}>
-                        <View style={styles.productNoteContainer}>
-                          <MaterialIcons
-                            name="qr-code"
-                            size={22}
-                            color={colors.secondary}
-                          />
-                          <Text
-                            style={[
-                              styles.secondaryLabel,
-                              styles.iconTextSpacing,
-                            ]}
-                          >
-                            کد محصول:
-                          </Text>
-                          <Text style={styles.productCode}>{product.code}</Text>
-                        </View>
-                        <View style={styles.quantityContainer}>
-                          <MaterialIcons
-                            name="straighten"
-                            size={18}
-                            color={colors.secondary}
-                          />
-                          <Text
-                            style={[
-                              styles.secondaryLabel,
-                              styles.iconTextSpacing,
-                            ]}
-                          >
-                            مقدار:
-                          </Text>
-                          <Text style={styles.quantityValue}>
-                            {product.quantity}
-                          </Text>
-                        </View>
-
-                        <View style={styles.colorSpectrumContainer}>
-                          <MaterialIcons
-                            name="palette"
-                            size={18}
-                            color={colors.secondary}
-                          />
-                          <Text
-                            style={[
-                              styles.secondaryLabel,
-                              styles.iconTextSpacing,
-                            ]}
-                          >
-                            طیف رنگی:
-                          </Text>
-                          {product.hasColorSpectrum ? (
-                            <Text style={styles.spectrumValueHas}>دارد</Text>
-                          ) : (
-                            <Text style={styles.spectrumValueHasNot}>
-                              ندارد
-                            </Text>
-                          )}
-                        </View>
-                      </View>
-
-                      <View style={styles.productImagePlaceholder}>
-                        <MaterialIcons
-                          name="qr-code-2"
-                          size={36}
-                          color={colors.secondary}
-                        />
-                      </View>
-                    </View>
-
-                    <View style={styles.productCodeContainer}>
-                      <MaterialIcons
-                        name="notes"
-                        size={18}
-                        color={colors.secondary}
-                      />
-                      <Text
-                        style={[styles.secondaryLabel, styles.iconTextSpacing]}
-                      >
-                        توضیحات:
-                      </Text>
-                      <Text style={styles.regularNoteContent}>
-                        {product.note}
-                      </Text>
-                    </View>
-                  </View>
-                </View>
+                  note={product.note}
+                  noteConfig={{
+                    show: !!product.note && product.note !== "-",
+                    icon: "notes",
+                    iconColor: colors.secondary,
+                    label: "توضیحات:",
+                  }}
+                  qrConfig={{
+                    show: true,
+                    icon: "qr-code-2",
+                    iconSize: 36,
+                    iconColor: colors.secondary,
+                  }}
+                  containerStyle={Platform.OS === 'android' ? styles.androidCardAdjustment : {}}
+                />
               ))}
             </View>
 
-            <View
-              style={[
-                styles.sellerCard,
-                Platform.OS === "android" && styles.androidCardAdjustment,
-              ]}
-            >
+
+            <View style={[styles.sellerCard, Platform.OS === 'android' && styles.androidCardAdjustment]}>
               <Text style={styles.sellerLabel}>نام فروشنده</Text>
+
 
               <View style={styles.qrPlaceholder}>
                 <View style={styles.qrCodeRectangle}>
@@ -340,37 +276,50 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
               </View>
             </View>
 
+
             <View style={styles.bottomSpacer} />
           </ScrollView>
 
+
           <View style={styles.actionsContainer}>
             <View style={styles.actionButtonsRow}>
-              <TouchableOpacity style={[styles.actionBtn, styles.finalizeBtn]}>
-                <MaterialIcons name="done-all" size={20} color={colors.white} />
-                <Text style={styles.actionBtnText}>تایید نهایی</Text>
-              </TouchableOpacity>
 
-              <TouchableOpacity style={[styles.actionBtn, styles.suspendBtn]}>
-                <MaterialIcons
-                  name="pause-circle-outline"
-                  size={20}
-                  color={colors.white}
-                />
-                <Text style={styles.actionBtnText}>تعلیق</Text>
-              </TouchableOpacity>
+              <IconButton
+                text="تایید نهایی"
+                iconName="done-all"
+                backgroundColor={colors.success}
+                onPress={() => console.log('تایید نهایی')}
+              />
+
+              <IconButton
+                text="تعلیق"
+                iconName="pause-circle-outline"
+                backgroundColor={"#F39C12"}
+                onPress={() => console.log('تعلیق ')}
+              />
+
+
             </View>
 
             <View style={styles.actionButtonsRow}>
-              <TouchableOpacity style={[styles.actionBtn, styles.referBtn]}>
-                <MaterialIcons name="send" size={20} color={colors.white} />
-                <Text style={styles.actionBtnText}>ارجاع به فروشنده</Text>
-              </TouchableOpacity>
 
-              <TouchableOpacity style={[styles.actionBtn, styles.cancelBtn]}>
-                <MaterialIcons name="close" size={20} color={colors.white} />
-                <Text style={styles.actionBtnText}>لغو</Text>
-              </TouchableOpacity>
+              <IconButton
+                text="ارجاع به فروشنده"
+                iconName="send"
+                backgroundColor={colors.secondary}
+                onPress={() => console.log('ارجاع به فروشنده ')}
+              />
+              <IconButton
+                text="لغو"
+                iconName="close"
+                backgroundColor={colors.danger}
+                onPress={() => console.log('لغو ')}
+              />
+
+
             </View>
+
+
           </View>
         </View>
       </SafeAreaView>
