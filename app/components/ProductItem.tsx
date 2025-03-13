@@ -5,7 +5,7 @@ import { IProduct } from "../config/types";
 import AppText from "./Text";
 import { toPersianDigits } from "../utils/converters";
 import { useNavigation } from "@react-navigation/native";
-import { AppNavigationProp } from "../SellerStackNavigator";
+import { AppNavigationProp } from "../StackNavigator";
 import ProductProperties from "../screens/Seller/IssuingNewInvoice/ProductProperties";
 
 interface IProps {

@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../../../SellerStackNavigator";
+import { RootStackParamList } from "../../../StackNavigator";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { LinearGradient } from "expo-linear-gradient";
 import colors from "../../../config/colors";
@@ -23,7 +23,7 @@ type ReceiveNewInvoiceNavigationProp =
 
 type FontWeight = "700" | "600" | "500" | "bold" | "semi-bold" | string;
 
-const getFontFamily = (baseFont: string, weight: FontWeight): string => {
+export const getFontFamily = (baseFont: string, weight: FontWeight): string => {
   if (Platform.OS === "android") {
     switch (weight) {
       case "700":

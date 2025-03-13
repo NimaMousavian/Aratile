@@ -12,7 +12,7 @@ import {
 import colors from "../../config/colors";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useNavigation } from "@react-navigation/native";
-import { RootStackParamList } from "../../SellerStackNavigator";
+import { RootStackParamList } from "../../StackNavigator";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 type AppNavigationProp = NativeStackNavigationProp<RootStackParamList>;

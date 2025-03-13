@@ -12,10 +12,7 @@ import {
 import colors from "../../config/colors";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useNavigation } from "@react-navigation/native";
-import {
-  AppNavigationProp,
-  RootStackParamList,
-} from "../../SellerStackNavigator";
+import { AppNavigationProp, RootStackParamList } from "../../StackNavigator";
 
 interface MenuItem {
   id: number;
