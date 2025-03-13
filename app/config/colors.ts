@@ -7,6 +7,7 @@ export type ColorKeys =
   | "light"
   | "danger"
   | "success"
+  | "warning"
   | "primaryLight"
   | "info";
 

@@ -19,11 +19,12 @@ import colors from "../../../config/colors";
 import IconButton from "../../../components/iconButton";
 import ProductCard from "../../../components/ProductCard"; // Import your ProductCard component
 
-type ReceiveNewInvoiceNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type ReceiveNewInvoiceNavigationProp =
+  NativeStackNavigationProp<RootStackParamList>;
 
 type FontWeight = "700" | "600" | "500" | "bold" | "semi-bold" | string;
 
-const getFontFamily = (baseFont: string, weight: FontWeight): string => {
+export const getFontFamily = (baseFont: string, weight: FontWeight): string => {
   if (Platform.OS === "android") {
     switch (weight) {
       case "700":
@@ -40,7 +41,6 @@ const getFontFamily = (baseFont: string, weight: FontWeight): string => {
   return baseFont;
 };
 
-
 const productData = [
   {
     id: 1,
@@ -48,7 +48,7 @@ const productData = [
     quantity: "۵.۷۶ متر مربع",
     note: "-",
     code: "١٣١٢٧٧٩١٣٠٦٠٢١٢٠١٥١٤٣٠١",
-    hasColorSpectrum: true
+    hasColorSpectrum: true,
   },
   {
     id: 2,
@@ -56,7 +56,7 @@ const productData = [
     quantity: "۸.۸۰ متر مربع",
     note: "نصب در اتاق خواب",
     code: "١٤٣٧٨٢١٣٩٦١٨٠٩٢١٣٤٣٥٩١",
-    hasColorSpectrum: false
+    hasColorSpectrum: false,
   },
   {
     id: 3,
@@ -64,7 +64,7 @@ const productData = [
     quantity: "۱۶.۲۰ متر مربع",
     note: "ارسال به آدرس مشتری",
     code: "١١٨٥٤٣٢٧١٣٦٥٤٠٩٧٦٢٧٩٠١",
-    hasColorSpectrum: true
+    hasColorSpectrum: true,
   },
   {
     id: 4,
@@ -72,8 +72,8 @@ const productData = [
     quantity: "۴.۵۰ متر مربع",
     note: "نصب در حیاط خلوت",
     code: "١٥٨٦٧٩٤٣١٤٧٨٢٣٤٥٦٧١٨٢٣",
-    hasColorSpectrum: false
-  }
+    hasColorSpectrum: false,
+  },
 ];
 
 const ReceiveNewInvoiceScreen: React.FC = () => {
@@ -93,7 +93,7 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
           <ScrollView
             style={[
               styles.content,
-              Platform.OS === 'android' && styles.androidContentAdjustment
+              Platform.OS === "android" && styles.androidContentAdjustment,
             ]}
             showsVerticalScrollIndicator={false}
           >
@@ -120,13 +120,19 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                 end={{ x: 1, y: 0 }}
               >
                 <MaterialIcons name="person" size={22} color={colors.white} />
-                <Text style={styles.purchasesecondaryHeaderText}>اطلاعات خرید</Text>
+                <Text style={styles.purchasesecondaryHeaderText}>
+                  اطلاعات خرید
+                </Text>
               </LinearGradient>
 
               <View style={styles.purchasesecondaryContent}>
                 <View style={styles.purchasesecondaryRow}>
                   <View style={styles.purchasesecondaryItem}>
-                    <MaterialIcons name="person" size={18} color={colors.secondary} />
+                    <MaterialIcons
+                      name="person"
+                      size={18}
+                      color={colors.secondary}
+                    />
                     <View style={styles.purchasesecondaryTextContainer}>
                       <Text style={styles.secondaryLabel}>خریدار:</Text>
                       <Text style={styles.secondaryValue}>نمت</Text>
@@ -144,7 +150,11 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
 
                 <View style={styles.purchasesecondaryRow}>
                   <View style={styles.purchasesecondaryItem}>
-                    <MaterialIcons name="store" size={18} color={colors.secondary} />
+                    <MaterialIcons
+                      name="store"
+                      size={18}
+                      color={colors.secondary}
+                    />
                     <View style={styles.purchasesecondaryTextContainer}>
                       <Text style={styles.secondaryLabel}>فروشنده:</Text>
                       <Text style={styles.secondaryValue}>زهره نورانی</Text>
@@ -161,7 +171,11 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                 <View style={styles.divider} />
 
                 <View style={styles.addressContainer}>
-                  <MaterialIcons name="location-on" size={18} color={colors.secondary} />
+                  <MaterialIcons
+                    name="location-on"
+                    size={18}
+                    color={colors.secondary}
+                  />
                   <View style={styles.purchasesecondaryTextContainer}>
                     <Text style={styles.secondaryLabel}>آدرس:</Text>
                     <Text style={styles.addressValue}>ایران، تهران</Text>
@@ -172,10 +186,16 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
 
 
                 <View style={styles.noteContainer}>
-                  <MaterialIcons name="error-outline" size={18} color={colors.secondary} />
+                  <MaterialIcons
+                    name="error-outline"
+                    size={18}
+                    color={colors.secondary}
+                  />
                   <View style={styles.noteTextContainer}>
                     <Text style={styles.noteLabel}>توضیحات:</Text>
-                    <Text style={styles.noteContent}>لطفا فاکتور صادر نشود</Text>
+                    <Text style={styles.noteContent}>
+                      لطفا فاکتور صادر نشود
+                    </Text>
                   </View>
                 </View>
               </View>
@@ -184,7 +204,11 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
 
             <View style={styles.productsSection}>
               <View style={styles.sectionHeader}>
-                <MaterialIcons name="shopping-bag" size={18} color={colors.primary} />
+                <MaterialIcons
+                  name="shopping-bag"
+                  size={18}
+                  color={colors.primary}
+                />
                 <Text style={styles.sectionHeaderText}>اطلاعات محصولات</Text>
               </View>
 
@@ -240,9 +264,14 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
             <View style={[styles.sellerCard, Platform.OS === 'android' && styles.androidCardAdjustment]}>
               <Text style={styles.sellerLabel}>نام فروشنده</Text>
 
+
               <View style={styles.qrPlaceholder}>
                 <View style={styles.qrCodeRectangle}>
-                  <MaterialIcons name="qr-code-2" size={100} color={colors.gray} />
+                  <MaterialIcons
+                    name="qr-code-2"
+                    size={100}
+                    color={colors.gray}
+                  />
                 </View>
               </View>
             </View>
@@ -313,17 +342,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.light,
   },
   content: {
-  
     flex: 1,
     padding: 16,
-    paddingTop: Platform.OS === 'android' ?60 : 20, 
+    paddingTop: Platform.OS === "android" ? 60 : 20,
   },
   androidContentAdjustment: {
-    marginTop: 0, 
+    marginTop: 0,
   },
-  
-  androidCardAdjustment: {
 
+  androidCardAdjustment: {
     borderWidth: 1.5,
     borderColor: "#e0e0e0",
     marginVertical: 8,
@@ -384,8 +411,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.success,
     justifyContent: "center",
     alignItems: "center",
-
- 
   },
 
   purchasesecondaryCard: {
@@ -444,7 +469,6 @@ const styles = StyleSheet.create({
     color: colors.medium,
     fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
     marginLeft: 8,
-    
   },
   secondaryValue: {
     fontSize: 15,
@@ -466,7 +490,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   iconTextSpacing: {
-    marginRight: 10, 
+    marginRight: 10,
   },
   noteLabel: {
     fontSize: 15,
@@ -512,7 +536,7 @@ const styles = StyleSheet.create({
   },
   productTitleContainer: {
     padding: 12,
-    backgroundColor: colors.white, 
+    backgroundColor: colors.white,
     borderBottomWidth: 1,
     borderBottomColor: "#e1e1e1",
     // borderRightWidth: 3,
@@ -555,7 +579,7 @@ const styles = StyleSheet.create({
   colorSpectrumContainer: {
     flexDirection: "row-reverse",
     alignItems: "center",
-    marginBottom: 16,  
+    marginBottom: 16,
   },
   productImagePlaceholder: {
     width: 80,
@@ -597,7 +621,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   spectrumOptionHas: {
-    backgroundColor: "#E8F5E9", 
+    backgroundColor: "#E8F5E9",
     borderColor: colors.success,
   },
   spectrumOptionHasNot: {
@@ -609,17 +633,17 @@ const styles = StyleSheet.create({
     fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
   },
   spectrumOptionTextHas: {
-    color: colors.success, 
+    color: colors.success,
   },
   spectrumOptionTextHasNot: {
-    color: colors.danger, 
+    color: colors.danger,
   },
   productCodeContainer: {
     flexDirection: "row-reverse",
     alignItems: "center",
-    paddingRight:0,
+    paddingRight: 0,
     padding: 12,
-    backgroundColor: colors.white, 
+    backgroundColor: colors.white,
     borderTopWidth: 1,
     borderTopColor: "#e1e1e1",
   },
@@ -685,7 +709,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bottomSpacer: {
-    height: 200, 
+    height: 200,
   },
   actionsContainer: {
     position: "absolute",
@@ -700,7 +724,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: -3 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-
   },
   actionButtonsRow: {
     flexDirection: "row-reverse",
@@ -739,7 +762,6 @@ const styles = StyleSheet.create({
   cancelBtn: {
     backgroundColor: colors.danger,
   },
-  
 });
 
 export default ReceiveNewInvoiceScreen;

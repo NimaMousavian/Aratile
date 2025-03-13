@@ -5,7 +5,7 @@ import {
   createStackNavigator,
   CardStyleInterpolators,
   StackNavigationOptions,
-  StackScreenProps
+  StackScreenProps,
 } from "@react-navigation/stack";
 import {
   createNativeStackNavigator,
@@ -13,7 +13,6 @@ import {
 } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-
 
 import AppSelectionScreen from "./screens/AppSelectionScreen";
 import HomeScreen from "./screens/Seller/HomeScreen";
@@ -23,16 +22,23 @@ import { MarketerHomeScreen } from "./screens/MarketerHome/MarketerHomeScreen";
 import CashierHomeScreen from "./screens/Cashier/CashierHomeScreen";
 import ReceiveNewInvoiceScreen from "./screens/Cashier/ReceiveNewInvoiceScreen/ReceiveNewInvoiceScreen";
 
-
-
 import styles from "./config/styles";
 import colors from "./config/colors";
+import CustomerInfo from "./screens/Seller/IssuingNewInvoice/CustomerInfo";
+import ProductProperties from "./screens/Seller/IssuingNewInvoice/ProductProperties";
+import { IProduct } from "./config/types";
+import SupplyRequest from "./screens/Seller/SupplyRequest";
+import AppText from "./components/Text";
 
 export type RootStackParamList = {
   AppSelection: undefined;
   Home: undefined;
   IssuingNewInvoic: undefined;
   BarCodeScanner: undefined;
+  CustomerInfo: undefined;
+  ProductProperties: undefined;
+  SupplyRequest: undefined;
+
   CashierHome: undefined;
   MarketerHome: undefined;
   ReceiveNewInvoice: undefined;
@@ -41,7 +47,6 @@ export type RootStackParamList = {
   ClosedInvoices: undefined;
   SuspendedInvoices: undefined;
   CheckCalculator: undefined;
-
 };
 export type AppNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -49,11 +54,12 @@ const Stack = createStackNavigator<RootStackParamList>();
 
 const StackNavigator: React.FC = () => {
   type NavigationProps = StackScreenProps<RootStackParamList>;
-  const navigation = useNavigation<NavigationProps['navigation']>();
+  const navigation = useNavigation<NavigationProps["navigation"]>();
   return (
     <Stack.Navigator
       initialRouteName="AppSelection"
       screenOptions={{
+        headerShown: false,
         cardStyle: { backgroundColor: "#FFFFFF" },
         gestureEnabled: true,
         gestureDirection: "horizontal-inverted",
@@ -75,7 +81,6 @@ const StackNavigator: React.FC = () => {
         component={AppSelectionScreen}
         options={{ headerShown: false }}
       />
-
 
       <Stack.Screen
         name="Home"
@@ -117,7 +122,17 @@ const StackNavigator: React.FC = () => {
         component={BarcodeScanner}
         options={{ headerShown: false }}
       />
-
+      <Stack.Screen
+        name="CustomerInfo"
+        component={CustomerInfo}
+        options={{
+          headerTitleAlign: "center",
+          headerTitleStyle: styles.headerTitleStyle,
+          headerStyle: styles.headerStyle,
+          title: "مشخصات خریدار",
+        }}
+      />
+      <Stack.Screen name="SupplyRequest" component={SupplyRequest} />
 
       <Stack.Screen
         name="CashierHome"
@@ -209,10 +224,10 @@ const StackNavigator: React.FC = () => {
 // Temporary placeholder component for screens not yet implemented
 const PlaceholderScreen: React.FC = () => {
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text style={{ fontSize: 18, textAlign: 'center' }}>
+    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <AppText style={{ fontSize: 18, textAlign: "center" }}>
         این صفحه در حال توسعه است
-      </Text>
+      </AppText>
     </View>
   );
 };

@@ -121,7 +121,6 @@ const CashierHomeScreen: React.FC = () => {
           source={require("../../../assets/aratile_logo_2.png")}
         />
       </View>
-
       <View style={styles.headerBox}>
         <View style={styles.infoBox}>
           <View style={styles.avatarCircle}>
@@ -131,9 +130,7 @@ const CashierHomeScreen: React.FC = () => {
         </View>
         <MaterialIcons name="create" size={24} color="#666666" />
       </View>
-
       \
-
       <FlatList
         data={cashierItems}
         numColumns={2}
