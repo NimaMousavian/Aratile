@@ -10,7 +10,7 @@ import { useState, useEffect, useCallback } from "react";
 import * as SplashScreen from "expo-splash-screen";
 import HomeScreen from "./app/screens/Seller/HomeScreen";
 import IssuingNewInvoice from "./app/screens/Seller/IssuingNewInvoice/IssuingNewInvoice";
-import StackNavigator from "./app/StackNavigator";
+import StackNavigator from "./app/SellerStackNavigator";
 
 I18nManager.forceRTL(true);
 

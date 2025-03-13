@@ -13,12 +13,13 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../../../StackNavigator";
+import { RootStackParamList } from "../../../SellerStackNavigator";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { LinearGradient } from "expo-linear-gradient";
 import colors from "../../../config/colors";
 
-type ReceiveNewInvoiceNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type ReceiveNewInvoiceNavigationProp =
+  NativeStackNavigationProp<RootStackParamList>;
 
 type FontWeight = "700" | "600" | "500" | "bold" | "semi-bold" | string;
 
@@ -39,7 +40,6 @@ const getFontFamily = (baseFont: string, weight: FontWeight): string => {
   return baseFont;
 };
 
-
 const productData = [
   {
     id: 1,
@@ -47,7 +47,7 @@ const productData = [
     quantity: "۵.۷۶ متر مربع",
     note: "-",
     code: "١٣١٢٧٧٩١٣٠٦٠٢١٢٠١٥١٤٣٠١",
-    hasColorSpectrum: true
+    hasColorSpectrum: true,
   },
   {
     id: 2,
@@ -55,7 +55,7 @@ const productData = [
     quantity: "۸.۸۰ متر مربع",
     note: "نصب در اتاق خواب",
     code: "١٤٣٧٨٢١٣٩٦١٨٠٩٢١٣٤٣٥٩١",
-    hasColorSpectrum: false
+    hasColorSpectrum: false,
   },
   {
     id: 3,
@@ -63,7 +63,7 @@ const productData = [
     quantity: "۱۶.۲۰ متر مربع",
     note: "ارسال به آدرس مشتری",
     code: "١١٨٥٤٣٢٧١٣٦٥٤٠٩٧٦٢٧٩٠١",
-    hasColorSpectrum: true
+    hasColorSpectrum: true,
   },
   {
     id: 4,
@@ -71,13 +71,12 @@ const productData = [
     quantity: "۴.۵۰ متر مربع",
     note: "نصب در حیاط خلوت",
     code: "١٥٨٦٧٩٤٣١٤٧٨٢٣٤٥٦٧١٨٢٣",
-    hasColorSpectrum: false
-  }
+    hasColorSpectrum: false,
+  },
 ];
 
 const ReceiveNewInvoiceScreen: React.FC = () => {
   const navigation = useNavigation<ReceiveNewInvoiceNavigationProp>();
-
 
   const handlePhoneCall = (phoneNumber: string) => {
     Linking.openURL(`tel:${phoneNumber}`);
@@ -89,16 +88,19 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
       <SafeAreaView style={styles.safeAreaTop} />
       <SafeAreaView style={styles.safeAreaBottom}>
         <View style={styles.container}>
-        
           <ScrollView
             style={[
               styles.content,
-              Platform.OS === 'android' && styles.androidContentAdjustment
+              Platform.OS === "android" && styles.androidContentAdjustment,
             ]}
             showsVerticalScrollIndicator={false}
           >
-           
-            <View style={[styles.card, Platform.OS === 'android' && styles.androidCardAdjustment]}>
+            <View
+              style={[
+                styles.card,
+                Platform.OS === "android" && styles.androidCardAdjustment,
+              ]}
+            >
               <View style={styles.cardHeaderSection}>
                 <View style={styles.invoiceNumberBadge}>
                   <Text style={styles.invoiceNumberLabel}>شماره فاکتور:</Text>
@@ -111,8 +113,12 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
               </View>
             </View>
 
-   
-            <View style={[styles.purchasesecondaryCard, Platform.OS === 'android' && styles.androidCardAdjustment]}>
+            <View
+              style={[
+                styles.purchasesecondaryCard,
+                Platform.OS === "android" && styles.androidCardAdjustment,
+              ]}
+            >
               <LinearGradient
                 colors={[colors.secondary, colors.primary]}
                 style={styles.purchasesecondaryHeader}
@@ -120,13 +126,19 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                 end={{ x: 1, y: 0 }}
               >
                 <MaterialIcons name="person" size={22} color={colors.white} />
-                <Text style={styles.purchasesecondaryHeaderText}>اطلاعات خرید</Text>
+                <Text style={styles.purchasesecondaryHeaderText}>
+                  اطلاعات خرید
+                </Text>
               </LinearGradient>
 
               <View style={styles.purchasesecondaryContent}>
                 <View style={styles.purchasesecondaryRow}>
                   <View style={styles.purchasesecondaryItem}>
-                    <MaterialIcons name="person" size={18} color={colors.secondary} />
+                    <MaterialIcons
+                      name="person"
+                      size={18}
+                      color={colors.secondary}
+                    />
                     <View style={styles.purchasesecondaryTextContainer}>
                       <Text style={styles.secondaryLabel}>خریدار:</Text>
                       <Text style={styles.secondaryValue}>نمت</Text>
@@ -144,7 +156,11 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
 
                 <View style={styles.purchasesecondaryRow}>
                   <View style={styles.purchasesecondaryItem}>
-                    <MaterialIcons name="store" size={18} color={colors.secondary} />
+                    <MaterialIcons
+                      name="store"
+                      size={18}
+                      color={colors.secondary}
+                    />
                     <View style={styles.purchasesecondaryTextContainer}>
                       <Text style={styles.secondaryLabel}>فروشنده:</Text>
                       <Text style={styles.secondaryValue}>زهره نورانی</Text>
@@ -161,7 +177,11 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                 <View style={styles.divider} />
 
                 <View style={styles.addressContainer}>
-                  <MaterialIcons name="location-on" size={18} color={colors.secondary} />
+                  <MaterialIcons
+                    name="location-on"
+                    size={18}
+                    color={colors.secondary}
+                  />
                   <View style={styles.purchasesecondaryTextContainer}>
                     <Text style={styles.secondaryLabel}>آدرس:</Text>
                     <Text style={styles.addressValue}>ایران، تهران</Text>
@@ -170,96 +190,159 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
 
                 <View style={styles.divider} />
 
-       
                 <View style={styles.noteContainer}>
-                  <MaterialIcons name="error-outline" size={18} color={colors.secondary} />
+                  <MaterialIcons
+                    name="error-outline"
+                    size={18}
+                    color={colors.secondary}
+                  />
                   <View style={styles.noteTextContainer}>
                     <Text style={styles.noteLabel}>توضیحات:</Text>
-                    <Text style={styles.noteContent}>لطفا فاکتور صادر نشود</Text>
+                    <Text style={styles.noteContent}>
+                      لطفا فاکتور صادر نشود
+                    </Text>
                   </View>
                 </View>
               </View>
             </View>
 
-       
             <View style={styles.productsSection}>
               <View style={styles.sectionHeader}>
-                <MaterialIcons name="shopping-bag" size={18} color={colors.primary} />
+                <MaterialIcons
+                  name="shopping-bag"
+                  size={18}
+                  color={colors.primary}
+                />
                 <Text style={styles.sectionHeaderText}>اطلاعات محصولات</Text>
               </View>
 
-         
               {productData.map((product) => (
-                <View key={product.id} style={[styles.productCard, Platform.OS === 'android' && styles.androidCardAdjustment]}>
-           
+                <View
+                  key={product.id}
+                  style={[
+                    styles.productCard,
+                    Platform.OS === "android" && styles.androidCardAdjustment,
+                  ]}
+                >
                   <View style={styles.productTitleContainer}>
                     <View style={styles.productTitleRow}>
                       <Text style={styles.productTitle}>{product.title}</Text>
-                  
                     </View>
                   </View>
 
-              
                   <View style={styles.productDetailsContainer}>
                     <View style={styles.infoWithImageContainer}>
                       <View style={styles.infoSection}>
                         <View style={styles.productNoteContainer}>
-                    <MaterialIcons name="qr-code" size={22} color={colors.secondary} />
-                    <Text style={[styles.secondaryLabel, styles.iconTextSpacing]}>کد محصول:</Text>
-                    <Text style={styles.productCode}>{product.code}</Text>
-                  </View>
+                          <MaterialIcons
+                            name="qr-code"
+                            size={22}
+                            color={colors.secondary}
+                          />
+                          <Text
+                            style={[
+                              styles.secondaryLabel,
+                              styles.iconTextSpacing,
+                            ]}
+                          >
+                            کد محصول:
+                          </Text>
+                          <Text style={styles.productCode}>{product.code}</Text>
+                        </View>
                         <View style={styles.quantityContainer}>
-                          <MaterialIcons name="straighten" size={18} color={colors.secondary} />
-                          <Text style={[styles.secondaryLabel, styles.iconTextSpacing]}>مقدار:</Text>
-                          <Text style={styles.quantityValue}>{product.quantity}</Text>
+                          <MaterialIcons
+                            name="straighten"
+                            size={18}
+                            color={colors.secondary}
+                          />
+                          <Text
+                            style={[
+                              styles.secondaryLabel,
+                              styles.iconTextSpacing,
+                            ]}
+                          >
+                            مقدار:
+                          </Text>
+                          <Text style={styles.quantityValue}>
+                            {product.quantity}
+                          </Text>
                         </View>
 
-                    
                         <View style={styles.colorSpectrumContainer}>
-                          <MaterialIcons name="palette" size={18} color={colors.secondary} />
-                          <Text style={[styles.secondaryLabel, styles.iconTextSpacing]}>طیف رنگی:</Text>
+                          <MaterialIcons
+                            name="palette"
+                            size={18}
+                            color={colors.secondary}
+                          />
+                          <Text
+                            style={[
+                              styles.secondaryLabel,
+                              styles.iconTextSpacing,
+                            ]}
+                          >
+                            طیف رنگی:
+                          </Text>
                           {product.hasColorSpectrum ? (
                             <Text style={styles.spectrumValueHas}>دارد</Text>
                           ) : (
-                            <Text style={styles.spectrumValueHasNot}>ندارد</Text>
+                            <Text style={styles.spectrumValueHasNot}>
+                              ندارد
+                            </Text>
                           )}
                         </View>
                       </View>
 
                       <View style={styles.productImagePlaceholder}>
-                        <MaterialIcons name="qr-code-2" size={36} color={colors.secondary} />
+                        <MaterialIcons
+                          name="qr-code-2"
+                          size={36}
+                          color={colors.secondary}
+                        />
                       </View>
                     </View>
 
-                 
                     <View style={styles.productCodeContainer}>
-                      <MaterialIcons name="notes" size={18} color={colors.secondary} />
-                      <Text style={[styles.secondaryLabel, styles.iconTextSpacing]}>توضیحات:</Text>
-                      <Text style={styles.regularNoteContent}>{product.note}</Text>
+                      <MaterialIcons
+                        name="notes"
+                        size={18}
+                        color={colors.secondary}
+                      />
+                      <Text
+                        style={[styles.secondaryLabel, styles.iconTextSpacing]}
+                      >
+                        توضیحات:
+                      </Text>
+                      <Text style={styles.regularNoteContent}>
+                        {product.note}
+                      </Text>
                     </View>
                   </View>
-
-              
                 </View>
               ))}
             </View>
 
-      
-            <View style={[styles.sellerCard, Platform.OS === 'android' && styles.androidCardAdjustment]}>
+            <View
+              style={[
+                styles.sellerCard,
+                Platform.OS === "android" && styles.androidCardAdjustment,
+              ]}
+            >
               <Text style={styles.sellerLabel}>نام فروشنده</Text>
-              
+
               <View style={styles.qrPlaceholder}>
                 <View style={styles.qrCodeRectangle}>
-                  <MaterialIcons name="qr-code-2" size={100} color={colors.gray} />
+                  <MaterialIcons
+                    name="qr-code-2"
+                    size={100}
+                    color={colors.gray}
+                  />
                 </View>
               </View>
             </View>
 
-      
             <View style={styles.bottomSpacer} />
           </ScrollView>
 
-        
           <View style={styles.actionsContainer}>
             <View style={styles.actionButtonsRow}>
               <TouchableOpacity style={[styles.actionBtn, styles.finalizeBtn]}>
@@ -268,7 +351,11 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
               </TouchableOpacity>
 
               <TouchableOpacity style={[styles.actionBtn, styles.suspendBtn]}>
-                <MaterialIcons name="pause-circle-outline" size={20} color={colors.white} />
+                <MaterialIcons
+                  name="pause-circle-outline"
+                  size={20}
+                  color={colors.white}
+                />
                 <Text style={styles.actionBtnText}>تعلیق</Text>
               </TouchableOpacity>
             </View>
@@ -284,8 +371,6 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                 <Text style={styles.actionBtnText}>لغو</Text>
               </TouchableOpacity>
             </View>
-
-           
           </View>
         </View>
       </SafeAreaView>
@@ -308,17 +393,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.light,
   },
   content: {
-  
     flex: 1,
     padding: 16,
-    paddingTop: Platform.OS === 'android' ?60 : 20, 
+    paddingTop: Platform.OS === "android" ? 60 : 20,
   },
   androidContentAdjustment: {
-    marginTop: 0, 
+    marginTop: 0,
   },
-  
-  androidCardAdjustment: {
 
+  androidCardAdjustment: {
     borderWidth: 1.5,
     borderColor: "#e0e0e0",
     marginVertical: 8,
@@ -379,8 +462,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.success,
     justifyContent: "center",
     alignItems: "center",
-
- 
   },
 
   purchasesecondaryCard: {
@@ -439,7 +520,6 @@ const styles = StyleSheet.create({
     color: colors.medium,
     fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
     marginLeft: 8,
-    
   },
   secondaryValue: {
     fontSize: 15,
@@ -461,7 +541,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   iconTextSpacing: {
-    marginRight: 10, 
+    marginRight: 10,
   },
   noteLabel: {
     fontSize: 15,
@@ -507,7 +587,7 @@ const styles = StyleSheet.create({
   },
   productTitleContainer: {
     padding: 12,
-    backgroundColor: colors.white, 
+    backgroundColor: colors.white,
     borderBottomWidth: 1,
     borderBottomColor: "#e1e1e1",
     // borderRightWidth: 3,
@@ -550,7 +630,7 @@ const styles = StyleSheet.create({
   colorSpectrumContainer: {
     flexDirection: "row-reverse",
     alignItems: "center",
-    marginBottom: 16,  
+    marginBottom: 16,
   },
   productImagePlaceholder: {
     width: 80,
@@ -592,7 +672,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   spectrumOptionHas: {
-    backgroundColor: "#E8F5E9", 
+    backgroundColor: "#E8F5E9",
     borderColor: colors.success,
   },
   spectrumOptionHasNot: {
@@ -604,17 +684,17 @@ const styles = StyleSheet.create({
     fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
   },
   spectrumOptionTextHas: {
-    color: colors.success, 
+    color: colors.success,
   },
   spectrumOptionTextHasNot: {
-    color: colors.danger, 
+    color: colors.danger,
   },
   productCodeContainer: {
     flexDirection: "row-reverse",
     alignItems: "center",
-    paddingRight:0,
+    paddingRight: 0,
     padding: 12,
-    backgroundColor: colors.white, 
+    backgroundColor: colors.white,
     borderTopWidth: 1,
     borderTopColor: "#e1e1e1",
   },
@@ -680,7 +760,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bottomSpacer: {
-    height: 200, 
+    height: 200,
   },
   actionsContainer: {
     position: "absolute",
@@ -695,7 +775,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: -3 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-
   },
   actionButtonsRow: {
     flexDirection: "row-reverse",
@@ -734,7 +813,6 @@ const styles = StyleSheet.create({
   cancelBtn: {
     backgroundColor: colors.danger,
   },
-  
 });
 
 export default ReceiveNewInvoiceScreen;

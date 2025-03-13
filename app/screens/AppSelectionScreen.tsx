@@ -1,27 +1,34 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../StackNavigator';
-import colors from '../config/colors';
+import React from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
+} from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../SellerStackNavigator";
+import colors from "../config/colors";
 
-type AppSelectionScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type AppSelectionScreenNavigationProp =
+  NativeStackNavigationProp<RootStackParamList>;
 
 const AppSelectionScreen: React.FC = () => {
   const navigation = useNavigation<AppSelectionScreenNavigationProp>();
 
-  const navigateToApp = (appType: 'seller' | 'cashier' | 'marketer'): void => {
+  const navigateToApp = (appType: "seller" | "cashier" | "marketer"): void => {
     switch (appType) {
-      case 'seller':
-        navigation.navigate('Home');
+      case "seller":
+        navigation.navigate("Home");
         break;
-      case 'cashier':
+      case "cashier":
         // Will navigate to cashier home when it's created
-        navigation.navigate('CashierHome');
+        navigation.navigate("CashierHome");
         break;
-      case 'marketer':
+      case "marketer":
         // Will navigate to marketer home when it's created
-        navigation.navigate('MarketerHome');
+        navigation.navigate("MarketerHome");
         break;
       default:
         break;
@@ -35,21 +42,21 @@ const AppSelectionScreen: React.FC = () => {
 
         <TouchableOpacity
           style={styles.optionButton}
-          onPress={() => navigateToApp('seller')}
+          onPress={() => navigateToApp("seller")}
         >
           <Text style={styles.buttonText}>اپ فروشنده</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.optionButton}
-          onPress={() => navigateToApp('cashier')}
+          onPress={() => navigateToApp("cashier")}
         >
           <Text style={styles.buttonText}>اپ صندوقدار</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.optionButton}
-          onPress={() => navigateToApp('marketer')}
+          onPress={() => navigateToApp("marketer")}
         >
           <Text style={styles.buttonText}>اپ بازاریاب</Text>
         </TouchableOpacity>
@@ -61,33 +68,33 @@ const AppSelectionScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
   },
   content: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 40,
-    textAlign: 'center',
+    textAlign: "center",
   },
   optionButton: {
-    width: '100%',
+    width: "100%",
     backgroundColor: colors.primary,
     padding: 15,
     borderRadius: 8,
     marginBottom: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 18,
-    fontWeight: 'bold',
-  }
+    fontWeight: "bold",
+  },
 });
 
 export default AppSelectionScreen;

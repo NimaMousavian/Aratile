@@ -13,7 +13,10 @@ import Button from "../../../components/Button";
 import TextInput from "../../../components/TextInput";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { AppNavigationProp, RootStackParamList } from "../../../StackNavigator";
+import {
+  AppNavigationProp,
+  RootStackParamList,
+} from "../../../SellerStackNavigator";
 import { IProduct } from "../../../config/types";
 import ProductItem from "../../../components/ProductItem";
 import AppButton from "../../../components/Button";

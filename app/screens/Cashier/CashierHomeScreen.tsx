@@ -12,7 +12,7 @@ import {
 import colors from "../../config/colors";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useNavigation } from "@react-navigation/native";
-import { RootStackParamList } from "../../StackNavigator";
+import { RootStackParamList } from "../../SellerStackNavigator";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 type AppNavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -121,7 +121,6 @@ const CashierHomeScreen: React.FC = () => {
           source={require("../../../assets/aratile_logo_2.png")}
         />
       </View>
-
       <View style={styles.headerBox}>
         <View style={styles.infoBox}>
           <View style={styles.avatarCircle}>
@@ -131,9 +130,7 @@ const CashierHomeScreen: React.FC = () => {
         </View>
         <MaterialIcons name="create" size={24} color="#666666" />
       </View>
-
       \
-
       <FlatList
         data={cashierItems}
         numColumns={2}
