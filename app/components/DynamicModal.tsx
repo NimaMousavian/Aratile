@@ -15,8 +15,7 @@ import {
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { LinearGradient } from "expo-linear-gradient";
 import colors from "../config/colors";
-import IconButton from "../components/IconButton"; // Import IconButton component
-
+import IconButton from "../components/IconButton"; 
 const getFontFamily = (baseFont: string, weight: string): string => {
   if (Platform.OS === "android") {
     switch (weight) {

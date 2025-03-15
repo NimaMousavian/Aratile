@@ -15,7 +15,7 @@ import AppText from "./Text";
 interface AppButtonProps extends Omit<TouchableOpacityProps, "style"> {
   title: string;
   onPress: () => void;
-  color?: ColorKeys; // Use ColorKeys from your colors config
+  color?: ColorKeys; 
   style?: StyleProp<ViewStyle>;
 }
 
