@@ -19,7 +19,20 @@ import colors from "../../../config/colors";
 import IconButtonSquare from "../../../components/IconButtonSquare";
 import ProductCard from "../../../components/ProductCard";
 import DynamicModal from "../../../components/DynamicModal";
-import IconButton from "../../../components/IconButton"; // Import IconButton
+import IconButton from "../../../components/IconButton"; 
+import PurchaseInfoCard from "../../../components/PurchaseInfoCard";
+interface PurchaseData {
+  buyer: {
+    name: string;
+    phone: string;
+  };
+  seller: {
+    name: string;
+    phone: string;
+  };
+  address: string;
+  note: string;
+}
 
 type ReceiveNewInvoiceNavigationProp =
   NativeStackNavigationProp<RootStackParamList>;
@@ -41,6 +54,18 @@ export const getFontFamily = (baseFont: string, weight: FontWeight): string => {
     }
   }
   return baseFont;
+};
+const purchaseData: PurchaseData = {
+  buyer: {
+    name: "نمت",
+    phone: "09353130587"
+  },
+  seller: {
+    name: "زهره نورانی",
+    phone: "09137305578"
+  },
+  address: "ایران، تهران",
+  note: "لطفا فاکتور صادر نشود",
 };
 
 const productData = [
@@ -474,94 +499,15 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
             </View>
 
 
-            <View style={[styles.purchasesecondaryCard, Platform.OS === 'android' && styles.androidCardAdjustment]}>
-              <LinearGradient
-                colors={[colors.secondary, colors.primary]}
-                style={styles.purchasesecondaryHeader}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              >
-                <MaterialIcons name="person" size={22} color={colors.white} />
-                <Text style={styles.purchasesecondaryHeaderText}>
-                  اطلاعات خرید
-                </Text>
-              </LinearGradient>
-
-              <View style={styles.purchasesecondaryContent}>
-                <View style={styles.purchasesecondaryRow}>
-                  <View style={styles.purchasesecondaryItem}>
-                    <MaterialIcons
-                      name="person"
-                      size={18}
-                      color={colors.secondary}
-                    />
-                    <View style={styles.purchasesecondaryTextContainer}>
-                      <Text style={styles.secondaryLabel}>خریدار:</Text>
-                      <Text style={styles.secondaryValue}>نمت</Text>
-                    </View>
-                  </View>
-                  <TouchableOpacity
-                    style={styles.callButtonCircle}
-                    onPress={() => handlePhoneCall("09353130587")}
-                  >
-                    <MaterialIcons name="call" size={25} color={colors.success} />
-                  </TouchableOpacity>
-                </View>
-
-                <View style={styles.divider} />
-
-                <View style={styles.purchasesecondaryRow}>
-                  <View style={styles.purchasesecondaryItem}>
-                    <MaterialIcons
-                      name="store"
-                      size={18}
-                      color={colors.secondary}
-                    />
-                    <View style={styles.purchasesecondaryTextContainer}>
-                      <Text style={styles.secondaryLabel}>فروشنده:</Text>
-                      <Text style={styles.secondaryValue}>زهره نورانی</Text>
-                    </View>
-                  </View>
-                  <TouchableOpacity
-                    style={styles.callButtonCircle}
-                    onPress={() => handlePhoneCall("09137305578")}
-                  >
-                    <MaterialIcons name="call" size={25} color={colors.success} />
-                  </TouchableOpacity>
-                </View>
-
-                <View style={styles.divider} />
-
-                <View style={styles.addressContainer}>
-                  <MaterialIcons
-                    name="location-on"
-                    size={18}
-                    color={colors.secondary}
-                  />
-                  <View style={styles.purchasesecondaryTextContainer}>
-                    <Text style={styles.secondaryLabel}>آدرس:</Text>
-                    <Text style={styles.addressValue}>ایران، تهران</Text>
-                  </View>
-                </View>
-
-                <View style={styles.divider} />
-
-
-                <View style={styles.noteContainer}>
-                  <MaterialIcons
-                    name="error-outline"
-                    size={18}
-                    color={colors.secondary}
-                  />
-                  <View style={styles.noteTextContainer}>
-                    <Text style={styles.noteLabel}>توضیحات:</Text>
-                    <Text style={styles.noteContent}>
-                      لطفا فاکتور صادر نشود
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            </View>
+            <PurchaseInfoCard
+              headerTitle="اطلاعات خرید"
+              headerIcon="person"
+              buyer={purchaseData.buyer}
+              seller={purchaseData.seller}
+              address={purchaseData.address}
+              note={purchaseData.note}
+              gradientColors={[colors.secondary, colors.primary]}
+            />
 
 
             <View style={styles.productsSection}>

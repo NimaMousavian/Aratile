@@ -21,6 +21,7 @@ import BarcodeScanner from "./screens/Seller/IssuingNewInvoice/BarcodeScanner";
 import { MarketerHomeScreen } from "./screens/MarketerHome/MarketerHomeScreen";
 import CashierHomeScreen from "./screens/Cashier/CashierHomeScreen";
 import ReceiveNewInvoiceScreen from "./screens/Cashier/ReceiveNewInvoiceScreen/ReceiveNewInvoiceScreen";
+import StatusFilterScreen from "./screens/Cashier/ReceiveNewInvoiceScreen/StatusFilterScreen";
 
 import styles from "./config/styles";
 import colors from "./config/colors";
@@ -42,7 +43,7 @@ export type RootStackParamList = {
   CashierHome: undefined;
   MarketerHome: undefined;
   ReceiveNewInvoice: undefined;
-  FinalizedInvoices: undefined;
+  StatusFilterScreen: undefined;
   CanceledInvoices: undefined;
   ClosedInvoices: undefined;
   SuspendedInvoices: undefined;
@@ -141,7 +142,7 @@ const StackNavigator: React.FC = () => {
           headerShown: false,
           // title: "صفحه اصلی صندوقدار",
           // headerTitleAlign: "center",
-     
+
         }}
       />
       <Stack.Screen
@@ -152,60 +153,24 @@ const StackNavigator: React.FC = () => {
         }}
       />
 
-      {/* Add the ReceiveNewInvoice screen */}
+     
       <Stack.Screen
         name="ReceiveNewInvoice"
         component={ReceiveNewInvoiceScreen}
         options={{
-          headerShown: false, // Using custom header in the component
+          headerShown: false, 
         }}
       />
 
-      {/* Placeholder for other cashier screens */}
+
       <Stack.Screen
-        name="FinalizedInvoices"
-        component={PlaceholderScreen}
+        name="StatusFilterScreen"
+        component={StatusFilterScreen}
         options={{
-          headerShown: true,
-          title: "فاکتور های نهایی شده",
-          headerTitleAlign: "center",
-          headerTitleStyle: styles.headerTitleStyle,
-          headerStyle: styles.headerStyle,
+          headerShown: false, 
         }}
       />
-      <Stack.Screen
-        name="CanceledInvoices"
-        component={PlaceholderScreen}
-        options={{
-          headerShown: true,
-          title: "فاکتور های لغو شده",
-          headerTitleAlign: "center",
-          headerTitleStyle: styles.headerTitleStyle,
-          headerStyle: styles.headerStyle,
-        }}
-      />
-      <Stack.Screen
-        name="ClosedInvoices"
-        component={PlaceholderScreen}
-        options={{
-          headerShown: true,
-          title: "فاکتور های بسته شده",
-          headerTitleAlign: "center",
-          headerTitleStyle: styles.headerTitleStyle,
-          headerStyle: styles.headerStyle,
-        }}
-      />
-      <Stack.Screen
-        name="SuspendedInvoices"
-        component={PlaceholderScreen}
-        options={{
-          headerShown: true,
-          title: "فاکتور های تعلیق شده",
-          headerTitleAlign: "center",
-          headerTitleStyle: styles.headerTitleStyle,
-          headerStyle: styles.headerStyle,
-        }}
-      />
+    
       <Stack.Screen
         name="CheckCalculator"
         component={PlaceholderScreen}

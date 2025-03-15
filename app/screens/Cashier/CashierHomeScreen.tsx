@@ -54,34 +54,14 @@ const cashierItems: MenuItem[] = [
   },
   {
     id: 2,
-    name: "فاکتور های نهایی شده",
+    name: "فاکتور ها",
     icon: "done-all",
     iconColor: "#1C3F64",
-    screenName: "FinalizedInvoices",
+    screenName: "StatusFilterScreen",
   },
+ 
   {
     id: 3,
-    name: "فاکتور های لغو شده",
-    icon: "cancel",
-    iconColor: "#1C3F64",
-    screenName: "CanceledInvoices",
-  },
-  {
-    id: 4,
-    name: "فاکتور های بسته شده",
-    icon: "inventory",
-    iconColor: "#1C3F64",
-    screenName: "ClosedInvoices",
-  },
-  {
-    id: 5,
-    name: "فاکتور های تعلیق شده",
-    icon: "pause-circle-outline",
-    iconColor: "#1C3F64",
-    screenName: "SuspendedInvoices",
-  },
-  {
-    id: 6,
     name: "راس گیر چک",
     icon: "account-balance",
     iconColor: "#1C3F64",
