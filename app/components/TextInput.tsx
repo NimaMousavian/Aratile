@@ -1,10 +1,14 @@
 import React from "react";
 import {
-  View, TextInput, StyleSheet, TextInputProps, Text, Platform,
+  View,
+  TextInput,
+  StyleSheet,
+  TextInputProps,
+  Text,
+  Platform,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-
 
 import colors from "../config/colors";
 
@@ -34,9 +38,9 @@ interface AppTextInputProps extends TextInputProps {
   onChangeInput?: (id: string, value: string) => void;
   value?: string;
   style?: any;
-  containerStyle?: any; 
-  inputContainerStyle?: any; 
-  labelStyle?: any; 
+  containerStyle?: any;
+  inputContainerStyle?: any;
+  labelStyle?: any;
 }
 
 const AppTextInput: React.FC<AppTextInputProps> = ({
@@ -55,7 +59,13 @@ const AppTextInput: React.FC<AppTextInputProps> = ({
   ...otherProps
 }) => {
   return (
-    <View style={[styles.inputContainer, width ? { width } : undefined, containerStyle]}>
+    <View
+      style={[
+        styles.inputContainer,
+        width ? { width } : undefined,
+        containerStyle,
+      ]}
+    >
       {label && <Text style={[styles.inputLabel, labelStyle]}>{label}</Text>}
       <View style={[styles.textInputContainer, inputContainerStyle]}>
         {icon && (
@@ -85,14 +95,14 @@ const AppTextInput: React.FC<AppTextInputProps> = ({
 
 const styles = StyleSheet.create({
   inputContainer: {
-    marginBottom: 16
+    marginBottom: 16,
   },
   inputLabel: {
     fontSize: 15,
     fontFamily: getFontFamily("Yekan_Bakh_Bold", "500"),
     color: colors.dark,
     marginBottom: 8,
-    textAlign: "right"
+    textAlign: "right",
   },
   textInputContainer: {
     flexDirection: "row",

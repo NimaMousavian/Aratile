@@ -1,71 +1,34 @@
 import React from "react";
 import {
-  Dimensions,
-  FlatList,
-  Image,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
   View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
   Platform,
+  FlatList,
+  Dimensions,
 } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { AppNavigationProp, RootStackParamList } from "../../StackNavigator";
 import colors from "../../config/colors";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useNavigation } from "@react-navigation/native";
-import { RootStackParamList } from "../../StackNavigator";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { getFontFamily } from "../Cashier/ReceiveNewInvoiceScreen/ReceiveNewInvoiceScreen";
+import { MenuItem } from "./../Cashier/CashierHomeScreen";
 
-type AppNavigationProp = NativeStackNavigationProp<RootStackParamList>;
-
-export interface MenuItem {
-  id: number;
-  name: string;
-  icon: keyof typeof MaterialIcons.glyphMap;
-  iconColor?: string;
-  screenName?: keyof RootStackParamList;
-}
-
-type FontWeight = "700" | "600" | "500" | "bold" | "semi-bold" | string;
-
-const getFontFamily = (baseFont: string, weight: FontWeight): string => {
-  if (Platform.OS === "android") {
-    switch (weight) {
-      case "700":
-      case "bold":
-        return "Yekan_Bakh_Bold";
-      case "500":
-      case "600":
-      case "semi-bold":
-        return "Yekan_Bakh_Bold";
-      default:
-        return "Yekan_Bakh_Regular";
-    }
-  }
-  return baseFont;
-};
-
-const cashierItems: MenuItem[] = [
+const fieldMarketerItems: MenuItem[] = [
   {
     id: 1,
-    name: "دریافت فاکتور جدید",
-    icon: "receipt-long",
-    iconColor: "#1C3F64",
-    screenName: "ReceiveNewInvoice",
+    name: "بازاریاب میدانی B2B",
+    icon: "business",
+    screenName: "B2BFieldMarketer",
   },
   {
     id: 2,
-    name: "فاکتور ها",
-    icon: "done-all",
-    iconColor: "#1C3F64",
-    screenName: "StatusFilterScreen",
-  },
- 
-  {
-    id: 3,
-    name: "راس گیر چک",
-    icon: "account-balance",
-    iconColor: "#1C3F64",
-    screenName: "CheckCalculator",
+    name: "بازاریاب میدانی B2C",
+    icon: "business-center",
+    screenName: "B2CFieldMarketer",
   },
 ];
 
@@ -74,7 +37,7 @@ const numColumns = 2;
 const itemMargin = 10;
 const itemWidth = (screenWidth - (numColumns + 1) * itemMargin) / numColumns;
 
-const CashierHomeScreen: React.FC = () => {
+const MarketerHomeScreen: React.FC = () => {
   const navigation = useNavigation<AppNavigationProp>();
 
   const renderItem = ({ item }: { item: MenuItem }) => {
@@ -106,13 +69,12 @@ const CashierHomeScreen: React.FC = () => {
           <View style={styles.avatarCircle}>
             <MaterialIcons name="person" size={26} color="#666666" />
           </View>
-          <Text style={styles.userName}>خانم صندوقدار</Text>
+          <Text style={styles.userName}>کارشناس میدانی</Text>
         </View>
         <MaterialIcons name="create" size={24} color="#666666" />
       </View>
-      \
       <FlatList
-        data={cashierItems}
+        data={fieldMarketerItems}
         numColumns={2}
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
@@ -126,26 +88,12 @@ const CashierHomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 50,
-    backgroundColor: "#ffffff",
-  },
-  logoContainer: {
-    alignItems: "center",
     justifyContent: "center",
-    paddingTop: 10,
+    alignItems: "center",
+    paddingTop: 50,
+    backgroundColor: "#FFFFFF",
   },
-  logo: {
-    width: 100,
-    height: 36,
-  },
-  screenTitle: {
-    fontSize: 22,
-    textAlign: "center",
-    marginBottom: 20,
-    fontWeight: Platform.OS === "ios" ? "700" : "normal",
-    fontFamily: getFontFamily("Yekan_Bakh_Bold", "700"),
-    color: "#333333",
-  },
+
   list: {
     padding: itemMargin,
   },
@@ -169,12 +117,22 @@ const styles = StyleSheet.create({
     fontWeight: Platform.OS === "ios" ? "700" : "normal",
     fontFamily: getFontFamily("Yekan_Bakh_Bold", "700"),
   },
+  logoContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 10,
+  },
+  logo: {
+    width: 100,
+    height: 36,
+  },
   headerBox: {
     flexDirection: "row-reverse",
-    justifyContent: "space-between",
     alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
     paddingHorizontal: 20,
-    marginVertical: 20,
+    marginTop: 20,
   },
   infoBox: {
     flexDirection: "row-reverse",
@@ -203,4 +161,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CashierHomeScreen;
+export default MarketerHomeScreen;
