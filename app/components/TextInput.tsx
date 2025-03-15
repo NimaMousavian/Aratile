@@ -69,7 +69,7 @@ const AppTextInput: React.FC<AppTextInputProps> = ({
       {label && <Text style={[styles.inputLabel, labelStyle]}>{label}</Text>}
       <View style={[styles.textInputContainer, inputContainerStyle]}>
         {icon && (
-          <MaterialCommunityIcons
+          <MaterialIcons
             name={icon as any}
             size={20}
             color={colors.medium}
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
     textAlign: "right",
   },
   textInputContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     borderWidth: 1,
     borderColor: colors.dark,
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
   },
   icon: {
-    marginLeft: 10,
+    marginRight: 10,
   },
   textInput: {
     flex: 1,

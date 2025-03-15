@@ -16,6 +16,7 @@ const B2BFieldMarketer = () => {
         style={{
           flexDirection: "row-reverse",
           justifyContent: "space-between",
+          alignItems: "center",
         }}
       >
         <AppTextInput
