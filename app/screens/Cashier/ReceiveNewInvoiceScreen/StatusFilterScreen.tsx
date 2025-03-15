@@ -388,7 +388,6 @@ const StatusFilterScreen: React.FC = () => {
       <StatusBar backgroundColor="#f5f5f5" barStyle="dark-content" />
       <View style={styles.container}>
         <View style={styles.searchContainer}>
-          <Feather name="search" size={20} color="#999" style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
             placeholder="جستجو در فاکتورها..."
@@ -396,6 +395,7 @@ const StatusFilterScreen: React.FC = () => {
             value={searchText}
             onChangeText={setSearchText}
           />
+              <Feather name="search" size={20} color="#999" style={styles.searchIcon} />
           {searchText ? (
             <TouchableOpacity onPress={() => setSearchText("")}>
               <Feather name="x" size={20} color="#999" />
