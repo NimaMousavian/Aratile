@@ -18,7 +18,7 @@ import AppSelectionScreen from "./screens/AppSelectionScreen";
 import HomeScreen from "./screens/Seller/HomeScreen";
 import IssuingNewInvoice from "./screens/Seller/IssuingNewInvoice/IssuingNewInvoice";
 import BarcodeScanner from "./screens/Seller/IssuingNewInvoice/BarcodeScanner";
-import { MarketerHomeScreen } from "./screens/MarketerHome/MarketerHomeScreen";
+import MarketerHomeScreen from "./screens/FieldMarketing/MarketerHomeScreen";
 import CashierHomeScreen from "./screens/Cashier/CashierHomeScreen";
 import ReceiveNewInvoiceScreen from "./screens/Cashier/ReceiveNewInvoiceScreen/ReceiveNewInvoiceScreen";
 
@@ -30,6 +30,9 @@ import { IProduct } from "./config/types";
 import SupplyRequest from "./screens/Seller/SupplyRequest";
 import AppText from "./components/Text";
 import SupplyRequestList from "./screens/Seller/SupplyRequestList";
+import B2BFieldMarketer from "./screens/FieldMarketing/B2BFieldMarketer/B2BFieldMarketer";
+import B2CFieldMarketer from "./screens/FieldMarketing/B2CFieldMarketer";
+import AddNewShop from "./screens/FieldMarketing/B2BFieldMarketer/AddNewShop";
 
 export type RootStackParamList = {
   AppSelection: undefined;
@@ -42,13 +45,17 @@ export type RootStackParamList = {
   SupplyRequestList: undefined;
 
   CashierHome: undefined;
-  MarketerHome: undefined;
   ReceiveNewInvoice: undefined;
   FinalizedInvoices: undefined;
   CanceledInvoices: undefined;
   ClosedInvoices: undefined;
   SuspendedInvoices: undefined;
   CheckCalculator: undefined;
+
+  MarketerHome: undefined;
+  B2BFieldMarketer: undefined;
+  B2CFieldMarketer: undefined;
+  AddNewShop: undefined;
 };
 export type AppNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -83,6 +90,8 @@ const StackNavigator: React.FC = () => {
         component={AppSelectionScreen}
         options={{ headerShown: false }}
       />
+
+      {/* Seller Screens */}
 
       <Stack.Screen
         name="Home"
@@ -137,6 +146,8 @@ const StackNavigator: React.FC = () => {
       <Stack.Screen name="SupplyRequest" component={SupplyRequest} />
       <Stack.Screen name="SupplyRequestList" component={SupplyRequestList} />
 
+      {/* Cashier Screens */}
+
       <Stack.Screen
         name="CashierHome"
         component={CashierHomeScreen}
@@ -146,24 +157,14 @@ const StackNavigator: React.FC = () => {
           // headerTitleAlign: "center",
         }}
       />
-      <Stack.Screen
-        name="MarketerHome"
-        component={MarketerHomeScreen}
-        options={{
-          headerShown: false,
-        }}
-      />
 
-      {/* Add the ReceiveNewInvoice screen */}
       <Stack.Screen
         name="ReceiveNewInvoice"
         component={ReceiveNewInvoiceScreen}
         options={{
-          headerShown: false, // Using custom header in the component
+          headerShown: false,
         }}
       />
-
-      {/* Placeholder for other cashier screens */}
       <Stack.Screen
         name="FinalizedInvoices"
         component={PlaceholderScreen}
@@ -219,6 +220,11 @@ const StackNavigator: React.FC = () => {
           headerStyle: styles.headerStyle,
         }}
       />
+      {/* FieldMarketing Screens */}
+      <Stack.Screen name="MarketerHome" component={MarketerHomeScreen} />
+      <Stack.Screen name="B2BFieldMarketer" component={B2BFieldMarketer} />
+      <Stack.Screen name="B2CFieldMarketer" component={B2CFieldMarketer} />
+      <Stack.Screen name="AddNewShop" component={AddNewShop} />
     </Stack.Navigator>
   );
 };

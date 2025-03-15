@@ -43,11 +43,11 @@ const AppTextInput: React.FC<AppTextInputProps> = ({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: defaultStyles.colors.light,
-    borderRadius: 15,
+    borderRadius: 9,
     borderWidth: 1,
     borderColor: colors.primary,
     flexDirection: "row-reverse",
-    padding: 10,
+    padding: 2,
     marginVertical: 10,
   },
   icon: {
