@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -16,8 +16,10 @@ import { RootStackParamList } from "../../../StackNavigator";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { LinearGradient } from "expo-linear-gradient";
 import colors from "../../../config/colors";
-import IconButton from "../../../components/IconButton";
-import ProductCard from "../../../components/ProductCard"; // Import your ProductCard component
+import IconButtonSquare from "../../../components/IconButtonSquare";
+import ProductCard from "../../../components/ProductCard";
+import DynamicModal from "../../../components/DynamicModal";
+import IconButton from "../../../components/IconButton"; // Import IconButton
 
 type ReceiveNewInvoiceNavigationProp =
   NativeStackNavigationProp<RootStackParamList>;
@@ -76,11 +78,350 @@ export const productData = [
   },
 ];
 
+enum ModalType {
+  None,
+  Confirm,
+  Suspend,
+  Refer,
+  Cancel,
+}
+
 const ReceiveNewInvoiceScreen: React.FC = () => {
   const navigation = useNavigation<ReceiveNewInvoiceNavigationProp>();
 
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [modalType, setModalType] = useState<ModalType>(ModalType.None);
+
+  const [modalData, setModalData] = useState<{
+    title: string;
+    message: string;
+    icon: React.ComponentProps<typeof MaterialIcons>["name"];
+    colors: string[];
+  }>({
+    title: "",
+    message: "",
+    icon: "check-circle",
+    colors: [colors.success, colors.success],
+  });
+
   const handlePhoneCall = (phoneNumber: string) => {
     Linking.openURL(`tel:${phoneNumber}`);
+  };
+
+  const handleConfirmation = (inputValues: Record<string, string>) => {
+    console.log("فاکتور با موفقیت تایید شد");
+    console.log("شماره سفارش:", inputValues.orderNumber);
+    console.log("نام شخص:", inputValues.personName);
+
+    if (!inputValues.orderNumber || !inputValues.personName) {
+      return;
+    }
+
+    setModalVisible(false);
+  };
+
+  const handleSuspension = (inputValues: Record<string, string>) => {
+    console.log("فاکتور به حالت تعلیق درآمد");
+    console.log("دلیل تعلیق:", inputValues.suspendReason);
+
+    if (!inputValues.suspendReason) {
+      return;
+    }
+
+    setModalVisible(false);
+  };
+
+  const handleReferral = (inputValues: Record<string, string>) => {
+    console.log("فاکتور ارجاع داده شد");
+    console.log("ارجاع به:", inputValues.referTo);
+    console.log("توضیحات ارجاع:", inputValues.referNote);
+
+    if (!inputValues.referTo) {
+      return;
+    }
+
+    setModalVisible(false);
+  };
+
+  const handleCancellation = (inputValues: Record<string, string>) => {
+    console.log("فاکتور لغو شد");
+    console.log("دلیل لغو:", inputValues.cancelReason);
+
+    if (!inputValues.cancelReason) {
+      return;
+    }
+
+    setModalVisible(false);
+  };
+
+  const showConfirmModal = () => {
+    setModalType(ModalType.Confirm);
+    setModalData({
+      title: "تایید نهایی فاکتور",
+      message: "فاکتور ثبت نهایی شود؟",
+      icon: "done-all",
+      colors: [colors.success, colors.success],
+    });
+    setModalVisible(true);
+  };
+
+  const showSuspendModal = () => {
+    setModalType(ModalType.Suspend);
+    setModalData({
+      title: "تعلیق فاکتور",
+      message: "آیا می‌خواهید این فاکتور را به حالت تعلیق درآورید؟",
+      icon: "pause-circle-outline",
+      colors: ["#F39C12", "#E67E22"],
+    });
+    setModalVisible(true);
+  };
+
+  const showReferModal = () => {
+    setModalType(ModalType.Refer);
+    setModalData({
+      title: "ارجاع فاکتور به فروشنده",
+      message: "آیا می‌خواهید این فاکتور را به فروشنده ارجاع دهید؟",
+      icon: "send",
+      colors: [colors.secondary, colors.primary],
+    });
+    setModalVisible(true);
+  };
+
+  const showCancelModal = () => {
+    setModalType(ModalType.Cancel);
+    setModalData({
+      title: "لغو فاکتور",
+      message: "فاکتور لغو شود؟",
+      icon: "close",
+      colors: [colors.danger, "#D32F2F"],
+    });
+    setModalVisible(true);
+  };
+
+  const getModalContent = () => {
+    switch (modalType) {
+      case ModalType.Confirm:
+        return (
+          <DynamicModal
+            visible={modalVisible}
+            onClose={() => setModalVisible(false)}
+            headerConfig={{
+              title: modalData.title,
+              icon: modalData.icon,
+              colors: modalData.colors,
+            }}
+            messages={[
+              {
+                text: modalData.message,
+                icon: "info-outline",
+                iconColor: colors.info,
+              },
+            ]}
+            inputs={[
+              {
+                id: "orderNumber",
+                label: "شماره سفارش را وارد کنید",
+                placeholder: "شماره سفارش را وارد کنید",
+                show: true,
+              },
+              {
+                id: "personName",
+                label: "فاکتور به اسم چه شخصی ثبت شود؟",
+                placeholder: "نام شخص را وارد کنید",
+                show: true,
+              },
+            ]}
+            buttons={[
+              {
+                id: "confirm",
+                text: "تایید",
+                color: colors.success,
+                icon: "done-all",
+                onPress: handleConfirmation,
+              },
+              {
+                id: "cancel",
+                text: "انصراف",
+                color: colors.danger,
+                icon: "close",
+                onPress: () => setModalVisible(false),
+              },
+            ]}
+          />
+        );
+      case ModalType.Refer:
+        return (
+          <DynamicModal
+            visible={modalVisible}
+            onClose={() => setModalVisible(false)}
+            headerConfig={{
+              title: modalData.title,
+              icon: modalData.icon,
+              colors: modalData.colors,
+            }}
+            messages={[
+              {
+                text: modalData.message,
+                icon: "info-outline",
+                iconColor: colors.info,
+              },
+              {
+                text: "پس از ارجاع، فروشنده می‌تواند فاکتور را اصلاح کند.",
+                icon: "send",
+                iconColor: colors.secondary,
+              },
+            ]}
+            buttons={[
+              {
+                id: "confirm",
+                text: "ارجاع به فروشنده",
+                color: colors.secondary,
+                icon: "send",
+                onPress: handleReferral,
+              },
+              {
+                id: "cancel",
+                text: "انصراف",
+                color: colors.danger,
+                icon: "close",
+                onPress: () => setModalVisible(false),
+              },
+            ]}
+          />
+        );
+
+      case ModalType.Suspend:
+        return (
+          <DynamicModal
+            visible={modalVisible}
+            onClose={() => setModalVisible(false)}
+            headerConfig={{
+              title: modalData.title,
+              icon: modalData.icon,
+              colors: modalData.colors,
+            }}
+            messages={[
+              {
+                text: modalData.message,
+                icon: "info-outline",
+                iconColor: colors.info,
+              },
+            ]}
+            // inputs={[
+            //   {
+            //     id: "suspendReason",
+            //     label: "دلیل تعلیق",
+            //     placeholder: "دلیل تعلیق فاکتور را وارد کنید",
+            //     show: true,
+            //   },
+            // ]}
+            buttons={[
+              {
+                id: "confirm",
+                text: "تعلیق",
+                color: "#F39C12",
+                icon: "pause-circle-outline",
+                onPress: handleSuspension,
+              },
+              {
+                id: "cancel",
+                text: "انصراف",
+                color: colors.danger,
+                icon: "close",
+                onPress: () => setModalVisible(false),
+              },
+            ]}
+          />
+        );
+
+      case ModalType.Refer:
+        return (
+          <DynamicModal
+            visible={modalVisible}
+            onClose={() => setModalVisible(false)}
+            headerConfig={{
+              title: modalData.title,
+              icon: modalData.icon,
+              colors: modalData.colors,
+            }}
+            messages={[
+              {
+                text: modalData.message,
+                icon: "info-outline",
+                iconColor: colors.info,
+              },
+            ]}
+            buttons={[
+              {
+                id: "confirm",
+                text: "ارجاع به فروشنده",
+                color: colors.secondary,
+                icon: "send",
+                onPress: handleReferral,
+              },
+              {
+                id: "cancel",
+                text: "انصراف",
+                color: colors.danger,
+                icon: "close",
+                onPress: () => setModalVisible(false),
+              },
+            ]}
+          />
+        );
+
+      case ModalType.Cancel:
+        return (
+          <DynamicModal
+            visible={modalVisible}
+            onClose={() => setModalVisible(false)}
+            headerConfig={{
+              title: modalData.title,
+              icon: modalData.icon,
+              colors: modalData.colors,
+            }}
+            messages={[
+              {
+                text: modalData.message,
+                icon: "warning",
+                iconColor: colors.danger,
+              },
+              {
+                text: "پس از لغو امکان اسکن گزینه ها وجود ندارد.",
+                icon: "error-outline",
+                iconColor: colors.danger,
+              },
+            ]}
+            inputs={[
+              {
+                id: "cancelReason",
+                label: "مشتری به چه دلیل منصرف شده است؟",
+                placeholder: "دلیل لغو فاکتور را وارد کنید",
+                show: true,
+              },
+            ]}
+            buttons={[
+              {
+                id: "confirm",
+                text: "لغو فاکتور",
+                color: colors.danger,
+                icon: "delete",
+                onPress: handleCancellation,
+              },
+              {
+                id: "cancel",
+                text: "انصراف",
+                color: colors.medium,
+                icon: "close",
+                onPress: () => setModalVisible(false),
+              },
+            ]}
+          />
+        );
+
+      default:
+        return null;
+    }
   };
 
   return (
@@ -149,7 +490,11 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                     style={styles.callButtonCircle}
                     onPress={() => handlePhoneCall("09353130587")}
                   >
-                    <MaterialIcons name="call" size={18} color={colors.white} />
+                    <MaterialIcons
+                      name="call"
+                      size={25}
+                      color={colors.success}
+                    />
                   </TouchableOpacity>
                 </View>
 
@@ -171,7 +516,11 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                     style={styles.callButtonCircle}
                     onPress={() => handlePhoneCall("09137305578")}
                   >
-                    <MaterialIcons name="call" size={18} color={colors.white} />
+                    <MaterialIcons
+                      name="call"
+                      size={25}
+                      color={colors.success}
+                    />
                   </TouchableOpacity>
                 </View>
 
@@ -229,7 +578,7 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                     {
                       icon: "qr-code",
                       iconColor: colors.secondary,
-                      label: "کد محصول:",
+                      label: "کد:",
                       value: product.code,
                     },
                     {
@@ -294,36 +643,37 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
 
           <View style={styles.actionsContainer}>
             <View style={styles.actionButtonsRow}>
-              <IconButton
+              <IconButtonSquare
                 text="تایید نهایی"
                 iconName="done-all"
                 backgroundColor={colors.success}
-                onPress={() => console.log("تایید نهایی")}
+                onPress={showConfirmModal}
               />
 
-              <IconButton
+              <IconButtonSquare
                 text="تعلیق"
                 iconName="pause-circle-outline"
                 backgroundColor={"#F39C12"}
-                onPress={() => console.log("تعلیق ")}
+                onPress={showSuspendModal}
               />
-            </View>
 
-            <View style={styles.actionButtonsRow}>
-              <IconButton
-                text="ارجاع به فروشنده"
+              <IconButtonSquare
+                text="ارجاع"
                 iconName="send"
                 backgroundColor={colors.secondary}
-                onPress={() => console.log("ارجاع به فروشنده ")}
+                onPress={showReferModal}
               />
-              <IconButton
+
+              <IconButtonSquare
                 text="لغو"
                 iconName="close"
                 backgroundColor={colors.danger}
-                onPress={() => console.log("لغو ")}
+                onPress={showCancelModal}
               />
             </View>
           </View>
+
+          {getModalContent()}
         </View>
       </SafeAreaView>
     </>
@@ -404,14 +754,16 @@ const styles = StyleSheet.create({
     fontSize: 15,
     marginRight: 6,
     color: colors.medium,
-    fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
+    fontFamily: getFontFamily("Yekan_Bakh_Bold", "700"),
   },
 
   callButtonCircle: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.success,
+    borderColor: colors.success,
+    borderWidth: 2,
+    backgroundColor: colors.white,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -720,7 +1072,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: colors.white,
-    padding: 16,
+    padding: 5,
     borderTopWidth: 1,
     borderTopColor: "#e1e1e1",
     shadowColor: colors.black,
