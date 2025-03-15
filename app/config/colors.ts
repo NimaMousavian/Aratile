@@ -24,5 +24,6 @@ export default {
   dark: "#0c0c0c",
   danger: "#ff5252",
   success: "#238B45",
+  warning: "#F39C12",
   info: "#2696d9",
 };

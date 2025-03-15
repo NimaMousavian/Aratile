@@ -23,13 +23,14 @@ const getFontFamily = (baseFont: string, weight: FontWeight): string => {
 
 type IconButtonProps = {
   text: string;
-  iconName: React.ComponentProps<typeof MaterialIcons>["name"]; 
+  iconName: React.ComponentProps<typeof MaterialIcons>["name"];
   backgroundColor: string;
   textColor?: string;
   iconColor?: string;
   iconSize?: number;
   onPress: () => void;
   style?: object;
+  flex?: number;
 };
 
 const IconButton: React.FC<IconButtonProps> = ({
@@ -40,14 +41,15 @@ const IconButton: React.FC<IconButtonProps> = ({
   iconColor = "#FFFFFF",
   iconSize = 20,
   onPress,
-  style
+  style,
+  flex = 0.49,
 }) => {
   return (
     <TouchableOpacity
       style={[
         styles.actionBtn,
-        { backgroundColor: backgroundColor },
-        style
+        { backgroundColor: backgroundColor, flex: flex },
+        style,
       ]}
       onPress={onPress}
     >
@@ -64,7 +66,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: 9,
     padding: 12,
-    flex: 0.49,
   },
   actionBtnText: {
     fontSize: 15,

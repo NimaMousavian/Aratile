@@ -38,16 +38,16 @@ const AppButton: React.FC<AppButtonProps> = ({
 const styles = StyleSheet.create({
   button: {
     backgroundColor: colors.primary,
-    borderRadius: 15,
+    borderRadius: 9,
     justifyContent: "center",
     alignItems: "center",
-    padding: 15,
+    padding: 12,
     // width: "100%",
-    marginVertical: 10,
+    marginVertical: 8,
   },
   text: {
     color: colors.white,
-    fontSize: 20,
+    fontSize: 18,
     textTransform: "uppercase",
     fontFamily: "Yekan_Bakh_Bold",
   },

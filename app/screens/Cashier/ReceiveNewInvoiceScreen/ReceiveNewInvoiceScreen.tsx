@@ -68,7 +68,7 @@ const purchaseData: PurchaseData = {
   note: "لطفا فاکتور صادر نشود",
 };
 
-const productData = [
+export const productData = [
   {
     id: 1,
     title: "پرسلان نگار رافیا استخوانی مات ۶۰×۱۳۰ (کد:۱/۴۴)",
@@ -103,13 +103,12 @@ const productData = [
   },
 ];
 
-
 enum ModalType {
   None,
   Confirm,
   Suspend,
   Refer,
-  Cancel
+  Cancel,
 }
 
 const ReceiveNewInvoiceScreen: React.FC = () => {
@@ -117,7 +116,6 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
 
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [modalType, setModalType] = useState<ModalType>(ModalType.None);
-
 
   const [modalData, setModalData] = useState<{
     title: string;
@@ -135,22 +133,17 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
     Linking.openURL(`tel:${phoneNumber}`);
   };
 
-
   const handleConfirmation = (inputValues: Record<string, string>) => {
     console.log("فاکتور با موفقیت تایید شد");
     console.log("شماره سفارش:", inputValues.orderNumber);
     console.log("نام شخص:", inputValues.personName);
 
-
     if (!inputValues.orderNumber || !inputValues.personName) {
-
       return;
     }
 
     setModalVisible(false);
-
   };
-
 
   const handleSuspension = (inputValues: Record<string, string>) => {
     console.log("فاکتور به حالت تعلیق درآمد");
@@ -161,7 +154,6 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
     }
 
     setModalVisible(false);
-
   };
 
   const handleReferral = (inputValues: Record<string, string>) => {
@@ -174,9 +166,7 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
     }
 
     setModalVisible(false);
-
   };
-
 
   const handleCancellation = (inputValues: Record<string, string>) => {
     console.log("فاکتور لغو شد");
@@ -187,9 +177,7 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
     }
 
     setModalVisible(false);
-
   };
-
 
   const showConfirmModal = () => {
     setModalType(ModalType.Confirm);
@@ -202,7 +190,6 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
     setModalVisible(true);
   };
 
-
   const showSuspendModal = () => {
     setModalType(ModalType.Suspend);
     setModalData({
@@ -213,8 +200,6 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
     });
     setModalVisible(true);
   };
-
- 
 
   const showReferModal = () => {
     setModalType(ModalType.Refer);
@@ -227,20 +212,16 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
     setModalVisible(true);
   };
 
-
-
-
   const showCancelModal = () => {
     setModalType(ModalType.Cancel);
     setModalData({
       title: "لغو فاکتور",
-      message:"فاکتور لغو شود؟",
+      message: "فاکتور لغو شود؟",
       icon: "close",
       colors: [colors.danger, "#D32F2F"],
     });
     setModalVisible(true);
   };
-
 
   const getModalContent = () => {
     switch (modalType) {
@@ -315,7 +296,6 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                 iconColor: colors.secondary,
               },
             ]}
-     
             buttons={[
               {
                 id: "confirm",
@@ -396,7 +376,6 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                 iconColor: colors.info,
               },
             ]}
-           
             buttons={[
               {
                 id: "confirm",
@@ -476,7 +455,6 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
       <SafeAreaView style={styles.safeAreaTop} />
       <SafeAreaView style={styles.safeAreaBottom}>
         <View style={styles.container}>
-
           <ScrollView
             style={[
               styles.content,
@@ -484,8 +462,12 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
             ]}
             showsVerticalScrollIndicator={false}
           >
-
-            <View style={[styles.card, Platform.OS === 'android' && styles.androidCardAdjustment]}>
+            <View
+              style={[
+                styles.card,
+                Platform.OS === "android" && styles.androidCardAdjustment,
+              ]}
+            >
               <View style={styles.cardHeaderSection}>
                 <View style={styles.invoiceNumberBadge}>
                   <Text style={styles.invoiceNumberLabel}>شماره فاکتور:</Text>
@@ -520,7 +502,6 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                 <Text style={styles.sectionHeaderText}>اطلاعات محصولات</Text>
               </View>
 
-
               {productData.map((product) => (
                 <ProductCard
                   key={product.id}
@@ -547,7 +528,9 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                       iconColor: colors.secondary,
                       label: "طیف رنگی:",
                       value: product.hasColorSpectrum ? "دارد" : "ندارد",
-                      valueColor: product.hasColorSpectrum ? colors.success : colors.danger,
+                      valueColor: product.hasColorSpectrum
+                        ? colors.success
+                        : colors.danger,
                     },
                   ]}
                   note={product.note}
@@ -563,15 +546,22 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                     iconSize: 36,
                     iconColor: colors.secondary,
                   }}
-                  containerStyle={Platform.OS === 'android' ? styles.androidCardAdjustment : {}}
+                  containerStyle={
+                    Platform.OS === "android"
+                      ? styles.androidCardAdjustment
+                      : {}
+                  }
                 />
               ))}
             </View>
 
-
-            <View style={[styles.sellerCard, Platform.OS === 'android' && styles.androidCardAdjustment]}>
+            <View
+              style={[
+                styles.sellerCard,
+                Platform.OS === "android" && styles.androidCardAdjustment,
+              ]}
+            >
               <Text style={styles.sellerLabel}>نام فروشنده</Text>
-
 
               <View style={styles.qrPlaceholder}>
                 <View style={styles.qrCodeRectangle}>
@@ -584,14 +574,11 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
               </View>
             </View>
 
-
             <View style={styles.bottomSpacer} />
           </ScrollView>
 
-
           <View style={styles.actionsContainer}>
             <View style={styles.actionButtonsRow}>
-
               <IconButtonSquare
                 text="تایید نهایی"
                 iconName="done-all"
@@ -619,10 +606,8 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                 backgroundColor={colors.danger}
                 onPress={showCancelModal}
               />
-
             </View>
           </View>
-
 
           {getModalContent()}
         </View>
@@ -709,7 +694,6 @@ const styles = StyleSheet.create({
   },
 
   callButtonCircle: {
-
     width: 40,
     height: 40,
     borderRadius: 20,

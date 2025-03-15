@@ -24,7 +24,7 @@ const ProductProperties: React.FC<IProps> = ({ product, onClose }) => {
     <View style={styles.container}>
       <View style={styles.prductContainer}>
         <AppText style={{ fontSize: 18, fontFamily: "Yekan_Bakh_Bold" }}>
-          {product.name}
+          {product.title}
         </AppText>
         <View style={styles.devider}></View>
         {/* <View style={styles.properties}>
@@ -37,7 +37,7 @@ const ProductProperties: React.FC<IProps> = ({ product, onClose }) => {
           <AppText style={{ fontFamily: "Yekan_Bakh_Bold" }}>
             موجودی قابل تعهد:
           </AppText>
-          <AppText>{toPersianDigits(product.accountableInventory)}</AppText>
+          <AppText>{toPersianDigits(product.quantity)}</AppText>
         </View>
         <View style={styles.properties}>
           <AppText style={{ fontFamily: "Yekan_Bakh_Bold" }}>طیف:</AppText>

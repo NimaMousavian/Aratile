@@ -91,6 +91,7 @@ const items: MenuItem[] = [
     name: "مشاهده درخواست های تامین",
     icon: "visibility",
     iconColor: "#1C3F64",
+    screenName: "SupplyRequestList",
   },
 ];
 

@@ -1,8 +1,18 @@
 export interface IProduct {
   id: number;
-  name: string;
-  physicalInventory: string;
-  accountableInventory: string;
+  title: string;
+  quantity: string;
+  note: string;
+  code: string;
+  hasColorSpectrum: boolean;
+}
+
+export interface ISupplyRequest {
+  id: number;
+  title: string;
+  requestCount: number;
   grade: string;
-  price: number;
+  status: string;
+  dateCreated: string;
+  dateModified: string;
 }
