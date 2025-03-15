@@ -34,6 +34,7 @@ import SupplyRequestList from "./screens/Seller/SupplyRequestList";
 import B2BFieldMarketer from "./screens/FieldMarketing/B2BFieldMarketer/B2BFieldMarketer";
 import B2CFieldMarketer from "./screens/FieldMarketing/B2CFieldMarketer";
 import AddNewShop from "./screens/FieldMarketing/B2BFieldMarketer/AddNewShop";
+import VoiceRecording from "./screens/FieldMarketing/B2BFieldMarketer/VoiceRecording";
 
 export type RootStackParamList = {
   AppSelection: undefined;
@@ -57,6 +58,7 @@ export type RootStackParamList = {
   B2BFieldMarketer: undefined;
   B2CFieldMarketer: undefined;
   AddNewShop: undefined;
+  VoiceRecording: undefined;
 };
 export type AppNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -190,6 +192,7 @@ const StackNavigator: React.FC = () => {
       <Stack.Screen name="B2BFieldMarketer" component={B2BFieldMarketer} />
       <Stack.Screen name="B2CFieldMarketer" component={B2CFieldMarketer} />
       <Stack.Screen name="AddNewShop" component={AddNewShop} />
+      <Stack.Screen name="VoiceRecording" component={VoiceRecording} />
     </Stack.Navigator>
   );
 };

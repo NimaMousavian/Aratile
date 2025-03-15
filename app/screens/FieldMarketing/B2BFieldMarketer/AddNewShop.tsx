@@ -1,12 +1,22 @@
-import React from "react";
+import React, { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import AppText from "../../../components/Text";
 import AppTextInput from "../../../components/TextInput";
 import { getFontFamily } from "../../Cashier/ReceiveNewInvoiceScreen/ReceiveNewInvoiceScreen";
 import colors from "../../../config/colors";
 import { LinearGradient } from "expo-linear-gradient";
+import {
+  DatePickerField,
+  PersianDatePicker,
+} from "../../../components/PersianDatePicker";
+import IconButton from "../../../components/IconButton";
+import { useNavigation } from "@react-navigation/native";
+import { AppNavigationProp } from "../../../StackNavigator";
 
 const AddNewShop = () => {
+  const navigation = useNavigation<AppNavigationProp>();
+  const [birthDateShow, setBirthDateShow] = useState<boolean>(false);
+
   const InputContainer: React.FC<{
     title: string;
     children: React.ReactElement[];
@@ -57,14 +67,13 @@ const AddNewShop = () => {
             placeholder="محل تولد"
             onChangeText={() => {}}
           ></AppTextInput>
-          <AppTextInput
-            autoCapitalize="none"
-            icon="calendar-month"
-            autoCorrect={false}
-            keyboardType="default"
-            placeholder="تاریخ تولد"
-            onChangeText={() => {}}
-          ></AppTextInput>
+
+          <DatePickerField
+            label="تاریخ تولد"
+            onDateChange={(date) => {}}
+            date="1400/01/01"
+          />
+
           <AppTextInput
             autoCapitalize="none"
             icon="numbers"
@@ -147,7 +156,7 @@ const AddNewShop = () => {
             icon="shop"
             autoCorrect={false}
             keyboardType="default"
-            placeholder=""
+            placeholder="مالکیت فروشگاه"
             onChangeText={() => {}}
           ></AppTextInput>
           <AppTextInput
@@ -155,10 +164,132 @@ const AddNewShop = () => {
             icon="shop"
             autoCorrect={false}
             keyboardType="default"
-            placeholder=""
+            placeholder="پانل ریلی دارد یا خیر"
+            onChangeText={() => {}}
+          ></AppTextInput>
+          <AppTextInput
+            autoCapitalize="none"
+            icon="shop"
+            autoCorrect={false}
+            keyboardType="default"
+            placeholder="تعداد دکور زنده"
+            onChangeText={() => {}}
+          ></AppTextInput>
+          <AppTextInput
+            autoCapitalize="none"
+            icon="shop"
+            autoCorrect={false}
+            keyboardType="default"
+            placeholder="ثبت عکس های فروشگاه"
             onChangeText={() => {}}
           ></AppTextInput>
         </InputContainer>
+        <InputContainer title="مشخصات انبار">
+          <AppTextInput
+            autoCapitalize="none"
+            icon="shop"
+            autoCorrect={false}
+            keyboardType="default"
+            placeholder="آدرس انبار"
+            onChangeText={() => {}}
+          ></AppTextInput>
+          <AppTextInput
+            autoCapitalize="none"
+            icon="shop"
+            autoCorrect={false}
+            keyboardType="default"
+            placeholder="متراژ انبار"
+            onChangeText={() => {}}
+          ></AppTextInput>
+          <AppTextInput
+            autoCapitalize="none"
+            icon="shop"
+            autoCorrect={false}
+            keyboardType="default"
+            placeholder="تعداد لیفتراک"
+            onChangeText={() => {}}
+          ></AppTextInput>
+          <AppTextInput
+            autoCapitalize="none"
+            icon="shop"
+            autoCorrect={false}
+            keyboardType="default"
+            placeholder="متراژ دپویی"
+            onChangeText={() => {}}
+          ></AppTextInput>
+          <AppTextInput
+            autoCapitalize="none"
+            icon="shop"
+            autoCorrect={false}
+            keyboardType="default"
+            placeholder="مالکیت انبار"
+            onChangeText={() => {}}
+          ></AppTextInput>
+          <AppTextInput
+            autoCapitalize="none"
+            icon="shop"
+            autoCorrect={false}
+            keyboardType="default"
+            placeholder="ثبت عکس های انبار"
+            onChangeText={() => {}}
+          ></AppTextInput>
+        </InputContainer>
+        <InputContainer title="زمینه فعالیت فروشگاه">
+          <AppTextInput
+            autoCapitalize="none"
+            icon="shop"
+            autoCorrect={false}
+            keyboardType="default"
+            placeholder="شبکه فروش دارد یا خیر"
+            onChangeText={() => {}}
+          ></AppTextInput>
+          <AppTextInput
+            autoCapitalize="none"
+            icon="shop"
+            autoCorrect={false}
+            keyboardType="default"
+            placeholder="شریک دارد یا خیر"
+            onChangeText={() => {}}
+          ></AppTextInput>
+          <AppTextInput
+            autoCapitalize="none"
+            icon="shop"
+            autoCorrect={false}
+            keyboardType="default"
+            placeholder="سیستم مالی"
+            onChangeText={() => {}}
+          ></AppTextInput>
+          <AppTextInput
+            autoCapitalize="none"
+            icon="shop"
+            autoCorrect={false}
+            keyboardType="default"
+            placeholder="ثبت موقعیت جغرافیایی"
+            onChangeText={() => {}}
+          ></AppTextInput>
+        </InputContainer>
+        <InputContainer title="خلاصه مذاکرات انجام شده">
+          <IconButton
+            text="صوتی"
+            iconName="record-voice-over"
+            backgroundColor={colors.primaryLight}
+            onPress={() => navigation.navigate("VoiceRecording")}
+          />
+          <View style={{ marginVertical: 7 }}></View>
+          <IconButton
+            text="متنی"
+            iconName="text-snippet"
+            backgroundColor={colors.primaryLight}
+            onPress={() => {}}
+          />
+        </InputContainer>
+        <IconButton
+          text="ثبت"
+          iconName="done"
+          onPress={() => {}}
+          backgroundColor={colors.success}
+          flex={1}
+        />
       </ScrollView>
     </View>
   );

@@ -11,6 +11,7 @@ import {
   TextStyle,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import colors from "../config/colors";
 
 const getFontFamily = (baseFont: string, weight: string): string => {
   if (Platform.OS === "android") {
@@ -215,11 +216,11 @@ export const PersianDatePicker: React.FC<PersianDatePickerProps> = ({
       ...customStyles.pickerButton,
     },
     confirmButton: {
-      backgroundColor: "#487856",
+      backgroundColor: colors.success,
       ...customStyles.confirmButton,
     },
     cancelButton: {
-      backgroundColor: "#B04033",
+      backgroundColor: colors.danger,
       ...customStyles.cancelButton,
     },
     confirmButtonText: {
@@ -292,7 +293,7 @@ export const PersianDatePicker: React.FC<PersianDatePickerProps> = ({
                         style={[
                           styles.pickerItemText,
                           selectedMonth === month.number &&
-                          styles.selectedItemText,
+                            styles.selectedItemText,
                         ]}
                       >
                         {month.name}
@@ -339,7 +340,9 @@ export const PersianDatePicker: React.FC<PersianDatePickerProps> = ({
                 style={[styles.pickerButton, styles.confirmButton]}
                 onPress={handleConfirm}
               >
-                <Text style={styles.confirmButtonText}>{confirmButtonText}</Text>
+                <Text style={styles.confirmButtonText}>
+                  {confirmButtonText}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -374,13 +377,21 @@ export const DatePickerField: React.FC<DatePickerFieldProps> = ({
   const styles = StyleSheet.create({
     infoItem: {
       flex: 1,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.dark,
+      flexDirection: "row-reverse",
+      alignItems: "center",
+      marginBottom: 16,
+      padding: 12,
       ...customStyles.infoItem,
     },
     infoLabel: {
-      color: "#6B7280",
-      fontSize: 14,
+      color: colors.medium,
+      fontSize: 15,
       fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
       textAlign: "right",
+      marginRight: 10,
       ...customStyles.infoLabel,
     },
     infoValue: {
@@ -405,16 +416,18 @@ export const DatePickerField: React.FC<DatePickerFieldProps> = ({
   });
 
   return (
-    <View style={styles.infoItem}>
+    <TouchableOpacity
+      style={styles.infoItem}
+      onPress={() => setPickerVisible(true)}
+    >
+      <MaterialIcons name="calendar-month" size={20} color="#6B7280" />
       <Text style={styles.infoLabel}>{label}</Text>
       <View style={styles.valueContainer}>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           onPress={() => setPickerVisible(true)}
           style={styles.editButton}
-        >
-          <MaterialIcons name="edit" size={20} color="#6B7280" />
-        </TouchableOpacity>
-        <Text style={styles.infoValue}>{toFarsiDigits(date)}</Text>
+        ></TouchableOpacity> */}
+        {/* <Text style={styles.infoValue}>{toFarsiDigits(date)}</Text> */}
       </View>
 
       <PersianDatePicker
@@ -424,7 +437,7 @@ export const DatePickerField: React.FC<DatePickerFieldProps> = ({
         initialDate={dateArray}
         {...datePickerProps}
       />
-    </View>
+    </TouchableOpacity>
   );
 };
 
