@@ -12,7 +12,9 @@ const AddNewShop = () => {
   }> = ({ title, children }) => {
     return (
       <View style={styles.inputContainer}>
-        <AppText style={styles.title}>{title}</AppText>
+        <View style={styles.titleContainer}>
+          <AppText style={styles.title}>{title}</AppText>
+        </View>
         <View style={styles.divider}></View>
         <View style={styles.gridContainer}>{children.map((item) => item)}</View>
       </View>
@@ -56,6 +58,7 @@ const styles = StyleSheet.create({
     marginVertical: 5,
   },
   gridContainer: {},
+  titleContainer: {},
   title: {
     fontFamily: "Yekan_Bakh_Bold",
     fontSize: 20,
