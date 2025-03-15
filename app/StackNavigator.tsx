@@ -23,6 +23,7 @@ import CashierHomeScreen from "./screens/Cashier/CashierHomeScreen";
 import ReceiveNewInvoiceScreen from "./screens/Cashier/ReceiveNewInvoiceScreen/ReceiveNewInvoiceScreen";
 import StatusFilterScreen from "./screens/Cashier/ReceiveNewInvoiceScreen/StatusFilterScreen";
 
+
 import styles from "./config/styles";
 import colors from "./config/colors";
 import CustomerInfo from "./screens/Seller/IssuingNewInvoice/CustomerInfo";
@@ -34,6 +35,7 @@ import SupplyRequestList from "./screens/Seller/SupplyRequestList";
 import B2BFieldMarketer from "./screens/FieldMarketing/B2BFieldMarketer/B2BFieldMarketer";
 import B2CFieldMarketer from "./screens/FieldMarketing/B2CFieldMarketer";
 import AddNewShop from "./screens/FieldMarketing/B2BFieldMarketer/AddNewShop";
+import IssuedInvoices from "./screens/Seller/IssuedInvoices";
 
 export type RootStackParamList = {
   AppSelection: undefined;
@@ -44,10 +46,11 @@ export type RootStackParamList = {
   ProductProperties: undefined;
   SupplyRequest: undefined;
   SupplyRequestList: undefined;
+  IssuedInvoices: undefined;  
+  StatusFilterScreen: undefined;
 
   CashierHome: undefined;
   ReceiveNewInvoice: undefined;
-  StatusFilterScreen: undefined;
   CanceledInvoices: undefined;
   ClosedInvoices: undefined;
   SuspendedInvoices: undefined;
@@ -147,6 +150,20 @@ const StackNavigator: React.FC = () => {
       <Stack.Screen name="SupplyRequest" component={SupplyRequest} />
       <Stack.Screen name="SupplyRequestList" component={SupplyRequestList} />
 
+      <Stack.Screen
+        name="IssuedInvoices"
+        component={IssuedInvoices} 
+        options={{
+          headerShown: false,
+          // title: "فاکتور های صادر شده",
+          // headerTitleAlign: "center",
+          // headerTitleStyle: styles.headerTitleStyle,
+          // headerStyle: styles.headerStyle,
+        }}
+      />
+
+
+
       {/* Cashier Screens */}
 
       <Stack.Screen
@@ -162,13 +179,6 @@ const StackNavigator: React.FC = () => {
       <Stack.Screen
         name="ReceiveNewInvoice"
         component={ReceiveNewInvoiceScreen}
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="StatusFilterScreen"
-        component={StatusFilterScreen}
         options={{
           headerShown: false,
         }}

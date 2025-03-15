@@ -54,6 +54,7 @@ const items: MenuItem[] = [
     name: "فاکتور های صادر شده",
     icon: "description",
     iconColor: "#1C3F64",
+    screenName: "IssuedInvoices",
   },
   {
     id: 3,
