@@ -18,7 +18,7 @@ const ProductItem: React.FC<IProps> = ({ product }) => {
     useState<boolean>(false);
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={() => setProductPropertiesShow(true)}>
+      {/* <TouchableOpacity onPress={() => setProductPropertiesShow(true)}>
         <AppText style={{ fontSize: 18, fontFamily: "Yekan_Bakh_Bold" }}>
           {product.name}
         </AppText>
@@ -49,7 +49,7 @@ const ProductItem: React.FC<IProps> = ({ product }) => {
           product={product}
           onClose={() => setProductPropertiesShow(false)}
         />
-      </Modal>
+      </Modal> */}
     </View>
   );
 };

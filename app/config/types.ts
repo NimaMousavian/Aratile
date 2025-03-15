@@ -1,10 +1,10 @@
 export interface IProduct {
   id: number;
-  name: string;
-  physicalInventory: string;
-  accountableInventory: string;
-  grade: string;
-  price: number;
+  title: string;
+  quantity: string;
+  note: string;
+  code: string;
+  hasColorSpectrum: boolean;
 }
 
 export interface ISupplyRequest {

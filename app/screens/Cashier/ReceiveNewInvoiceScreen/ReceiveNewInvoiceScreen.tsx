@@ -16,7 +16,7 @@ import { RootStackParamList } from "../../../StackNavigator";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { LinearGradient } from "expo-linear-gradient";
 import colors from "../../../config/colors";
-import IconButton from "../../../components/iconButton";
+import IconButton from "../../../components/IconButton";
 import ProductCard from "../../../components/ProductCard"; // Import your ProductCard component
 
 type ReceiveNewInvoiceNavigationProp =
@@ -41,7 +41,7 @@ export const getFontFamily = (baseFont: string, weight: FontWeight): string => {
   return baseFont;
 };
 
-const productData = [
+export const productData = [
   {
     id: 1,
     title: "پرسلان نگار رافیا استخوانی مات ۶۰×۱۳۰ (کد:۱/۴۴)",
@@ -89,7 +89,6 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
       <SafeAreaView style={styles.safeAreaTop} />
       <SafeAreaView style={styles.safeAreaBottom}>
         <View style={styles.container}>
-
           <ScrollView
             style={[
               styles.content,
@@ -97,8 +96,12 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
             ]}
             showsVerticalScrollIndicator={false}
           >
-
-            <View style={[styles.card, Platform.OS === 'android' && styles.androidCardAdjustment]}>
+            <View
+              style={[
+                styles.card,
+                Platform.OS === "android" && styles.androidCardAdjustment,
+              ]}
+            >
               <View style={styles.cardHeaderSection}>
                 <View style={styles.invoiceNumberBadge}>
                   <Text style={styles.invoiceNumberLabel}>شماره فاکتور:</Text>
@@ -111,8 +114,12 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
               </View>
             </View>
 
-
-            <View style={[styles.purchasesecondaryCard, Platform.OS === 'android' && styles.androidCardAdjustment]}>
+            <View
+              style={[
+                styles.purchasesecondaryCard,
+                Platform.OS === "android" && styles.androidCardAdjustment,
+              ]}
+            >
               <LinearGradient
                 colors={[colors.secondary, colors.primary]}
                 style={styles.purchasesecondaryHeader}
@@ -184,7 +191,6 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
 
                 <View style={styles.divider} />
 
-
                 <View style={styles.noteContainer}>
                   <MaterialIcons
                     name="error-outline"
@@ -201,7 +207,6 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
               </View>
             </View>
 
-
             <View style={styles.productsSection}>
               <View style={styles.sectionHeader}>
                 <MaterialIcons
@@ -212,7 +217,6 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                 <Text style={styles.sectionHeaderText}>اطلاعات محصولات</Text>
               </View>
 
-          
               {productData.map((product) => (
                 <ProductCard
                   key={product.id}
@@ -239,7 +243,9 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                       iconColor: colors.secondary,
                       label: "طیف رنگی:",
                       value: product.hasColorSpectrum ? "دارد" : "ندارد",
-                      valueColor: product.hasColorSpectrum ? colors.success : colors.danger,
+                      valueColor: product.hasColorSpectrum
+                        ? colors.success
+                        : colors.danger,
                     },
                   ]}
                   note={product.note}
@@ -255,15 +261,22 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                     iconSize: 36,
                     iconColor: colors.secondary,
                   }}
-                  containerStyle={Platform.OS === 'android' ? styles.androidCardAdjustment : {}}
+                  containerStyle={
+                    Platform.OS === "android"
+                      ? styles.androidCardAdjustment
+                      : {}
+                  }
                 />
               ))}
             </View>
 
-
-            <View style={[styles.sellerCard, Platform.OS === 'android' && styles.androidCardAdjustment]}>
+            <View
+              style={[
+                styles.sellerCard,
+                Platform.OS === "android" && styles.androidCardAdjustment,
+              ]}
+            >
               <Text style={styles.sellerLabel}>نام فروشنده</Text>
-
 
               <View style={styles.qrPlaceholder}>
                 <View style={styles.qrCodeRectangle}>
@@ -276,50 +289,40 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
               </View>
             </View>
 
-
             <View style={styles.bottomSpacer} />
           </ScrollView>
 
-
           <View style={styles.actionsContainer}>
             <View style={styles.actionButtonsRow}>
-
               <IconButton
                 text="تایید نهایی"
                 iconName="done-all"
                 backgroundColor={colors.success}
-                onPress={() => console.log('تایید نهایی')}
+                onPress={() => console.log("تایید نهایی")}
               />
 
               <IconButton
                 text="تعلیق"
                 iconName="pause-circle-outline"
                 backgroundColor={"#F39C12"}
-                onPress={() => console.log('تعلیق ')}
+                onPress={() => console.log("تعلیق ")}
               />
-
-
             </View>
 
             <View style={styles.actionButtonsRow}>
-
               <IconButton
                 text="ارجاع به فروشنده"
                 iconName="send"
                 backgroundColor={colors.secondary}
-                onPress={() => console.log('ارجاع به فروشنده ')}
+                onPress={() => console.log("ارجاع به فروشنده ")}
               />
               <IconButton
                 text="لغو"
                 iconName="close"
                 backgroundColor={colors.danger}
-                onPress={() => console.log('لغو ')}
+                onPress={() => console.log("لغو ")}
               />
-
-
             </View>
-
-
           </View>
         </View>
       </SafeAreaView>

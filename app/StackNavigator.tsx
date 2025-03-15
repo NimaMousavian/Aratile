@@ -29,6 +29,7 @@ import ProductProperties from "./screens/Seller/IssuingNewInvoice/ProductPropert
 import { IProduct } from "./config/types";
 import SupplyRequest from "./screens/Seller/SupplyRequest";
 import AppText from "./components/Text";
+import SupplyRequestList from "./screens/Seller/SupplyRequestList";
 
 export type RootStackParamList = {
   AppSelection: undefined;
@@ -38,6 +39,7 @@ export type RootStackParamList = {
   CustomerInfo: undefined;
   ProductProperties: undefined;
   SupplyRequest: undefined;
+  SupplyRequestList: undefined;
 
   CashierHome: undefined;
   MarketerHome: undefined;
@@ -133,6 +135,7 @@ const StackNavigator: React.FC = () => {
         }}
       />
       <Stack.Screen name="SupplyRequest" component={SupplyRequest} />
+      <Stack.Screen name="SupplyRequestList" component={SupplyRequestList} />
 
       <Stack.Screen
         name="CashierHome"
@@ -141,7 +144,6 @@ const StackNavigator: React.FC = () => {
           headerShown: false,
           // title: "صفحه اصلی صندوقدار",
           // headerTitleAlign: "center",
-     
         }}
       />
       <Stack.Screen

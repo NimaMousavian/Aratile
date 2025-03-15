@@ -18,81 +18,88 @@ import { IProduct } from "../../../config/types";
 import ProductItem from "../../../components/ProductItem";
 import AppButton from "../../../components/Button";
 import ProductPreview from "../../../components/ProductPreview";
+import ProductCard from "../../../components/ProductCard";
+import { productData } from "../../Cashier/ReceiveNewInvoiceScreen/ReceiveNewInvoiceScreen";
+import ProductProperties from "./ProductProperties";
+import IconButton from "../../../components/IconButton";
 
-const sampleProducts: IProduct[] = [
-  {
-    id: 1,
-    name: "محصول اول",
-    accountableInventory: "1574",
-    physicalInventory: "1484",
-    grade: "یک",
-    price: 3659000,
-  },
-  {
-    id: 2,
-    name: "محصول دوم",
-    accountableInventory: "1574",
-    physicalInventory: "1484",
-    grade: "یک",
-    price: 3659000,
-  },
-  {
-    id: 3,
-    name: "محصول سوم",
-    accountableInventory: "1574",
-    physicalInventory: "1484",
-    grade: "یک",
-    price: 3659000,
-  },
-  {
-    id: 4,
-    name: "محصول چهارم",
-    accountableInventory: "1574",
-    physicalInventory: "1484",
-    grade: "یک",
-    price: 3659000,
-  },
-];
+// const sampleProducts: IProduct[] = [
+//   {
+//     id: 1,
+//     name: "محصول اول",
+//     accountableInventory: "1574",
+//     physicalInventory: "1484",
+//     grade: "یک",
+//     price: 3659000,
+//   },
+//   {
+//     id: 2,
+//     name: "محصول دوم",
+//     accountableInventory: "1574",
+//     physicalInventory: "1484",
+//     grade: "یک",
+//     price: 3659000,
+//   },
+//   {
+//     id: 3,
+//     name: "محصول سوم",
+//     accountableInventory: "1574",
+//     physicalInventory: "1484",
+//     grade: "یک",
+//     price: 3659000,
+//   },
+//   {
+//     id: 4,
+//     name: "محصول چهارم",
+//     accountableInventory: "1574",
+//     physicalInventory: "1484",
+//     grade: "یک",
+//     price: 3659000,
+//   },
+// ];
 
 const IssuingNewInvoice = () => {
   const [showProductCodeModal, setShowProductCodeModal] =
     useState<boolean>(false);
   const [showProductNameModal, setShowProductNameModal] =
     useState<boolean>(false);
-  const [selectedProducts, setSelectedProducts] = useState<IProduct[]>([
-    {
-      id: 1,
-      name: "محصول اول",
-      accountableInventory: "1574",
-      physicalInventory: "1484",
-      grade: "یک",
-      price: 3659000,
-    },
-    {
-      id: 2,
-      name: "محصول دوم",
-      accountableInventory: "1574",
-      physicalInventory: "1484",
-      grade: "یک",
-      price: 3659000,
-    },
-    {
-      id: 3,
-      name: "محصول سوم",
-      accountableInventory: "1574",
-      physicalInventory: "1484",
-      grade: "یک",
-      price: 3659000,
-    },
-    {
-      id: 4,
-      name: "محصول سوم",
-      accountableInventory: "1574",
-      physicalInventory: "1484",
-      grade: "یک",
-      price: 3659000,
-    },
-  ]);
+  const [selectedProducts, setSelectedProducts] = useState<IProduct[]>([]);
+  const [productPropertiesShow, setProductPropertiesShow] =
+    useState<boolean>(false);
+  const [productToShow, setProductToShow] = useState<IProduct | null>(null);
+  // {
+  //   id: 1,
+  //   name: "محصول اول",
+  //   accountableInventory: "1574",
+  //   physicalInventory: "1484",
+  //   grade: "یک",
+  //   price: 3659000,
+  // },
+  // {
+  //   id: 2,
+  //   name: "محصول دوم",
+  //   accountableInventory: "1574",
+  //   physicalInventory: "1484",
+  //   grade: "یک",
+  //   price: 3659000,
+  // },
+  // {
+  //   id: 3,
+  //   name: "محصول سوم",
+  //   accountableInventory: "1574",
+  //   physicalInventory: "1484",
+  //   grade: "یک",
+  //   price: 3659000,
+  // },
+  // {
+  //   id: 4,
+  //   name: "محصول سوم",
+  //   accountableInventory: "1574",
+  //   physicalInventory: "1484",
+  //   grade: "یک",
+  //   price: 3659000,
+  // },
+
   const navigation = useNavigation<AppNavigationProp>();
   return (
     <View style={{ flex: 1, padding: 10, paddingTop: 50 }}>
@@ -136,10 +143,7 @@ const IssuingNewInvoice = () => {
         data={selectedProducts}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <ProductPreview
-            title={item.name}
-            orderCount={item.accountableInventory}
-          />
+          <ProductPreview title={item.title} orderCount={item.quantity} />
         )}
       />
       <View>
@@ -161,12 +165,19 @@ const IssuingNewInvoice = () => {
           />
         </View>
         <View style={styles.buttonsBox}>
-          <Button
+          <IconButton
+            text="ثبت"
+            iconName="done"
+            onPress={() => {}}
+            backgroundColor={colors.success}
+            flex={1}
+          />
+          {/* <Button
             title="ثبت"
             onPress={() => {}}
             style={{ width: "100%" }}
             color="success"
-          />
+          /> */}
           {/* <Button
             title="انصراف"
             onPress={() => {}}
@@ -198,10 +209,60 @@ const IssuingNewInvoice = () => {
             style={{ width: "100%" }}
           ></TextInput>
           <AppButton title="جستجو" onPress={() => {}} color="success" />
-          <FlatList
+          {/* <FlatList
             data={sampleProducts}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => <ProductItem product={item} />}
+          /> */}
+          <FlatList
+            data={productData}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item: product }) => (
+              <ProductCard
+                key={product.id}
+                title={product.title}
+                // titleIcon={{
+                //   name: "inventory",
+                //   color: colors.primary,
+                // }}
+                fields={[
+                  {
+                    icon: "qr-code",
+                    iconColor: colors.secondary,
+                    label: "کد محصول:",
+                    value: product.code,
+                  },
+                  {
+                    icon: "straighten",
+                    iconColor: colors.secondary,
+                    label: "مقدار:",
+                    value: product.quantity,
+                  },
+                  {
+                    icon: "palette",
+                    iconColor: colors.secondary,
+                    label: "طیف رنگی:",
+                    value: product.hasColorSpectrum ? "دارد" : "ندارد",
+                    valueColor: product.hasColorSpectrum
+                      ? colors.success
+                      : colors.danger,
+                  },
+                ]}
+                note={product.note}
+                noteConfig={{
+                  show: !!product.note && product.note !== "-",
+                  icon: "notes",
+                  iconColor: colors.secondary,
+                  label: "توضیحات:",
+                }}
+                qrConfig={{
+                  show: true,
+                  icon: "qr-code-2",
+                  iconSize: 36,
+                  iconColor: colors.secondary,
+                }}
+              />
+            )}
           />
         </View>
       </Modal>
@@ -221,11 +282,73 @@ const IssuingNewInvoice = () => {
             style={{ width: "100%" }}
           ></TextInput>
           <AppButton title="جستجو" onPress={() => {}} color="success" />
-          <FlatList
+          {/* <FlatList
             data={sampleProducts}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => <ProductItem product={item} />}
+          /> */}
+          <FlatList
+            data={productData}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item: product }) => (
+              <ProductCard
+                key={product.id}
+                title={product.title}
+                onPress={() => {
+                  setProductToShow(product);
+                  setProductPropertiesShow(true);
+                }}
+                // titleIcon={{
+                //   name: "inventory",
+                //   color: colors.primary,
+                // }}
+                fields={[
+                  {
+                    icon: "qr-code",
+                    iconColor: colors.secondary,
+                    label: "کد محصول:",
+                    value: product.code,
+                  },
+                  {
+                    icon: "straighten",
+                    iconColor: colors.secondary,
+                    label: "مقدار:",
+                    value: product.quantity,
+                  },
+                  {
+                    icon: "palette",
+                    iconColor: colors.secondary,
+                    label: "طیف رنگی:",
+                    value: product.hasColorSpectrum ? "دارد" : "ندارد",
+                    valueColor: product.hasColorSpectrum
+                      ? colors.success
+                      : colors.danger,
+                  },
+                ]}
+                note={product.note}
+                noteConfig={{
+                  show: !!product.note && product.note !== "-",
+                  icon: "notes",
+                  iconColor: colors.secondary,
+                  label: "توضیحات:",
+                }}
+                qrConfig={{
+                  show: true,
+                  icon: "qr-code-2",
+                  iconSize: 36,
+                  iconColor: colors.secondary,
+                }}
+              />
+            )}
           />
+          <Modal visible={productPropertiesShow} animationType="slide">
+            {productToShow && (
+              <ProductProperties
+                product={productToShow}
+                onClose={() => setProductPropertiesShow(false)}
+              />
+            )}
+          </Modal>
         </View>
       </Modal>
     </View>
