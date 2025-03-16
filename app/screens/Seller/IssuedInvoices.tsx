@@ -16,10 +16,14 @@ import {
 import { Feather, MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import colors from "../../config/colors";
-
+import ScreenHeader from "../../components/ScreenHeader";
 
 type FontWeight = "700" | "600" | "500" | "bold" | "semi-bold" | string;
-type StatusType = "صادر شده" | "ارجاع شده از صندوق" | "پیش فاکتور" | "درحال ویرایش";
+type StatusType =
+  | "صادر شده"
+  | "ارجاع شده از صندوق"
+  | "پیش فاکتور"
+  | "درحال ویرایش";
 
 interface InspectionItem {
   id: string;
@@ -134,7 +138,11 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
           end={{ x: 1, y: 0 }}
         >
           <View style={styles.headerTitleContainer}>
-            <MaterialIcons name={headerIcon} size={22} color={colors.white || "#fff"} />
+            <MaterialIcons
+              name={headerIcon}
+              size={22}
+              color={colors.white || "#fff"}
+            />
             <Text style={styles.purchaseHeaderText}>{headerTitle}</Text>
           </View>
 
@@ -151,7 +159,6 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
         </LinearGradient>
 
         <View style={styles.purchaseContent}>
-
           {date && (
             <View style={styles.purchaseRow}>
               <View style={styles.purchaseItem}>
@@ -265,7 +272,6 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
 };
 
 const IssuedInvoices: React.FC = () => {
-
   const [items, setItems] = useState<InspectionItem[]>([
     {
       id: "1",
@@ -277,7 +283,6 @@ const IssuedInvoices: React.FC = () => {
       sellerPhone: "09123583467",
       status: "صادر شده",
       description: "فاکتور به درخواست مشتری لغو شده است",
-
     },
     {
       id: "2",
@@ -301,7 +306,6 @@ const IssuedInvoices: React.FC = () => {
       sellerPhone: "09304052520",
       status: "پیش فاکتور",
       description: "فاکتور به درخواست مشتری لغو شده است",
-
     },
     {
       id: "4",
@@ -323,13 +327,13 @@ const IssuedInvoices: React.FC = () => {
     let filtered = items;
 
     if (activeTab === "issued") {
-      filtered = items.filter(item => item.status === "صادر شده");
+      filtered = items.filter((item) => item.status === "صادر شده");
     } else if (activeTab === "referred") {
-      filtered = items.filter(item => item.status === "ارجاع شده از صندوق");
+      filtered = items.filter((item) => item.status === "ارجاع شده از صندوق");
     } else if (activeTab === "quote") {
-      filtered = items.filter(item => item.status === "پیش فاکتور");
+      filtered = items.filter((item) => item.status === "پیش فاکتور");
     } else if (activeTab === "editing") {
-      filtered = items.filter(item => item.status === "درحال ویرایش");
+      filtered = items.filter((item) => item.status === "درحال ویرایش");
     }
 
     if (searchText) {
@@ -348,21 +352,21 @@ const IssuedInvoices: React.FC = () => {
     if (status === null) {
       return items.length;
     }
-    return items.filter(item => item.status === status).length;
+    return items.filter((item) => item.status === status).length;
   };
 
   const getColorsByStatus = (status?: StatusType): string[] => {
     switch (status) {
       case "صادر شده":
-        return ["#4CAF50", "#2E7D32"]; 
+        return ["#4CAF50", "#2E7D32"];
       case "ارجاع شده از صندوق":
         return ["#FFA726", "#EF6C00"];
       case "پیش فاکتور":
-        return ["#42A5F5", "#1565C0"]; 
+        return ["#42A5F5", "#1565C0"];
       case "درحال ویرایش":
-        return ["#EF5350", "#C62828"]; 
+        return ["#EF5350", "#C62828"];
       default:
-        return ["#9E9E9E", "#616161"]; 
+        return ["#9E9E9E", "#616161"];
     }
   };
 
@@ -384,173 +388,182 @@ const IssuedInvoices: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar backgroundColor="#f5f5f5" barStyle="dark-content" />
-      <View style={styles.container}>
-        <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="جستجو در فاکتورها..."
-            placeholderTextColor="#999"
-            value={searchText}
-            onChangeText={setSearchText}
-          />
-          <Feather name="search" size={20} color="#999" style={styles.searchIcon} />
-          {searchText ? (
-            <TouchableOpacity onPress={() => setSearchText("")}>
-              <Feather name="x" size={20} color="#999" />
-            </TouchableOpacity>
-          ) : null}
-        </View>
-
-        <View style={styles.tabContainer}>
-          <TouchableOpacity
-            style={[
-              styles.tab,
-              activeTab === "editing" && styles.editingActiveTab,
-            ]}
-            onPress={() => setActiveTab("editing")}
-          >
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === "editing" && styles.activeTabText,
-              ]}
-            >
-              درحال ویرایش
-            </Text>
-            <Text
-              style={[
-                styles.countText,
-                activeTab === "editing" && styles.activeCountText,
-                { color: "#EF5350" },
-              ]}
-            >
-              {convertToPersianNumbers(getCountByStatus("درحال ویرایش"))}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.tab,
-              activeTab === "referred" && styles.referredActiveTab,
-            ]}
-            onPress={() => setActiveTab("referred")}
-          >
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === "referred" && styles.activeTabText,
-              ]}
-            >
-              ارجاع از صندوق
-            </Text>
-            <Text
-              style={[
-                styles.countText,
-                activeTab === "referred" && styles.activeCountText,
-                { color: "#FFA500" },
-              ]}
-            >
-              {convertToPersianNumbers(getCountByStatus("ارجاع شده از صندوق"))}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.tab,
-              activeTab === "issued" && styles.issuedActiveTab,
-            ]}
-            onPress={() => setActiveTab("issued")}
-          >
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === "issued" && styles.activeTabText,
-              ]}
-            >
-              صادر شده
-            </Text>
-            <Text
-              style={[
-                styles.countText,
-                activeTab === "issued" && styles.activeCountText,
-                { color: "#4CAF50" },
-              ]}
-            >
-              {convertToPersianNumbers(getCountByStatus("صادر شده"))}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.tab,
-              activeTab === "quote" && styles.quoteActiveTab,
-            ]}
-            onPress={() => setActiveTab("quote")}
-          >
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === "quote" && styles.activeTabText,
-              ]}
-            >
-              پیش فاکتور
-            </Text>
-            <Text
-              style={[
-                styles.countText,
-                activeTab === "quote" && styles.activeCountText,
-                { color: "#3498db" },
-              ]}
-            >
-              {convertToPersianNumbers(getCountByStatus("پیش فاکتور"))}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.tab, activeTab === "all" && styles.allActiveTab]}
-            onPress={() => setActiveTab("all")}
-          >
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === "all" && styles.activeTabText,
-              ]}
-            >
-              همه
-            </Text>
-            <Text
-              style={[
-                styles.countText,
-                activeTab === "all" && styles.activeCountText,
-                { color: "#6B7280" },
-              ]}
-            >
-              {convertToPersianNumbers(getCountByStatus(null))}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        
-        <View style={styles.listContainer}>
-          {getFilteredItems().length > 0 ? (
-            <FlatList
-              data={getFilteredItems()}
-              renderItem={renderItem}
-              keyExtractor={(item) => item.id}
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ padding: 10 }}
+    <>
+      <ScreenHeader title="فاکتورها" />
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar backgroundColor="#f5f5f5" barStyle="dark-content" />
+        <View style={styles.container}>
+          <View style={styles.searchContainer}>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="جستجو در فاکتورها..."
+              placeholderTextColor="#999"
+              value={searchText}
+              onChangeText={setSearchText}
             />
-          ) : (
-            <View style={styles.emptyContainer}>
-              <Feather name="clipboard" size={64} color="#9CA3AF" />
-              <Text style={styles.emptyText}>موردی یافت نشد</Text>
-            </View>
-          )}
+            <Feather
+              name="search"
+              size={20}
+              color="#999"
+              style={styles.searchIcon}
+            />
+            {searchText ? (
+              <TouchableOpacity onPress={() => setSearchText("")}>
+                <Feather name="x" size={20} color="#999" />
+              </TouchableOpacity>
+            ) : null}
+          </View>
+
+          <View style={styles.tabContainer}>
+            <TouchableOpacity
+              style={[
+                styles.tab,
+                activeTab === "editing" && styles.editingActiveTab,
+              ]}
+              onPress={() => setActiveTab("editing")}
+            >
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === "editing" && styles.activeTabText,
+                ]}
+              >
+                درحال ویرایش
+              </Text>
+              <Text
+                style={[
+                  styles.countText,
+                  activeTab === "editing" && styles.activeCountText,
+                  { color: "#EF5350" },
+                ]}
+              >
+                {convertToPersianNumbers(getCountByStatus("درحال ویرایش"))}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.tab,
+                activeTab === "referred" && styles.referredActiveTab,
+              ]}
+              onPress={() => setActiveTab("referred")}
+            >
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === "referred" && styles.activeTabText,
+                ]}
+              >
+                ارجاع از صندوق
+              </Text>
+              <Text
+                style={[
+                  styles.countText,
+                  activeTab === "referred" && styles.activeCountText,
+                  { color: "#FFA500" },
+                ]}
+              >
+                {convertToPersianNumbers(
+                  getCountByStatus("ارجاع شده از صندوق")
+                )}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.tab,
+                activeTab === "issued" && styles.issuedActiveTab,
+              ]}
+              onPress={() => setActiveTab("issued")}
+            >
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === "issued" && styles.activeTabText,
+                ]}
+              >
+                صادر شده
+              </Text>
+              <Text
+                style={[
+                  styles.countText,
+                  activeTab === "issued" && styles.activeCountText,
+                  { color: "#4CAF50" },
+                ]}
+              >
+                {convertToPersianNumbers(getCountByStatus("صادر شده"))}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.tab,
+                activeTab === "quote" && styles.quoteActiveTab,
+              ]}
+              onPress={() => setActiveTab("quote")}
+            >
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === "quote" && styles.activeTabText,
+                ]}
+              >
+                پیش فاکتور
+              </Text>
+              <Text
+                style={[
+                  styles.countText,
+                  activeTab === "quote" && styles.activeCountText,
+                  { color: "#3498db" },
+                ]}
+              >
+                {convertToPersianNumbers(getCountByStatus("پیش فاکتور"))}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.tab, activeTab === "all" && styles.allActiveTab]}
+              onPress={() => setActiveTab("all")}
+            >
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === "all" && styles.activeTabText,
+                ]}
+              >
+                همه
+              </Text>
+              <Text
+                style={[
+                  styles.countText,
+                  activeTab === "all" && styles.activeCountText,
+                  { color: "#6B7280" },
+                ]}
+              >
+                {convertToPersianNumbers(getCountByStatus(null))}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.listContainer}>
+            {getFilteredItems().length > 0 ? (
+              <FlatList
+                data={getFilteredItems()}
+                renderItem={renderItem}
+                keyExtractor={(item) => item.id}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ padding: 10 }}
+              />
+            ) : (
+              <View style={styles.emptyContainer}>
+                <Feather name="clipboard" size={64} color="#9CA3AF" />
+                <Text style={styles.emptyText}>موردی یافت نشد</Text>
+              </View>
+            )}
+          </View>
         </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </>
   );
 };
 
@@ -558,7 +571,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: "#f5f5f5",
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+    // paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
   container: {
     flex: 1,
@@ -770,7 +783,7 @@ const styles = StyleSheet.create({
   noteContainer: {
     flexDirection: "row-reverse",
     alignItems: "flex-start",
-    width: '100%',
+    width: "100%",
   },
   noteTextContainer: {
     flexDirection: "column",
@@ -783,7 +796,7 @@ const styles = StyleSheet.create({
     fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
     color: "#757575",
     marginBottom: 4,
-    alignSelf: 'flex-end',
+    alignSelf: "flex-end",
   },
   noteContent: {
     fontSize: 15,
@@ -791,7 +804,7 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: "right",
     color: "#212121",
-    width: '100%',
+    width: "100%",
   },
   callButtonCircle: {
     width: 40,

@@ -16,6 +16,7 @@ import { MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import IconButtonSquare from "../../../components/IconButtonSquare";
 import SelectionDialog from "../../../components/SelectionDialog";
 import AppModal from "../../../components/AppModal";
+import ScreenHeader from "../../../components/ScreenHeader";
 
 export const InputContainer: React.FC<{
   title: string;
@@ -71,273 +72,275 @@ const AddNewShop = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <ScrollView>
-        {/* All the previous input containers remain the same */}
-        <InputContainer title="مشخصات فردی">
-          <AppTextInput
-            autoCapitalize="none"
-            icon="person"
-            autoCorrect={false}
-            keyboardType="default"
-            placeholder="نام و نام خانوادگی"
-            onChangeText={() => {}}
-          ></AppTextInput>
-          <AppTextInput
-            autoCapitalize="none"
-            icon="person-4"
-            autoCorrect={false}
-            keyboardType="default"
-            placeholder="نام پدر"
-            onChangeText={() => {}}
-          ></AppTextInput>
-          <AppTextInput
-            autoCapitalize="none"
-            icon="location-on"
-            autoCorrect={false}
-            keyboardType="default"
-            placeholder="محل تولد"
-            onChangeText={() => {}}
-          ></AppTextInput>
+    <>
+      <ScreenHeader title="ثبت فروشگاه جدید" />
+      <View style={styles.container}>
+        <ScrollView>
+          {/* All the previous input containers remain the same */}
+          <InputContainer title="مشخصات فردی">
+            <AppTextInput
+              autoCapitalize="none"
+              icon="person"
+              autoCorrect={false}
+              keyboardType="default"
+              placeholder="نام و نام خانوادگی"
+              onChangeText={() => {}}
+            ></AppTextInput>
+            <AppTextInput
+              autoCapitalize="none"
+              icon="person-4"
+              autoCorrect={false}
+              keyboardType="default"
+              placeholder="نام پدر"
+              onChangeText={() => {}}
+            ></AppTextInput>
+            <AppTextInput
+              autoCapitalize="none"
+              icon="location-on"
+              autoCorrect={false}
+              keyboardType="default"
+              placeholder="محل تولد"
+              onChangeText={() => {}}
+            ></AppTextInput>
 
-          <DatePickerField
-            label="تاریخ تولد"
-            onDateChange={(date) => {}}
-            date="1400/01/01"
-          />
-
-          <AppTextInput
-            autoCapitalize="none"
-            icon="numbers"
-            autoCorrect={false}
-            keyboardType="number-pad"
-            placeholder="کد ملی"
-            onChangeText={() => {}}
-          ></AppTextInput>
-          <AppTextInput
-            autoCapitalize="none"
-            icon="phone-android"
-            autoCorrect={false}
-            keyboardType="number-pad"
-            placeholder="شماره موبایل"
-            onChangeText={() => {}}
-          ></AppTextInput>
-          <AppTextInput
-            autoCapitalize="none"
-            icon="local-phone"
-            autoCorrect={false}
-            keyboardType="number-pad"
-            placeholder="شماره تلفن"
-            onChangeText={() => {}}
-          ></AppTextInput>
-        </InputContainer>
-
-        {/* Other input containers remain the same */}
-        <InputContainer title="وضعیت تاهل">
-          <SelectionDialog
-            placeholderText="وضعیت تاهل"
-            title="وضعیت تاهل"
-            options={["متاهل", "مجرد"]}
-            onSelect={(value) => {}}
-            iconName="person"
-          />
-          <View></View>
-        </InputContainer>
-
-        <InputContainer title="مشخصات فروشگاه">
-          <AppTextInput
-            autoCapitalize="none"
-            icon="shopping-bag"
-            autoCorrect={false}
-            keyboardType="default"
-            placeholder="نام فروشگاه"
-            onChangeText={() => {}}
-          ></AppTextInput>
-          <AppTextInput
-            autoCapitalize="none"
-            icon="shop"
-            autoCorrect={false}
-            keyboardType="default"
-            placeholder="آدرس فروشگاه"
-            onChangeText={() => {}}
-          ></AppTextInput>
-          <AppTextInput
-            autoCapitalize="none"
-            icon="shop"
-            autoCorrect={false}
-            keyboardType="default"
-            placeholder="متراژ فروشگاه"
-            onChangeText={() => {}}
-          ></AppTextInput>
-          <AppTextInput
-            autoCapitalize="none"
-            icon="shop"
-            autoCorrect={false}
-            keyboardType="default"
-            placeholder="مدت زمان فعالیت (سال)"
-            onChangeText={() => {}}
-          ></AppTextInput>
-          <AppTextInput
-            autoCapitalize="none"
-            icon="shop"
-            autoCorrect={false}
-            keyboardType="default"
-            placeholder="مالکیت فروشگاه"
-            onChangeText={() => {}}
-          ></AppTextInput>
-          <SelectionDialog
-            placeholderText="پانل ریلی دارد یا خیر"
-            title="پانل ریلی دارد یا خیر"
-            options={["بله", "خیر"]}
-            onSelect={(value) => {}}
-            iconName="shop"
-          />
-          <AppTextInput
-            autoCapitalize="none"
-            icon="shop"
-            autoCorrect={false}
-            keyboardType="default"
-            placeholder="تعداد دکور زنده"
-            onChangeText={() => {}}
-          ></AppTextInput>
-          <AppTextInput
-            autoCapitalize="none"
-            icon="shop"
-            autoCorrect={false}
-            keyboardType="default"
-            placeholder="ثبت عکس های فروشگاه"
-            onChangeText={() => {}}
-          ></AppTextInput>
-        </InputContainer>
-        <InputContainer title="مشخصات انبار">
-          <AppTextInput
-            autoCapitalize="none"
-            icon="shop"
-            autoCorrect={false}
-            keyboardType="default"
-            placeholder="آدرس انبار"
-            onChangeText={() => {}}
-          ></AppTextInput>
-          <AppTextInput
-            autoCapitalize="none"
-            icon="shop"
-            autoCorrect={false}
-            keyboardType="default"
-            placeholder="متراژ انبار"
-            onChangeText={() => {}}
-          ></AppTextInput>
-          <AppTextInput
-            autoCapitalize="none"
-            icon="shop"
-            autoCorrect={false}
-            keyboardType="default"
-            placeholder="تعداد لیفتراک"
-            onChangeText={() => {}}
-          ></AppTextInput>
-          <AppTextInput
-            autoCapitalize="none"
-            icon="shop"
-            autoCorrect={false}
-            keyboardType="default"
-            placeholder="متراژ دپویی"
-            onChangeText={() => {}}
-          ></AppTextInput>
-          <AppTextInput
-            autoCapitalize="none"
-            icon="shop"
-            autoCorrect={false}
-            keyboardType="default"
-            placeholder="مالکیت انبار"
-            onChangeText={() => {}}
-          ></AppTextInput>
-          <AppTextInput
-            autoCapitalize="none"
-            icon="shop"
-            autoCorrect={false}
-            keyboardType="default"
-            placeholder="ثبت عکس های انبار"
-            onChangeText={() => {}}
-          ></AppTextInput>
-        </InputContainer>
-        <InputContainer title="زمینه فعالیت فروشگاه">
-          <SelectionDialog
-            placeholderText="شبکه فروش دارد یا خیر"
-            title="شبکه فروش دارد یا خیر"
-            iconName="cell-tower"
-            options={["بله", "خیر"]}
-            onSelect={(value) => {}}
-          />
-          <SelectionDialog
-            placeholderText="شریک دارد یا خیر"
-            title="شریک دارد یا خیر"
-            iconName="group"
-            options={["بله", "خیر"]}
-            onSelect={(value) => {}}
-          />
-
-          <AppTextInput
-            autoCapitalize="none"
-            icon="currency-exchange"
-            autoCorrect={false}
-            keyboardType="default"
-            placeholder="سیستم مالی"
-            onChangeText={() => {}}
-          ></AppTextInput>
-          <AppTextInput
-            autoCapitalize="none"
-            icon="pin-drop"
-            autoCorrect={false}
-            keyboardType="default"
-            placeholder="ثبت موقعیت جغرافیایی"
-            onChangeText={() => {}}
-          ></AppTextInput>
-        </InputContainer>
-
-        <InputContainer title="خلاصه مذاکرات انجام شده">
-          <View style={styles.recordingsWrapper}>
-            <IconButton
-              text="ضبط صدا"
-              iconName="record-voice-over"
-              backgroundColor={colors.primaryLight}
-              onPress={() => navigation.navigate("VoiceRecording")}
-              //   gradient={true}
-              //   iconSize={28}
-              //   style={styles.voiceButton}
+            <DatePickerField
+              label="تاریخ تولد"
+              onDateChange={(date) => {}}
+              date="1400/01/01"
             />
 
-            {recordings.length > 0 && (
-              <View style={styles.recordingsList}>
-                <AppText style={styles.recordingsTitle}>
-                  صداهای ضبط شده ({recordings.length})
-                </AppText>
+            <AppTextInput
+              autoCapitalize="none"
+              icon="numbers"
+              autoCorrect={false}
+              keyboardType="number-pad"
+              placeholder="کد ملی"
+              onChangeText={() => {}}
+            ></AppTextInput>
+            <AppTextInput
+              autoCapitalize="none"
+              icon="phone-android"
+              autoCorrect={false}
+              keyboardType="number-pad"
+              placeholder="شماره موبایل"
+              onChangeText={() => {}}
+            ></AppTextInput>
+            <AppTextInput
+              autoCapitalize="none"
+              icon="local-phone"
+              autoCorrect={false}
+              keyboardType="number-pad"
+              placeholder="شماره تلفن"
+              onChangeText={() => {}}
+            ></AppTextInput>
+          </InputContainer>
 
-                {recordings.map((item, index) => (
-                  <View key={index} style={styles.recordingItem}>
-                    <FontAwesome5
-                      name="file-audio"
-                      size={18}
-                      color={colors.primary}
-                    />
-                    <AppText style={styles.recordingText}>
-                      ضبط {index + 1} - {formatTime(item.duration)}
-                    </AppText>
-                  </View>
-                ))}
-              </View>
-            )}
-          </View>
+          {/* Other input containers remain the same */}
+          <InputContainer title="وضعیت تاهل">
+            <SelectionDialog
+              placeholderText="وضعیت تاهل"
+              title="وضعیت تاهل"
+              options={["متاهل", "مجرد"]}
+              onSelect={(value) => {}}
+              iconName="person"
+            />
+            <View></View>
+          </InputContainer>
 
-          <View style={{ marginVertical: 7 }}></View>
-          <AppTextInput
-            autoCorrect={false}
-            placeholder="یادداشت متنی"
-            keyboardType="default"
-            multiline
-            numberOfLines={10}
-            height={200}
-          />
+          <InputContainer title="مشخصات فروشگاه">
+            <AppTextInput
+              autoCapitalize="none"
+              icon="shopping-bag"
+              autoCorrect={false}
+              keyboardType="default"
+              placeholder="نام فروشگاه"
+              onChangeText={() => {}}
+            ></AppTextInput>
+            <AppTextInput
+              autoCapitalize="none"
+              icon="shop"
+              autoCorrect={false}
+              keyboardType="default"
+              placeholder="آدرس فروشگاه"
+              onChangeText={() => {}}
+            ></AppTextInput>
+            <AppTextInput
+              autoCapitalize="none"
+              icon="shop"
+              autoCorrect={false}
+              keyboardType="default"
+              placeholder="متراژ فروشگاه"
+              onChangeText={() => {}}
+            ></AppTextInput>
+            <AppTextInput
+              autoCapitalize="none"
+              icon="shop"
+              autoCorrect={false}
+              keyboardType="default"
+              placeholder="مدت زمان فعالیت (سال)"
+              onChangeText={() => {}}
+            ></AppTextInput>
+            <AppTextInput
+              autoCapitalize="none"
+              icon="shop"
+              autoCorrect={false}
+              keyboardType="default"
+              placeholder="مالکیت فروشگاه"
+              onChangeText={() => {}}
+            ></AppTextInput>
+            <SelectionDialog
+              placeholderText="پانل ریلی دارد یا خیر"
+              title="پانل ریلی دارد یا خیر"
+              options={["بله", "خیر"]}
+              onSelect={(value) => {}}
+              iconName="shop"
+            />
+            <AppTextInput
+              autoCapitalize="none"
+              icon="shop"
+              autoCorrect={false}
+              keyboardType="default"
+              placeholder="تعداد دکور زنده"
+              onChangeText={() => {}}
+            ></AppTextInput>
+            <AppTextInput
+              autoCapitalize="none"
+              icon="shop"
+              autoCorrect={false}
+              keyboardType="default"
+              placeholder="ثبت عکس های فروشگاه"
+              onChangeText={() => {}}
+            ></AppTextInput>
+          </InputContainer>
+          <InputContainer title="مشخصات انبار">
+            <AppTextInput
+              autoCapitalize="none"
+              icon="shop"
+              autoCorrect={false}
+              keyboardType="default"
+              placeholder="آدرس انبار"
+              onChangeText={() => {}}
+            ></AppTextInput>
+            <AppTextInput
+              autoCapitalize="none"
+              icon="shop"
+              autoCorrect={false}
+              keyboardType="default"
+              placeholder="متراژ انبار"
+              onChangeText={() => {}}
+            ></AppTextInput>
+            <AppTextInput
+              autoCapitalize="none"
+              icon="shop"
+              autoCorrect={false}
+              keyboardType="default"
+              placeholder="تعداد لیفتراک"
+              onChangeText={() => {}}
+            ></AppTextInput>
+            <AppTextInput
+              autoCapitalize="none"
+              icon="shop"
+              autoCorrect={false}
+              keyboardType="default"
+              placeholder="متراژ دپویی"
+              onChangeText={() => {}}
+            ></AppTextInput>
+            <AppTextInput
+              autoCapitalize="none"
+              icon="shop"
+              autoCorrect={false}
+              keyboardType="default"
+              placeholder="مالکیت انبار"
+              onChangeText={() => {}}
+            ></AppTextInput>
+            <AppTextInput
+              autoCapitalize="none"
+              icon="shop"
+              autoCorrect={false}
+              keyboardType="default"
+              placeholder="ثبت عکس های انبار"
+              onChangeText={() => {}}
+            ></AppTextInput>
+          </InputContainer>
+          <InputContainer title="زمینه فعالیت فروشگاه">
+            <SelectionDialog
+              placeholderText="شبکه فروش دارد یا خیر"
+              title="شبکه فروش دارد یا خیر"
+              iconName="cell-tower"
+              options={["بله", "خیر"]}
+              onSelect={(value) => {}}
+            />
+            <SelectionDialog
+              placeholderText="شریک دارد یا خیر"
+              title="شریک دارد یا خیر"
+              iconName="group"
+              options={["بله", "خیر"]}
+              onSelect={(value) => {}}
+            />
 
-          {/* <IconButton
+            <AppTextInput
+              autoCapitalize="none"
+              icon="currency-exchange"
+              autoCorrect={false}
+              keyboardType="default"
+              placeholder="سیستم مالی"
+              onChangeText={() => {}}
+            ></AppTextInput>
+            <AppTextInput
+              autoCapitalize="none"
+              icon="pin-drop"
+              autoCorrect={false}
+              keyboardType="default"
+              placeholder="ثبت موقعیت جغرافیایی"
+              onChangeText={() => {}}
+            ></AppTextInput>
+          </InputContainer>
+
+          <InputContainer title="خلاصه مذاکرات انجام شده">
+            <View style={styles.recordingsWrapper}>
+              <IconButton
+                text="ضبط صدا"
+                iconName="record-voice-over"
+                backgroundColor={colors.primaryLight}
+                onPress={() => navigation.navigate("VoiceRecording")}
+                //   gradient={true}
+                //   iconSize={28}
+                //   style={styles.voiceButton}
+              />
+
+              {recordings.length > 0 && (
+                <View style={styles.recordingsList}>
+                  <AppText style={styles.recordingsTitle}>
+                    صداهای ضبط شده ({recordings.length})
+                  </AppText>
+
+                  {recordings.map((item, index) => (
+                    <View key={index} style={styles.recordingItem}>
+                      <FontAwesome5
+                        name="file-audio"
+                        size={18}
+                        color={colors.primary}
+                      />
+                      <AppText style={styles.recordingText}>
+                        ضبط {index + 1} - {formatTime(item.duration)}
+                      </AppText>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
+
+            <View style={{ marginVertical: 7 }}></View>
+            <AppTextInput
+              autoCorrect={false}
+              placeholder="یادداشت متنی"
+              keyboardType="default"
+              multiline
+              numberOfLines={10}
+              height={200}
+            />
+
+            {/* <IconButton
             text="یادداشت متنی"
             iconName="text-snippet"
             backgroundColor={colors.primaryLight}
@@ -345,8 +348,8 @@ const AddNewShop = () => {
             // gradient={true}
             // style={styles.textButton}
           /> */}
-        </InputContainer>
-        {/* <AppModal
+          </InputContainer>
+          {/* <AppModal
           visible={textNoteShow}
           onClose={() => setTextShowNote(false)}
           onConfirm={() => setTextShowNote(false)}
@@ -362,23 +365,24 @@ const AddNewShop = () => {
           }
         /> */}
 
-        <IconButton
-          text="ثبت اطلاعات"
-          iconName="done"
-          onPress={() => {
-            Alert.alert("موفق", "اطلاعات با موفقیت ثبت شد");
-          }}
-          backgroundColor={colors.success}
-          flex={1}
-          style={styles.submitButton}
-        />
-      </ScrollView>
-    </View>
+          <IconButton
+            text="ثبت اطلاعات"
+            iconName="done"
+            onPress={() => {
+              Alert.alert("موفق", "اطلاعات با موفقیت ثبت شد");
+            }}
+            backgroundColor={colors.success}
+            flex={1}
+            style={styles.submitButton}
+          />
+        </ScrollView>
+      </View>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, paddingTop: 50 },
+  container: { flex: 1, padding: 20 },
   inputContainer: {
     borderWidth: 1,
     borderRadius: 12,

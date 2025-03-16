@@ -48,7 +48,6 @@ export type RootStackParamList = {
   SupplyRequest: undefined;
   SupplyRequestList: undefined;
   IssuedInvoices: undefined;
-  StatusFilterScreen: undefined;
 
   CashierHome: undefined;
   ReceiveNewInvoice: undefined;
@@ -56,6 +55,7 @@ export type RootStackParamList = {
   ClosedInvoices: undefined;
   SuspendedInvoices: undefined;
   CheckCalculator: undefined;
+  StatusFilterScreen: undefined;
 
   MarketerHome: undefined;
   B2BFieldMarketer: undefined;

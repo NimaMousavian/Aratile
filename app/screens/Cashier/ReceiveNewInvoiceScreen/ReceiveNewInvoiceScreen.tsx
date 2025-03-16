@@ -19,8 +19,9 @@ import colors from "../../../config/colors";
 import IconButtonSquare from "../../../components/IconButtonSquare";
 import ProductCard from "../../../components/ProductCard";
 import DynamicModal from "../../../components/DynamicModal";
-import IconButton from "../../../components/IconButton"; 
+import IconButton from "../../../components/IconButton";
 import PurchaseInfoCard from "../../../components/PurchaseInfoCard";
+import ScreenHeader from "../../../components/ScreenHeader";
 interface PurchaseData {
   buyer: {
     name: string;
@@ -58,11 +59,11 @@ export const getFontFamily = (baseFont: string, weight: FontWeight): string => {
 const purchaseData: PurchaseData = {
   buyer: {
     name: "نمت",
-    phone: "09353130587"
+    phone: "09353130587",
   },
   seller: {
     name: "زهره نورانی",
-    phone: "09137305578"
+    phone: "09137305578",
   },
   address: "ایران، تهران",
   note: "لطفا فاکتور صادر نشود",
@@ -451,6 +452,7 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
 
   return (
     <>
+      <ScreenHeader title="ثبت فاکتور جدید" />
       <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
       <SafeAreaView style={styles.safeAreaTop} />
       <SafeAreaView style={styles.safeAreaBottom}>
@@ -480,7 +482,6 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
               </View>
             </View>
 
-
             <PurchaseInfoCard
               headerTitle="اطلاعات خرید"
               headerIcon="person"
@@ -490,7 +491,6 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
               note={purchaseData.note}
               gradientColors={[colors.secondary, colors.primary]}
             />
-
 
             <View style={styles.productsSection}>
               <View style={styles.sectionHeader}>
@@ -633,7 +633,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 16,
-    paddingTop: Platform.OS === "android" ? 60 : 20,
+    // paddingTop: Platform.OS === "android" ? 60 : 20,
   },
   androidContentAdjustment: {
     marginTop: 0,

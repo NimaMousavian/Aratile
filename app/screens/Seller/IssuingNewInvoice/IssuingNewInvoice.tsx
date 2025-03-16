@@ -22,6 +22,7 @@ import ProductCard from "../../../components/ProductCard";
 import { productData } from "../../Cashier/ReceiveNewInvoiceScreen/ReceiveNewInvoiceScreen";
 import ProductProperties from "./ProductProperties";
 import IconButton from "../../../components/IconButton";
+import ScreenHeader from "../../../components/ScreenHeader";
 
 // const sampleProducts: IProduct[] = [
 //   {
@@ -102,86 +103,88 @@ const IssuingNewInvoice = () => {
 
   const navigation = useNavigation<AppNavigationProp>();
   return (
-    <View style={{ flex: 1, padding: 10, paddingTop: 50 }}>
-      {/* <TouchableOpacity
+    <>
+      <ScreenHeader title="ثبت فاکتور جدید" />
+      <View style={{ flex: 1, padding: 10, paddingTop: 20 }}>
+        {/* <TouchableOpacity
         style={styles.addNewCustomerBox}
         onPress={() => setShowCustomerModal(true)}
       >
         <MaterialIcons name="add-circle" size={35} color={colors.primary} />
         <Text style={{ fontSize: 18 }}>افزودن خریدار جدید</Text>
       </TouchableOpacity> */}
-      <View
-        style={{
-          flexDirection: "row-reverse",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
+        <View
+          style={{
+            flexDirection: "row-reverse",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <TextInput
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="default"
+            placeholder="جستجوی خریدار"
+            onChangeText={() => {}}
+            width={"75%"}
+            containerStyle={{ marginBottom: 0 }}
+          ></TextInput>
+          <Button
+            title="جستجو"
+            onPress={() => navigation.navigate("CustomerInfo")}
+          />
+        </View>
+
+        <FlatList
+          data={selectedProducts}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
+            <ProductPreview title={item.title} orderCount={item.quantity} />
+          )}
+        />
         <TextInput
           autoCapitalize="none"
           autoCorrect={false}
           keyboardType="default"
-          placeholder="جستجوی خریدار"
+          placeholder="توضیحات فاکتور"
           onChangeText={() => {}}
-          width={"75%"}
-          containerStyle={{ marginBottom: 0 }}
+          numberOfLines={4}
+          multiline={true}
+          height={150}
         ></TextInput>
-        <Button
-          title="جستجو"
-          onPress={() => navigation.navigate("CustomerInfo")}
-        />
-      </View>
-
-      <FlatList
-        data={selectedProducts}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <ProductPreview title={item.title} orderCount={item.quantity} />
-        )}
-      />
-      <TextInput
-        autoCapitalize="none"
-        autoCorrect={false}
-        keyboardType="default"
-        placeholder="توضیحات فاکتور"
-        onChangeText={() => {}}
-        numberOfLines={4}
-        multiline={true}
-        height={150}
-      ></TextInput>
-      <View>
-        <View style={styles.buttonsBox}>
-          <Button
-            title="دوربین"
-            onPress={() => navigation.navigate("BarCodeScanner")}
-            style={{ width: "30%" }}
-          />
-          <Button
-            title="کد کالا"
-            onPress={() => setShowProductCodeModal(true)}
-            style={{ width: "30%" }}
-          />
-          <Button
-            title=" نام کالا"
-            onPress={() => setShowProductNameModal(true)}
-            style={{ width: "30%" }}
-          />
-        </View>
-        <View style={styles.buttonsBox}>
-          <IconButton
-            text="ثبت"
-            iconName="done"
-            onPress={() => {}}
-            backgroundColor={colors.success}
-            flex={1}
-          />
-          {/* <Button
+        <View>
+          <View style={styles.buttonsBox}>
+            <Button
+              title="دوربین"
+              onPress={() => navigation.navigate("BarCodeScanner")}
+              style={{ width: "30%" }}
+            />
+            <Button
+              title="کد کالا"
+              onPress={() => setShowProductCodeModal(true)}
+              style={{ width: "30%" }}
+            />
+            <Button
+              title=" نام کالا"
+              onPress={() => setShowProductNameModal(true)}
+              style={{ width: "30%" }}
+            />
+          </View>
+          <View style={styles.buttonsBox}>
+            <IconButton
+              text="ثبت"
+              iconName="done"
+              onPress={() => {}}
+              backgroundColor={colors.success}
+              flex={1}
+            />
+            {/* <Button
             title="ثبت"
             onPress={() => {}}
             style={{ width: "100%" }}
             color="success"
           /> */}
-          {/* <Button
+            {/* <Button
             title="انصراف"
             onPress={() => {}}
             style={{ width: "30%" }}
@@ -193,186 +196,195 @@ const IssuingNewInvoice = () => {
             style={{ width: "30%" }}
             color="danger"
           /> */}
+          </View>
         </View>
-      </View>
 
-      <Modal visible={showProductCodeModal} animationType="slide">
-        <View style={{ padding: 20 }}>
-          <Button
-            title="بستن"
-            onPress={() => setShowProductCodeModal(false)}
-            color="danger"
-          />
-          <View
-            style={{
-              flexDirection: "row-reverse",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <TextInput
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="default"
-              placeholder="کد کالا را وارد کنید"
-              onChangeText={() => {}}
-              width={"75%"}
-              containerStyle={{ marginBottom: 0 }}
-            ></TextInput>
-            <AppButton title="جستجو" onPress={() => {}} color="primaryLight" />
-          </View>
-          {/* <FlatList
+        <Modal visible={showProductCodeModal} animationType="slide">
+          <View style={{ padding: 20 }}>
+            <Button
+              title="بستن"
+              onPress={() => setShowProductCodeModal(false)}
+              color="danger"
+            />
+            <View
+              style={{
+                flexDirection: "row-reverse",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <TextInput
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="default"
+                placeholder="کد کالا را وارد کنید"
+                onChangeText={() => {}}
+                width={"75%"}
+                containerStyle={{ marginBottom: 0 }}
+              ></TextInput>
+              <AppButton
+                title="جستجو"
+                onPress={() => {}}
+                color="primaryLight"
+              />
+            </View>
+            {/* <FlatList
             data={sampleProducts}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => <ProductItem product={item} />}
           /> */}
-          <FlatList
-            data={productData}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item: product }) => (
-              <ProductCard
-                key={product.id}
-                title={product.title}
-                // titleIcon={{
-                //   name: "inventory",
-                //   color: colors.primary,
-                // }}
-                fields={[
-                  {
-                    icon: "qr-code",
+            <FlatList
+              data={productData}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item: product }) => (
+                <ProductCard
+                  key={product.id}
+                  title={product.title}
+                  // titleIcon={{
+                  //   name: "inventory",
+                  //   color: colors.primary,
+                  // }}
+                  fields={[
+                    {
+                      icon: "qr-code",
+                      iconColor: colors.secondary,
+                      label: "کد محصول:",
+                      value: product.code,
+                    },
+                    {
+                      icon: "straighten",
+                      iconColor: colors.secondary,
+                      label: "مقدار:",
+                      value: product.quantity,
+                    },
+                    {
+                      icon: "palette",
+                      iconColor: colors.secondary,
+                      label: "طیف رنگی:",
+                      value: product.hasColorSpectrum ? "دارد" : "ندارد",
+                      valueColor: product.hasColorSpectrum
+                        ? colors.success
+                        : colors.danger,
+                    },
+                  ]}
+                  note={product.note}
+                  noteConfig={{
+                    show: !!product.note && product.note !== "-",
+                    icon: "notes",
                     iconColor: colors.secondary,
-                    label: "کد محصول:",
-                    value: product.code,
-                  },
-                  {
-                    icon: "straighten",
+                    label: "توضیحات:",
+                  }}
+                  qrConfig={{
+                    show: true,
+                    icon: "qr-code-2",
+                    iconSize: 36,
                     iconColor: colors.secondary,
-                    label: "مقدار:",
-                    value: product.quantity,
-                  },
-                  {
-                    icon: "palette",
-                    iconColor: colors.secondary,
-                    label: "طیف رنگی:",
-                    value: product.hasColorSpectrum ? "دارد" : "ندارد",
-                    valueColor: product.hasColorSpectrum
-                      ? colors.success
-                      : colors.danger,
-                  },
-                ]}
-                note={product.note}
-                noteConfig={{
-                  show: !!product.note && product.note !== "-",
-                  icon: "notes",
-                  iconColor: colors.secondary,
-                  label: "توضیحات:",
-                }}
-                qrConfig={{
-                  show: true,
-                  icon: "qr-code-2",
-                  iconSize: 36,
-                  iconColor: colors.secondary,
-                }}
-              />
-            )}
-          />
-        </View>
-      </Modal>
-      <Modal visible={showProductNameModal} animationType="slide">
-        <View style={{ padding: 20, flex: 1 }}>
-          <Button
-            title="بستن"
-            onPress={() => setShowProductNameModal(false)}
-            color="danger"
-          />
-          <View
-            style={{
-              flexDirection: "row-reverse",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <TextInput
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="default"
-              placeholder="نام کالا را وارد کنید"
-              onChangeText={() => {}}
-              containerStyle={{ marginBottom: 0 }}
-              width={"75%"}
-            ></TextInput>
-            <AppButton title="جستجو" onPress={() => {}} color="primaryLight" />
+                  }}
+                />
+              )}
+            />
           </View>
-          {/* <FlatList
+        </Modal>
+        <Modal visible={showProductNameModal} animationType="slide">
+          <View style={{ padding: 20, flex: 1 }}>
+            <Button
+              title="بستن"
+              onPress={() => setShowProductNameModal(false)}
+              color="danger"
+            />
+            <View
+              style={{
+                flexDirection: "row-reverse",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <TextInput
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="default"
+                placeholder="نام کالا را وارد کنید"
+                onChangeText={() => {}}
+                containerStyle={{ marginBottom: 0 }}
+                width={"75%"}
+              ></TextInput>
+              <AppButton
+                title="جستجو"
+                onPress={() => {}}
+                color="primaryLight"
+              />
+            </View>
+            {/* <FlatList
             data={sampleProducts}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => <ProductItem product={item} />}
           /> */}
-          <FlatList
-            data={productData}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item: product }) => (
-              <ProductCard
-                key={product.id}
-                title={product.title}
-                onPress={() => {
-                  setProductToShow(product);
-                  setProductPropertiesShow(true);
-                }}
-                // titleIcon={{
-                //   name: "inventory",
-                //   color: colors.primary,
-                // }}
-                fields={[
-                  {
-                    icon: "qr-code",
+            <FlatList
+              data={productData}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item: product }) => (
+                <ProductCard
+                  key={product.id}
+                  title={product.title}
+                  onPress={() => {
+                    setProductToShow(product);
+                    setProductPropertiesShow(true);
+                  }}
+                  // titleIcon={{
+                  //   name: "inventory",
+                  //   color: colors.primary,
+                  // }}
+                  fields={[
+                    {
+                      icon: "qr-code",
+                      iconColor: colors.secondary,
+                      label: "کد محصول:",
+                      value: product.code,
+                    },
+                    {
+                      icon: "straighten",
+                      iconColor: colors.secondary,
+                      label: "مقدار:",
+                      value: product.quantity,
+                    },
+                    {
+                      icon: "palette",
+                      iconColor: colors.secondary,
+                      label: "طیف رنگی:",
+                      value: product.hasColorSpectrum ? "دارد" : "ندارد",
+                      valueColor: product.hasColorSpectrum
+                        ? colors.success
+                        : colors.danger,
+                    },
+                  ]}
+                  note={product.note}
+                  noteConfig={{
+                    show: !!product.note && product.note !== "-",
+                    icon: "notes",
                     iconColor: colors.secondary,
-                    label: "کد محصول:",
-                    value: product.code,
-                  },
-                  {
-                    icon: "straighten",
+                    label: "توضیحات:",
+                  }}
+                  qrConfig={{
+                    show: true,
+                    icon: "qr-code-2",
+                    iconSize: 36,
                     iconColor: colors.secondary,
-                    label: "مقدار:",
-                    value: product.quantity,
-                  },
-                  {
-                    icon: "palette",
-                    iconColor: colors.secondary,
-                    label: "طیف رنگی:",
-                    value: product.hasColorSpectrum ? "دارد" : "ندارد",
-                    valueColor: product.hasColorSpectrum
-                      ? colors.success
-                      : colors.danger,
-                  },
-                ]}
-                note={product.note}
-                noteConfig={{
-                  show: !!product.note && product.note !== "-",
-                  icon: "notes",
-                  iconColor: colors.secondary,
-                  label: "توضیحات:",
-                }}
-                qrConfig={{
-                  show: true,
-                  icon: "qr-code-2",
-                  iconSize: 36,
-                  iconColor: colors.secondary,
-                }}
-              />
-            )}
-          />
-          <Modal visible={productPropertiesShow} animationType="slide">
-            {productToShow && (
-              <ProductProperties
-                product={productToShow}
-                onClose={() => setProductPropertiesShow(false)}
-              />
-            )}
-          </Modal>
-        </View>
-      </Modal>
-    </View>
+                  }}
+                />
+              )}
+            />
+            <Modal visible={productPropertiesShow} animationType="slide">
+              {productToShow && (
+                <ProductProperties
+                  product={productToShow}
+                  onClose={() => setProductPropertiesShow(false)}
+                />
+              )}
+            </Modal>
+          </View>
+        </Modal>
+      </View>
+    </>
   );
 };
 
