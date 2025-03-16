@@ -11,6 +11,7 @@ import * as SplashScreen from "expo-splash-screen";
 import HomeScreen from "./app/screens/Seller/HomeScreen";
 import IssuingNewInvoice from "./app/screens/Seller/IssuingNewInvoice/IssuingNewInvoice";
 import StackNavigator from "./app/StackNavigator";
+import { PaperProvider } from "react-native-paper";
 
 I18nManager.forceRTL(true);
 
@@ -54,12 +55,14 @@ export default function App(): JSX.Element {
   }
 
   return (
-    <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
-      <NavigationContainer>
-        <StackNavigator />
-      </NavigationContainer>
-      <StatusBar style="auto" />
-    </View>
+    <PaperProvider>
+      <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+        <NavigationContainer>
+          <StackNavigator />
+        </NavigationContainer>
+        <StatusBar style="auto" />
+      </View>
+    </PaperProvider>
   );
 }
 

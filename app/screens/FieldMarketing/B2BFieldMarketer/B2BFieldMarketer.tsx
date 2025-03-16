@@ -26,11 +26,9 @@ const B2BFieldMarketer = () => {
           placeholder="جستجو کنید..."
           onChangeText={() => {}}
           width={"78%"}
+          containerStyle={{ marginBottom: 0 }}
         ></AppTextInput>
-        <AppButton
-          title="جستجو"
-          onPress={() => navigation.navigate("CustomerInfo")}
-        />
+        <AppButton title="جستجو" onPress={() => {}} />
       </View>
       <TouchableOpacity
         style={styles.addIconContainer}
