@@ -3,6 +3,7 @@ import { StyleSheet, View } from "react-native";
 import { ISupplyRequest } from "../../config/types";
 import { FlatList } from "react-native-gesture-handler";
 import SupplyRequestCard from "../../components/SupplyRequestCard";
+import ScreenHeader from "../../components/ScreenHeader";
 const supplyRequests: ISupplyRequest[] = [
   {
     id: 1,
@@ -44,18 +45,21 @@ const supplyRequests: ISupplyRequest[] = [
 
 const SupplyRequestList = () => {
   return (
-    <View style={styles.container}>
-      <FlatList
-        data={supplyRequests}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => <SupplyRequestCard suuplyRequest={item} />}
-      />
-    </View>
+    <>
+      <ScreenHeader title="لیست درخواست های تامین" />
+      <View style={styles.container}>
+        <FlatList
+          data={supplyRequests}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => <SupplyRequestCard suuplyRequest={item} />}
+        />
+      </View>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingTop: 50, padding: 20 },
+  container: { flex: 1, padding: 20 },
 });
 
 export default SupplyRequestList;
