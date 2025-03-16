@@ -3,113 +3,115 @@ import { ScrollView, StyleSheet, View } from "react-native";
 import AppTextInput from "../../../components/TextInput";
 import AppButton from "../../../components/Button";
 import AppPicker from "../../../components/Picker";
+import { InputContainer } from "../../FieldMarketing/B2BFieldMarketer/AddNewShop";
+import SelectionDialog from "../../../components/SelectionDialog";
 
 const CustomerInfo = () => {
   return (
     <View style={styles.container}>
       <ScrollView>
-        <AppTextInput
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="number-pad"
-          placeholder="شماره موبایل مشتری"
-          onChangeText={() => {}}
-        ></AppTextInput>
-        <AppTextInput
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="default"
-          placeholder="نام و نام خانوادگی مشتری"
-          onChangeText={() => {}}
-        ></AppTextInput>
-        <AppPicker
-          items={[
-            {
-              label: "مصرف کنندع",
-              value: 1,
-            },
-            {
-              label: "همکار B2B",
-              value: 2,
-            },
-            {
-              label: "انبوه ساز",
-              value: 3,
-            },
-            {
-              label: "طراح",
-              value: 4,
-            },
-            {
-              label: "کاشیکار",
-              value: 5,
-            },
-            {
-              label: "سازنده",
-              value: 6,
-            },
-            {
-              label: "ارگان دولتی",
-              value: 7,
-            },
-            {
-              label: "واسط",
-              value: 8,
-            },
-            {
-              label: "پیمانکار",
-              value: 9,
-            },
-          ]}
-          onSelectItem={() => {}}
-          placeholder="نوع مشتری"
-        ></AppPicker>
-        <AppTextInput
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="default"
-          placeholder="نام مستعار/ جایگزین/ معرف"
-          onChangeText={() => {}}
-        ></AppTextInput>
-        <AppTextInput
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="default"
-          placeholder="از طرف همکار معرفی شده؟"
-          onChangeText={() => {}}
-        ></AppTextInput>
-        <AppTextInput
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="default"
-          placeholder="آدرس مشتری"
-          onChangeText={() => {}}
-          multiline
-          numberOfLines={5}
-          height={150}
-        ></AppTextInput>
-        <AppTextInput
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="default"
-          placeholder="متراژ درخواستی"
-          onChangeText={() => {}}
-        ></AppTextInput>
-        <AppTextInput
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="default"
-          placeholder="توضیحات"
-          onChangeText={() => {}}
-          multiline
-          numberOfLines={5}
-          height={150}
-        ></AppTextInput>
-        <AppPicker
-          items={[]}
-          onSelectItem={() => {}}
-          placeholder="منطقه خریدار"
-        ></AppPicker>
+        <InputContainer title="اطلاعات مشتری">
+          <AppTextInput
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="default"
+            icon="person"
+            placeholder="نام و نام خانوادگی"
+            onChangeText={() => {}}
+          ></AppTextInput>
+          <AppTextInput
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="number-pad"
+            icon="phone-android"
+            placeholder="شماره موبایل "
+            onChangeText={() => {}}
+          ></AppTextInput>
+          <SelectionDialog
+            placeholderText="نوع مشتری"
+            title="نوع مشتری"
+            iconName="group"
+            options={[
+              "مصرف کننده",
+              "همکار B2B",
+              "انبوه ساز",
+              "طراح",
+              "کاشیکار",
+              "سازنده",
+              "ارگان دولتی",
+              "واسط",
+              "پیمانکار",
+            ]}
+            onSelect={(value) => {}}
+          />
+
+          <AppTextInput
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="default"
+            icon="person-4"
+            placeholder="نام مستعار/ جایگزین/ معرف"
+            onChangeText={() => {}}
+          ></AppTextInput>
+
+          <SelectionDialog
+            placeholderText="از طرف همکار معرفی شده؟"
+            title="از طرف همکار معرفی شده؟"
+            iconName="group"
+            options={["بله", "خیر"]}
+            onSelect={(value) => {}}
+          />
+          <AppTextInput
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="default"
+            icon="location-pin"
+            placeholder="آدرس مشتری"
+            onChangeText={() => {}}
+            multiline
+            numberOfLines={5}
+            height={150}
+          ></AppTextInput>
+          <SelectionDialog
+            placeholderText="منطقه خریدار"
+            title="منطقه خریدار"
+            iconName="location-city"
+            options={[
+              "شاهین شهر",
+              "مبارکه",
+              "اصفهان",
+              "دستگرد",
+              "خورزوق",
+              "دولت آباد",
+              "خمینی شهر",
+              "نجف آباد",
+              "گلپایگان",
+            ]}
+            onSelect={(value) => {}}
+          />
+        </InputContainer>
+        <InputContainer title="سایر اطلاعات">
+          <AppTextInput
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="default"
+            icon="pin"
+            placeholder="متراژ درخواستی"
+            onChangeText={() => {}}
+          ></AppTextInput>
+          <AppTextInput
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="default"
+            icon="text-snippet"
+            placeholder="توضیحات"
+            onChangeText={() => {}}
+            multiline
+            numberOfLines={5}
+            height={150}
+          ></AppTextInput>
+        </InputContainer>
+
         <AppButton
           title="ثبت"
           onPress={() => {}}
@@ -122,7 +124,7 @@ const CustomerInfo = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 10 },
+  container: { flex: 1, padding: 20, paddingTop: 50 },
 });
 
 export default CustomerInfo;
