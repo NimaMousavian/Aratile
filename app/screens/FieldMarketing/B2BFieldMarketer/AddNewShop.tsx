@@ -17,6 +17,27 @@ import IconButtonSquare from "../../../components/IconButtonSquare";
 import SelectionDialog from "../../../components/SelectionDialog";
 import AppModal from "../../../components/AppModal";
 
+export const InputContainer: React.FC<{
+  title: string;
+  children: React.ReactElement[];
+}> = ({ title, children }) => {
+  return (
+    <View style={styles.inputContainer}>
+      <View style={styles.titleContainer}>
+        <LinearGradient
+          colors={[colors.secondary, colors.primary]}
+          style={styles.inputHeader}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+        >
+          <AppText style={styles.title}>{title}</AppText>
+        </LinearGradient>
+      </View>
+      <View style={styles.gridContainer}>{children.map((item) => item)}</View>
+    </View>
+  );
+};
+
 // Define the route params type
 type AddNewShopRouteParams = {
   recordings?: { uri: string; duration: number }[];
@@ -40,27 +61,6 @@ const AddNewShop = () => {
       // Optionally show a success message or indicator
     }
   }, [route.params]);
-
-  const InputContainer: React.FC<{
-    title: string;
-    children: React.ReactElement[];
-  }> = ({ title, children }) => {
-    return (
-      <View style={styles.inputContainer}>
-        <View style={styles.titleContainer}>
-          <LinearGradient
-            colors={[colors.secondary, colors.primary]}
-            style={styles.inputHeader}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-          >
-            <AppText style={styles.title}>{title}</AppText>
-          </LinearGradient>
-        </View>
-        <View style={styles.gridContainer}>{children.map((item) => item)}</View>
-      </View>
-    );
-  };
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -263,7 +263,7 @@ const AddNewShop = () => {
           <SelectionDialog
             placeholderText="شبکه فروش دارد یا خیر"
             title="شبکه فروش دارد یا خیر"
-            iconName="network-cell"
+            iconName="cell-tower"
             options={["بله", "خیر"]}
             onSelect={(value) => {}}
           />
