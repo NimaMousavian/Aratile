@@ -10,6 +10,7 @@ import {
   Platform,
   Animated,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage"; // اضافه کردن AsyncStorage
 import colors from "../../config/colors";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useNavigation } from "@react-navigation/native";
@@ -42,6 +43,9 @@ const getFontFamily = (baseFont: string, weight: FontWeight): string => {
   }
   return baseFont;
 };
+
+// کلید ذخیره‌سازی در AsyncStorage
+const LAYOUT_STORAGE_KEY = "home_screen_items_layout";
 
 const initialItems: MenuItem[] = [
   {
@@ -98,6 +102,7 @@ const HomeScreen: React.FC = () => {
   const [draggedItem, setDraggedItem] = useState<MenuItem | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [layoutSaved, setLayoutSaved] = useState(false); // وضعیت ذخیره‌سازی
 
   // Animation configurations for smoother transitions
   const SPRING_CONFIG = {
@@ -143,6 +148,36 @@ const HomeScreen: React.FC = () => {
 
   // Setup gesture handler state
   const panState = useRef(State.UNDETERMINED);
+
+  // بارگذاری چیدمان ذخیره شده هنگام اجرای برنامه
+  useEffect(() => {
+    loadSavedLayout();
+  }, []);
+
+  // بارگذاری چیدمان ذخیره‌شده از AsyncStorage
+  const loadSavedLayout = async () => {
+    try {
+      const savedLayout = await AsyncStorage.getItem(LAYOUT_STORAGE_KEY);
+      if (savedLayout !== null) {
+        const parsedLayout = JSON.parse(savedLayout) as MenuItem[];
+        setItems(parsedLayout);
+        console.log("چیدمان ذخیره‌شده بارگذاری شد");
+      }
+    } catch (error) {
+      console.error("خطا در بارگذاری چیدمان:", error);
+    }
+  };
+
+  // ذخیره چیدمان در AsyncStorage
+  const saveLayout = async () => {
+    try {
+      await AsyncStorage.setItem(LAYOUT_STORAGE_KEY, JSON.stringify(items));
+      setLayoutSaved(true);
+      console.log("چیدمان ذخیره شد:", items);
+    } catch (error) {
+      console.error("خطا در ذخیره چیدمان:", error);
+    }
+  };
 
   // Calculate grid positions based on current measurements
   const calculateGridPositions = () => {
@@ -216,6 +251,9 @@ const HomeScreen: React.FC = () => {
 
   // Function to finish dragging and reset state
   const finishDragging = () => {
+    // ذخیره چیدمان در پایان کشیدن
+    saveLayout();
+
     if (draggedIndex !== null) {
       // Reset animations with spring for a smoother finish
       Animated.parallel([
@@ -297,6 +335,11 @@ const HomeScreen: React.FC = () => {
 
     // Update the items state
     setItems(newItems);
+
+    // ذخیره چیدمان پس از هر عملیات جابجایی
+    setTimeout(() => {
+      saveLayout();
+    }, 100);
 
     // Update the dragged index
     setDraggedIndex(toIndex);
@@ -608,6 +651,9 @@ const HomeScreen: React.FC = () => {
             swapItems(index, closestIndex);
           }
 
+          // ذخیره چیدمان هنگام رها کردن آیتم
+          saveLayout();
+
           // Finish dragging with smoother animations
           finishDragging();
         }
@@ -618,6 +664,8 @@ const HomeScreen: React.FC = () => {
         // Force reset after a short delay to ensure we don't interfere with normal gesture handling
         setTimeout(() => {
           if (isDragging) {  // Double check we're still dragging
+            // ذخیره چیدمان در شرایط اضطراری
+            saveLayout();
             finishDragging();
           }
         }, 300);
@@ -791,11 +839,17 @@ const styles = StyleSheet.create({
     height: 36,
   },
   list: {
-    padding: itemMargin,
-    paddingBottom: 100, // Extra padding at bottom for dragging
+    paddingLeft: 5,
+    paddingRight: 5,
+    marginLeft: 5,
+    marginRight: 5,
+    paddingBottom: 100, 
   },
   gridItemContainer: {
     margin: 5,
+    paddingLeft: 5,
+    paddingRight: 5,
+    paddingBottom: 10,
     width: itemWidth,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -885,7 +939,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   dragInstructionText: {
-   
+
     fontFamily: getFontFamily("Yekan_Bakh_Bold", "500"),
     textAlign: "center",
     fontSize: 16,

@@ -9,7 +9,9 @@ import {
   View,
   Platform,
   Animated,
+  Alert,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import colors from "../../config/colors";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useNavigation } from "@react-navigation/native";
@@ -46,6 +48,10 @@ const getFontFamily = (baseFont: string, weight: FontWeight): string => {
   return baseFont;
 };
 
+// کلید ذخیره‌سازی در AsyncStorage
+const LAYOUT_STORAGE_KEY = "cashier_home_items_layout";
+
+// آیتم‌های اولیه صفحه صندوق‌دار
 const initialCashierItems: MenuItem[] = [
   {
     id: 1,
@@ -77,11 +83,30 @@ const itemWidth = (screenWidth - (numColumns + 1) * itemMargin) / numColumns;
 
 const CashierHomeScreen: React.FC = () => {
   const navigation = useNavigation<AppNavigationProp>();
-  const [items, setItems] = useState(initialCashierItems);
+  const [items, setItems] = useState<MenuItem[]>(initialCashierItems);
   const [isDragging, setIsDragging] = useState(false);
+  const isDraggingRef = useRef(false);
   const [draggedItem, setDraggedItem] = useState<MenuItem | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [layoutSaved, setLayoutSaved] = useState(false); // وضعیت ذخیره‌سازی
+  const instructionOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    isDraggingRef.current = isDragging;
+
+    // انیمیشن برای نمایش/پنهان کردن نوار راهنما
+    Animated.timing(instructionOpacity, {
+      toValue: isDragging ? 1 : 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [isDragging]);
+
+  // بارگذاری چیدمان ذخیره شده هنگام اجرای برنامه
+  useEffect(() => {
+    loadSavedLayout();
+  }, []);
 
   // Animation configurations for smoother transitions
   const SPRING_CONFIG = {
@@ -128,7 +153,33 @@ const CashierHomeScreen: React.FC = () => {
   // Setup gesture handler state
   const panState = useRef(State.UNDETERMINED);
 
-  // Calculate grid positions based on current measurements
+  // بارگذاری چیدمان ذخیره‌شده از AsyncStorage
+  const loadSavedLayout = async () => {
+    try {
+      const savedLayout = await AsyncStorage.getItem(LAYOUT_STORAGE_KEY);
+      if (savedLayout !== null) {
+        const parsedLayout = JSON.parse(savedLayout) as MenuItem[];
+        setItems(parsedLayout);
+        console.log("چیدمان ذخیره‌شده بارگذاری شد");
+      }
+    } catch (error) {
+      console.error("خطا در بارگذاری چیدمان:", error);
+    }
+  };
+
+
+  const saveLayout = async () => {
+    try {
+      await AsyncStorage.setItem(LAYOUT_STORAGE_KEY, JSON.stringify(items));
+      setLayoutSaved(true);
+
+      console.log("چیدمان ذخیره شد:", items);
+
+    } catch (error) {
+      console.error("خطا در ذخیره چیدمان:", error);
+    }
+  };
+
   const calculateGridPositions = () => {
     Object.keys(itemRefs.current).forEach((indexStr) => {
       const index = parseInt(indexStr);
@@ -198,9 +249,12 @@ const CashierHomeScreen: React.FC = () => {
     };
   }, [isDragging]);
 
-  // Function to finish dragging and reset state
   const finishDragging = () => {
     if (draggedIndex !== null) {
+      // ذخیره چیدمان قبل از پایان یافتن کشیدن
+      // این تضمین می‌کند که حتی اگر نوار راهنما نمایش داده نشود، چیدمان ذخیره می‌شود
+      saveLayout();
+
       // Reset animations with spring for a smoother finish
       Animated.parallel([
         Animated.spring(itemRefs.current[draggedIndex].scale, {
@@ -253,6 +307,14 @@ const CashierHomeScreen: React.FC = () => {
       swapDebounceTimer.current = null;
     }
   };
+  // اتمام کشیدن و ذخیره چیدمان
+  const finishDraggingAndSave = () => {
+    // ابتدا اتمام حالت کشیدن
+    
+    // سپس ذخیره چیدمان در دیتابیس محلی
+    saveLayout();
+    finishDragging();
+  };
 
   // Debounced swap function to prevent too rapid swaps
   const debouncedSwapItems = (fromIndex: number, toIndex: number) => {
@@ -267,7 +329,6 @@ const CashierHomeScreen: React.FC = () => {
     }, 150); // Debounce time
   };
 
-  // Optimized swap function with smoother animations
   const swapItems = (fromIndex: number, toIndex: number) => {
     if (isSwapping.current || fromIndex === toIndex) return;
 
@@ -281,6 +342,10 @@ const CashierHomeScreen: React.FC = () => {
 
     // Update the items state
     setItems(newItems);
+
+    // ذخیره چیدمان پس از هر عملیات جابجایی
+    // این یک نقطه عالی برای ذخیره‌سازی است زیرا هر تغییر در چیدمان را ثبت می‌کند
+    saveLayout();
 
     // Update the dragged index
     setDraggedIndex(toIndex);
@@ -432,7 +497,7 @@ const CashierHomeScreen: React.FC = () => {
         </Text>
         <TouchableOpacity
           style={styles.saveButton}
-          onPress={finishDragging}
+          onPress={finishDraggingAndSave}
         >
           <View style={styles.saveButtonContent}>
             <MaterialIcons name="save" size={20} color="#fff" />
@@ -457,12 +522,11 @@ const CashierHomeScreen: React.FC = () => {
         component: null
       };
     }
-
     const scale = itemRefs.current[index].scale;
     const translateX = itemRefs.current[index].translateX;
     const translateY = itemRefs.current[index].translateY;
     const opacity = itemRefs.current[index].opacity;
-
+    const isLastItemInOddList = index === items.length - 1 && items.length % 2 !== 0;
     // Start dragging on long press
     const onLongPress = () => {
       // If already dragging, don't start again
@@ -590,6 +654,9 @@ const CashierHomeScreen: React.FC = () => {
             swapItems(index, closestIndex);
           }
 
+          // ذخیره چیدمان قبل از پایان کشیدن - این یک نقطه خوب دیگر برای ذخیره‌سازی است
+          saveLayout();
+
           // Finish dragging with smoother animations
           finishDragging();
         }
@@ -600,6 +667,8 @@ const CashierHomeScreen: React.FC = () => {
         // Force reset after a short delay to ensure we don't interfere with normal gesture handling
         setTimeout(() => {
           if (isDragging) {  // Double check we're still dragging
+            // ذخیره چیدمان در این حالت هم تضمین می‌کند که در شرایط مختلف ذخیره انجام شود
+            saveLayout();
             finishDragging();
           }
         }, 300);
@@ -624,6 +693,8 @@ const CashierHomeScreen: React.FC = () => {
           }}
           style={[
             styles.gridItemContainer,
+            // Apply full width for the last item when total count is odd
+            isLastItemInOddList && styles.fullWidthItem,
             {
               transform: [
                 { scale: isBeingDragged ? scale : 1 },
@@ -671,6 +742,8 @@ const CashierHomeScreen: React.FC = () => {
           <TouchableOpacity
             style={[
               styles.gridItem,
+              // Apply full width styling to the content as well
+              isLastItemInOddList && styles.fullWidthItemContent,
               isBeingDragged && styles.draggingItem,
               isHovered && styles.hoveredItem
             ]}
@@ -702,7 +775,6 @@ const CashierHomeScreen: React.FC = () => {
       </PanGestureHandler>
     );
   };
-
   return (
     <View style={styles.container}>
       <View style={styles.logoContainer}>
@@ -725,6 +797,8 @@ const CashierHomeScreen: React.FC = () => {
       {/* Display drag instructions when dragging */}
       {renderDragInstructions()}
 
+      // اصلاح کامپوننت FlatList برای جلوگیری از بیرون زدن آیتم‌ها
+
       <FlatList
         ref={flatListRef}
         data={items}
@@ -732,7 +806,8 @@ const CashierHomeScreen: React.FC = () => {
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.list}
-        columnWrapperStyle={styles.columnWrapper}
+        // استفاده از استایل متفاوت برای حالت‌های فرد و زوج
+        columnWrapperStyle={(items.length % 2 !== 0) ? styles.unevenColumnWrapper : styles.columnWrapper}
         extraData={[isDragging, draggedIndex, hoveredIndex, items]}
         scrollEnabled={true} // Always allow scrolling for better UX
         onScroll={(e) => {
@@ -757,6 +832,8 @@ const CashierHomeScreen: React.FC = () => {
   );
 };
 
+// اصلاح استایل‌ها برای جلوگیری از بیرون زدن آیتم‌ها
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -773,17 +850,22 @@ const styles = StyleSheet.create({
     height: 36,
   },
   list: {
-    padding: itemMargin,
     paddingBottom: 100, // Extra padding at bottom for dragging
+    paddingLeft:5,
+    paddingRight:5,
+    marginLeft:5,
+    marginRight:5,
   },
   gridItemContainer: {
     margin: 5,
+    paddingLeft: 5,
+    paddingRight: 5,
+    paddingBottom: 10,
     width: itemWidth,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
-    // elevation: 3,
   },
   gridItem: {
     padding: 15,
@@ -805,7 +887,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
-    // elevation: 10,
   },
   hoveredItem: {
     borderColor: colors.primary,
@@ -851,6 +932,12 @@ const styles = StyleSheet.create({
   columnWrapper: {
     flexDirection: "row-reverse",
     justifyContent: "center",
+    paddingHorizontal: itemMargin, // افزودن padding اینجا به جای list
+  },
+  unevenColumnWrapper: {
+    flexDirection: "row-reverse",
+    justifyContent: "center", // Changed from "center" to align items from the right
+    paddingHorizontal: itemMargin, // افزودن padding اینجا به جای list
   },
   dragInstructionContainer: {
     backgroundColor: colors.light,
@@ -908,6 +995,14 @@ const styles = StyleSheet.create({
     fontFamily: getFontFamily("Yekan_Bakh_Bold", "600"),
     fontSize: 16,
     textAlign: "center",
+  },
+  // New styles for full-width item
+  fullWidthItem: {
+    width: screenWidth - (2 * itemMargin), // Take full width minus margins
+    alignSelf: "center", // اضافه کردن این خط برای حل مشکل بیرون زدگی
+  },
+  fullWidthItemContent: {
+    width: "100%", // Make sure content takes up full width of the container
   },
 });
 export default CashierHomeScreen;

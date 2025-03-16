@@ -1,72 +1,117 @@
 import React, { useState, useRef, useEffect } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Image,
-  Platform,
-  FlatList,
   Dimensions,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  Platform,
   Animated,
+  ViewStyle,
+  TextStyle,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import { AppNavigationProp } from "../../StackNavigator";
-import colors from "../../config/colors";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { getFontFamily } from "../Cashier/ReceiveNewInvoiceScreen/ReceiveNewInvoiceScreen";
-import { MenuItem } from "./../Cashier/CashierHomeScreen";
-import { PanGestureHandler, State } from "react-native-gesture-handler";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { PanGestureHandler, State } from "react-native-gesture-handler";
 
-const fieldMarketerItems: MenuItem[] = [
-  {
-    id: 1,
-    name: "بازاریاب میدانی B2B",
-    icon: "business",
-    iconColor: "#1C3F64",
-    screenName: "B2BFieldMarketer",
-  },
-  {
-    id: 2,
-    name: "بازاریاب میدانی B2C",
-    icon: "business-center",
-    iconColor: "#1C3F64",
-    screenName: "B2CFieldMarketer",
-  },
-];
+// تعریف اینترفیس برای آیتم‌های قابل درگ
+export interface DraggableItem {
+  id: number | string;
+  [key: string]: any; // اجازه دادن به سایر پروپرتی‌های دلخواه
+}
 
-const MARKETER_LAYOUT_STORAGE_KEY = "marketer_home_screen_items_layout";
+// تعریف پراپ‌های کامپوننت
+interface DraggableGridProps<T extends DraggableItem> {
+  items: T[];
+  onItemsChange?: (items: T[]) => void;
+  renderItemContent: (item: T, isDragging: boolean, isHovered: boolean) => React.ReactNode;
+  onItemPress?: (item: T) => void;
+  storageKey?: string;
+  numColumns?: number;
+  containerStyle?: ViewStyle;
+  itemStyle?: ViewStyle;
+  draggedItemStyle?: ViewStyle;
+  hoveredItemStyle?: ViewStyle;
+  instructionsText?: string;
+  instructionsStyle?: TextStyle;
+  saveButtonText?: string;
+  saveButtonStyle?: ViewStyle;
+  saveButtonTextStyle?: TextStyle;
+  itemHeight?: number;
+  itemMargin?: number;
+}
 
-const screenWidth = Dimensions.get("window").width;
-const numColumns = 2;
-const itemMargin = 10;
-const itemWidth = (screenWidth - (numColumns + 1) * itemMargin) / numColumns;
+// تعریف وزن فونت
+type FontWeight = "700" | "600" | "500" | "bold" | "semi-bold" | string;
 
-const MarketerHomeScreen: React.FC = () => {
-  const navigation = useNavigation<AppNavigationProp>();
-  const [items, setItems] = useState<MenuItem[]>(fieldMarketerItems);
+// تابع تعیین فونت بر اساس پلتفرم
+const getFontFamily = (baseFont: string, weight: FontWeight): string => {
+  if (Platform.OS === "android") {
+    switch (weight) {
+      case "700":
+      case "bold":
+        return "Yekan_Bakh_Bold";
+      case "500":
+      case "600":
+      case "semi-bold":
+        return "Yekan_Bakh_Bold";
+      default:
+        return "Yekan_Bakh_Regular";
+    }
+  }
+  return baseFont;
+};
+
+// کامپوننت اصلی
+function DraggableGrid<T extends DraggableItem>({
+  items: initialItems,
+  onItemsChange,
+  renderItemContent,
+  onItemPress,
+  storageKey,
+  numColumns = 2,
+  containerStyle,
+  itemStyle,
+  draggedItemStyle,
+  hoveredItemStyle,
+  instructionsText = "آیتم را به مکان دلخواه بکشید و رها کنید",
+  instructionsStyle,
+  saveButtonText = "ذخیره و اتمام",
+  saveButtonStyle,
+  saveButtonTextStyle,
+  itemHeight = 150,
+  itemMargin = 10,
+}: DraggableGridProps<T>) {
+  // محاسبه عرض آیتم‌ها
+  const screenWidth = Dimensions.get("window").width;
+  const itemWidth = (screenWidth - (numColumns + 1) * itemMargin) / numColumns;
+
+  // استیت‌های کامپوننت
+  const [items, setItems] = useState<T[]>(initialItems);
   const [isDragging, setIsDragging] = useState(false);
-  const [draggedItem, setDraggedItem] = useState<MenuItem | null>(null);
+  const [draggedItem, setDraggedItem] = useState<T | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [layoutSaved, setLayoutSaved] = useState(false);
+  const [loadedLayout, setLoadedLayout] = useState<T[] | null>(null);
 
-  // Animation configurations
+  // تنظیمات انیمیشن برای حرکت نرم‌تر
   const SPRING_CONFIG = {
     tension: 50,
     friction: 7,
     useNativeDriver: true
   };
 
+  // تنظیمات زمان‌بندی برای انیمیشن‌های نرم‌تر
   const TIMING_CONFIG = {
     duration: 200,
     useNativeDriver: true
   };
 
-  // Refs for tracking positions and animations
+  // استفاده از راه روش‌های مطمئن‌تر برای ذخیره موقعیت آیتم‌ها
   const itemRefs = useRef<{
-    [key: number]: {
+    [key: string]: {
       position: { x: number, y: number },
       dimensions: { width: number, height: number },
       scale: Animated.Value,
@@ -77,61 +122,102 @@ const MarketerHomeScreen: React.FC = () => {
     }
   }>({});
 
-  // Store fixed grid positions
-  const gridPositions = useRef<{ [key: number]: { x: number, y: number, width: number, height: number } }>({});
+  // ذخیره موقعیت‌های ثابت شبکه
+  const gridPositions = useRef<{ [key: string]: { x: number, y: number, width: number, height: number } }>({});
 
-  // Use this ref to track the overall scroll position
+  // رفرنس برای پیگیری موقعیت اسکرول کلی
   const scrollOffset = useRef(0);
   const flatListRef = useRef<FlatList | null>(null);
 
-  // Last gesture location for smoother movement
+  // آخرین موقعیت حرکت برای حرکت نرم‌تر
   const lastGestureLocation = useRef({ x: 0, y: 0 });
 
-  // Flag to prevent multiple rapid swaps
+  // پرچم برای جلوگیری از جابجایی‌های سریع متعدد
   const isSwapping = useRef(false);
 
-  // Debounce timer for swaps
+  // تایمر تاخیر برای جابجایی‌ها
   const swapDebounceTimer = useRef<NodeJS.Timeout | null>(null);
 
-  // Setup gesture handler state
+  // تنظیم وضعیت هندلر حرکت
   const panState = useRef(State.UNDETERMINED);
 
-  // بارگذاری چیدمان ذخیره شده هنگام اجرای برنامه
+  // بارگذاری چیدمان ذخیره شده هنگام اجرای کامپوننت
   useEffect(() => {
-    loadSavedLayout();
-  }, []);
+    if (storageKey) {
+      loadSavedLayout();
+    } else {
+      setItems(initialItems);
+    }
+  }, [storageKey, initialItems]);
+
+  // اعمال تغییرات آیتم‌ها به کامپوننت والد
+  useEffect(() => {
+    if (onItemsChange) {
+      onItemsChange(items);
+    }
+  }, [items, onItemsChange]);
 
   const loadSavedLayout = async () => {
+    if (!storageKey) return null;
+
     try {
-      console.log("تلاش برای بارگذاری چیدمان ذخیره شده");
-      const savedLayout = await AsyncStorage.getItem(MARKETER_LAYOUT_STORAGE_KEY);
+      const savedLayout = await AsyncStorage.getItem(storageKey);
       if (savedLayout !== null) {
-        const parsedLayout = JSON.parse(savedLayout);
-        setItems(parsedLayout);
-        console.log("چیدمان ذخیره شده با موفقیت بارگذاری شد");
-      } else {
-        console.log("هیچ چیدمان ذخیره شده‌ای یافت نشد");
+        return JSON.parse(savedLayout) as T[];
+        // console.log("چیدمان ذخیره‌شده بارگذاری شد");
       }
     } catch (error) {
       console.error("خطا در بارگذاری چیدمان:", error);
     }
+    return null;
+  };
+  const applyLayout = (layout: T[] | null) => {
+    if (layout) {
+      setItems(layout);
+    }
+  };
+  useEffect(() => {
+    const initLayout = async () => {
+      const layout = await loadSavedLayout();
+      // Store the layout in state but don't apply it yet
+      setLoadedLayout(layout);
+    };
+
+    initLayout();
+  }, []);
+
+  // On save button click
+  const handleSave = () => {
+    // Apply the loaded layout
+    applyLayout(loadedLayout);
+    // Save the current state
+    saveLayout(items);
   };
 
+  // After drag end
+  const handleDragEnd = () => {
+    setIsDragging(false);
+    // Apply the layout after drag ends
+    applyLayout(loadedLayout);
+  };
+
+  // ذخیره چیدمان در AsyncStorage
   const saveLayout = async () => {
+    if (!storageKey) return;
+
     try {
-      console.log("تلاش برای ذخیره چیدمان:", items);
-      await AsyncStorage.setItem(MARKETER_LAYOUT_STORAGE_KEY, JSON.stringify(items));
+      await AsyncStorage.setItem(storageKey, JSON.stringify(items));
       setLayoutSaved(true);
-      console.log("چیدمان با موفقیت ذخیره شد");
+      console.log("چیدمان ذخیره شد:", items);
     } catch (error) {
       console.error("خطا در ذخیره چیدمان:", error);
     }
   };
 
-  // Calculate grid positions based on current measurements
+  // محاسبه موقعیت‌های شبکه بر اساس اندازه‌گیری‌های فعلی
   const calculateGridPositions = () => {
     Object.keys(itemRefs.current).forEach((indexStr) => {
-      const index = parseInt(indexStr);
+      const index = indexStr;
       const itemRef = itemRefs.current[index];
 
       if (itemRef && itemRef.position && itemRef.dimensions) {
@@ -145,9 +231,9 @@ const MarketerHomeScreen: React.FC = () => {
     });
   };
 
-  // Initialize grid positions when component mounts and when items change
+  // مقدار دهی اولیه موقعیت‌های شبکه وقتی کامپوننت نصب می‌شود و زمانی که آیتم‌ها تغییر می‌کنند
   useEffect(() => {
-    // Wait for all items to be measured
+    // انتظار برای اندازه‌گیری تمام آیتم‌ها
     const timer = setTimeout(() => {
       calculateGridPositions();
     }, 300);
@@ -155,16 +241,16 @@ const MarketerHomeScreen: React.FC = () => {
     return () => clearTimeout(timer);
   }, [items]);
 
-  // Handle touch outside to immediately cancel dragging
+  // مدیریت لمس خارج از محدوده برای لغو فوری درگ کردن
   useEffect(() => {
-    // Function to handle touch end anywhere
+    // تابع برای مدیریت پایان لمس در هر جایی
     const handleTouchEnd = () => {
       if (isDragging) {
         finishDragging();
       }
     };
 
-    // Add global touch end listener
+    // افزودن شنونده پایان لمس سراسری
     if (isDragging) {
       if (Platform.OS === 'web') {
         document.addEventListener('touchend', handleTouchEnd);
@@ -180,15 +266,15 @@ const MarketerHomeScreen: React.FC = () => {
     return () => { };
   }, [isDragging]);
 
-  // Safety timeout to prevent cards from getting stuck
+  // تایمر اطمینان برای جلوگیری از گیر کردن کارت‌ها
   useEffect(() => {
     let safetyTimer: NodeJS.Timeout | null = null;
 
     if (isDragging) {
-      // If dragging continues for too long, force reset
+      // اگر کشیدن برای مدت طولانی ادامه یابد، بازنشانی اجباری
       safetyTimer = setTimeout(() => {
         finishDragging();
-      }, 10000); // 10 seconds max drag time
+      }, 10000); // حداکثر 10 ثانیه زمان کشیدن
     }
 
     return () => {
@@ -198,57 +284,56 @@ const MarketerHomeScreen: React.FC = () => {
     };
   }, [isDragging]);
 
-  // Function to finish dragging and reset state
   const finishDragging = () => {
-    // ذخیره چیدمان قبل از اتمام عملیات کشیدن
-    saveLayout();
-
     if (draggedIndex !== null) {
-      // Reset animations with spring for a smoother finish
+      // بازنشانی انیمیشن‌ها با اسپرینگ برای پایان نرم‌تر
       Animated.parallel([
-        Animated.spring(itemRefs.current[draggedIndex].scale, {
+        Animated.spring(itemRefs.current[draggedIndex.toString()].scale, {
           toValue: 1,
           ...SPRING_CONFIG,
         }),
-        Animated.spring(itemRefs.current[draggedIndex].translateX, {
+        Animated.spring(itemRefs.current[draggedIndex.toString()].translateX, {
           toValue: 0,
           ...SPRING_CONFIG,
         }),
-        Animated.spring(itemRefs.current[draggedIndex].translateY, {
+        Animated.spring(itemRefs.current[draggedIndex.toString()].translateY, {
           toValue: 0,
           ...SPRING_CONFIG,
         }),
-        Animated.timing(itemRefs.current[draggedIndex].opacity, {
+        Animated.timing(itemRefs.current[draggedIndex.toString()].opacity, {
           toValue: 1,
           ...TIMING_CONFIG
         })
       ]).start(() => {
-        // Reset all states only after animation completes
+        // حذف فراخوانی saveLayout از اینجا
+        // saveLayout();
+
+        // بازنشانی همه وضعیت‌ها فقط پس از تکمیل انیمیشن
         setIsDragging(false);
         setDraggedItem(null);
         setDraggedIndex(null);
         setHoveredIndex(null);
 
-        // Force reset all animations for all items to ensure nothing is stuck
+        // بازنشانی اجباری همه انیمیشن‌ها برای همه آیتم‌ها برای اطمینان از عدم گیر
         Object.keys(itemRefs.current).forEach((indexStr) => {
-          const index = parseInt(indexStr);
-          if (itemRefs.current[index]) {
-            itemRefs.current[index].translateX.setValue(0);
-            itemRefs.current[index].translateY.setValue(0);
-            itemRefs.current[index].scale.setValue(1);
-            itemRefs.current[index].opacity.setValue(1);
+          const itemRef = itemRefs.current[indexStr];
+          if (itemRef) {
+            itemRef.translateX.setValue(0);
+            itemRef.translateY.setValue(0);
+            itemRef.scale.setValue(1);
+            itemRef.opacity.setValue(1);
           }
         });
       });
     } else {
-      // If no draggedIndex, just reset states
+      // اگر draggedIndex وجود ندارد، فقط وضعیت‌ها را بازنشانی کن
       setIsDragging(false);
       setDraggedItem(null);
       setDraggedIndex(null);
       setHoveredIndex(null);
     }
 
-    // Reset swapping state immediately
+    // بازنشانی فوری وضعیت جابجایی
     isSwapping.current = false;
 
     if (swapDebounceTimer.current) {
@@ -256,8 +341,15 @@ const MarketerHomeScreen: React.FC = () => {
       swapDebounceTimer.current = null;
     }
   };
+  const handleSaveButton = () => {
+    // ذخیره چیدمان
+    saveLayout();
 
-  // Debounced swap function to prevent too rapid swaps
+    // پایان دادن به حالت درگینگ
+    finishDragging();
+  };
+
+  // تابع جابجایی با تاخیر برای جلوگیری از جابجایی‌های بسیار سریع
   const debouncedSwapItems = (fromIndex: number, toIndex: number) => {
     if (isSwapping.current || fromIndex === toIndex) return;
 
@@ -267,44 +359,39 @@ const MarketerHomeScreen: React.FC = () => {
 
     swapDebounceTimer.current = setTimeout(() => {
       swapItems(fromIndex, toIndex);
-    }, 150); // Debounce time
+    }, 150); // زمان تاخیر
   };
 
-  // Optimized swap function with smoother animations
+  // تابع جابجایی بهینه‌سازی شده با انیمیشن‌های نرم‌تر
   const swapItems = (fromIndex: number, toIndex: number) => {
     if (isSwapping.current || fromIndex === toIndex) return;
 
     isSwapping.current = true;
 
-    // Create a new items array with the swapped items
+    // ایجاد آرایه جدید آیتم‌ها با آیتم‌های جابجا شده
     const newItems = [...items];
     const temp = newItems[fromIndex];
     newItems[fromIndex] = newItems[toIndex];
     newItems[toIndex] = temp;
 
-    // Update the items state
+    // به‌روزرسانی وضعیت آیتم‌ها
     setItems(newItems);
 
-    // ذخیره چیدمان بعد از هر جابجایی
-    setTimeout(() => {
-      saveLayout();
-    }, 100);
-
-    // Update the dragged index
+    // به‌روزرسانی شاخص کشیده شده
     setDraggedIndex(toIndex);
 
-    // Recalculate grid positions for the swapped items
-    if (itemRefs.current[toIndex]?.component && itemRefs.current[fromIndex]?.component) {
+    // محاسبه مجدد موقعیت‌های شبکه برای آیتم‌های جابجا شده
+    if (itemRefs.current[toIndex.toString()]?.component && itemRefs.current[fromIndex.toString()]?.component) {
       setTimeout(() => {
-        // Re-measure the positions to ensure they're updated
-        itemRefs.current[toIndex].component.measure(
+        // اندازه‌گیری مجدد موقعیت‌ها برای اطمینان از به‌روز بودن آنها
+        itemRefs.current[toIndex.toString()].component.measure(
           (x: number, y: number, width: number, height: number, pageX: number, pageY: number) => {
             if (typeof pageX === 'number' && typeof pageY === 'number') {
-              itemRefs.current[toIndex].position = {
+              itemRefs.current[toIndex.toString()].position = {
                 x: pageX + width / 2,
                 y: pageY + height / 2 - scrollOffset.current
               };
-              gridPositions.current[toIndex] = {
+              gridPositions.current[toIndex.toString()] = {
                 x: pageX + width / 2,
                 y: pageY + height / 2 - scrollOffset.current,
                 width, height
@@ -313,14 +400,14 @@ const MarketerHomeScreen: React.FC = () => {
           }
         );
 
-        itemRefs.current[fromIndex].component.measure(
+        itemRefs.current[fromIndex.toString()].component.measure(
           (x: number, y: number, width: number, height: number, pageX: number, pageY: number) => {
             if (typeof pageX === 'number' && typeof pageY === 'number') {
-              itemRefs.current[fromIndex].position = {
+              itemRefs.current[fromIndex.toString()].position = {
                 x: pageX + width / 2,
                 y: pageY + height / 2 - scrollOffset.current
               };
-              gridPositions.current[fromIndex] = {
+              gridPositions.current[fromIndex.toString()] = {
                 x: pageX + width / 2,
                 y: pageY + height / 2 - scrollOffset.current,
                 width, height
@@ -330,28 +417,28 @@ const MarketerHomeScreen: React.FC = () => {
         );
       }, 100);
 
-      // Animate the item that's "receiving" the drag
+      // انیمیشن آیتمی که "دریافت‌کننده" درگ است
       Animated.sequence([
-        Animated.timing(itemRefs.current[fromIndex].scale, {
+        Animated.timing(itemRefs.current[fromIndex.toString()].scale, {
           toValue: 0.9,
           duration: 100,
           useNativeDriver: true,
         }),
-        Animated.timing(itemRefs.current[fromIndex].scale, {
+        Animated.timing(itemRefs.current[fromIndex.toString()].scale, {
           toValue: 1,
           duration: 150,
           useNativeDriver: true,
         }),
       ]).start();
 
-      // Briefly highlight the swap by changing opacity
+      // برجسته کردن کوتاه جابجایی با تغییر شفافیت
       Animated.sequence([
-        Animated.timing(itemRefs.current[toIndex].opacity, {
+        Animated.timing(itemRefs.current[toIndex.toString()].opacity, {
           toValue: 0.7,
           duration: 100,
           useNativeDriver: true,
         }),
-        Animated.timing(itemRefs.current[toIndex].opacity, {
+        Animated.timing(itemRefs.current[toIndex.toString()].opacity, {
           toValue: 1,
           duration: 150,
           useNativeDriver: true,
@@ -359,34 +446,36 @@ const MarketerHomeScreen: React.FC = () => {
       ]).start();
     }
 
-    // Reset the swapping flag after the animation
+    // بازنشانی پرچم جابجایی پس از انیمیشن
     setTimeout(() => {
       isSwapping.current = false;
     }, 250);
   };
 
-  // Find the closest item that can be swapped with
+  // یافتن نزدیک‌ترین آیتمی که می‌تواند جابجا شود - اجازه هر فاصله‌ای
   const findClosestItem = (currentPosition: { x: number; y: number }) => {
     let minDistance = Number.MAX_VALUE;
     let closestIndex = -1;
 
-    // Find closest item to current position
+    // بدون آستانه فاصله - اجازه جابجایی با هر آیتمی
+
+    // یافتن نزدیک‌ترین آیتم به موقعیت فعلی - جستجو همه آیتم‌ها
     Object.keys(gridPositions.current).forEach((key) => {
       const index = parseInt(key);
 
-      // Skip the current dragged item
+      // رد کردن آیتم درگ شده فعلی
       if (index === draggedIndex) return;
 
-      const position = gridPositions.current[index];
+      const position = gridPositions.current[key];
       if (!position) return;
 
-      // Calculate distance to the center of this item
+      // محاسبه فاصله تا مرکز این آیتم
       const distance = Math.sqrt(
         Math.pow(position.x - currentPosition.x, 2) +
         Math.pow(position.y - currentPosition.y, 2)
       );
 
-      // Find the closest one
+      // یافتن نزدیک‌ترین مورد بدون توجه به فاصله
       if (distance < minDistance) {
         minDistance = distance;
         closestIndex = index;
@@ -396,7 +485,7 @@ const MarketerHomeScreen: React.FC = () => {
     return closestIndex;
   };
 
-  // Handle auto-scrolling when dragging near edges
+  // مدیریت اسکرول خودکار هنگام کشیدن نزدیک لبه‌ها
   const handleAutoScroll = (y: number) => {
     if (!flatListRef.current) return;
 
@@ -404,8 +493,9 @@ const MarketerHomeScreen: React.FC = () => {
     const SCROLL_INCREMENT = 5;
     const { height } = Dimensions.get('window');
 
+    // اصلاح خطای scrollTo - دسترسی ایمن به متد scrollToOffset در FlatList
     if (y < SCROLL_THRESHOLD) {
-      // Scroll up
+      // اسکرول به بالا به صورت نرم‌تر
       if (flatListRef.current.scrollToOffset) {
         flatListRef.current.scrollToOffset({
           offset: Math.max(0, scrollOffset.current - SCROLL_INCREMENT),
@@ -413,7 +503,7 @@ const MarketerHomeScreen: React.FC = () => {
         });
       }
     } else if (y > height - SCROLL_THRESHOLD) {
-      // Scroll down
+      // اسکرول به پایین به صورت نرم‌تر
       if (flatListRef.current.scrollToOffset) {
         flatListRef.current.scrollToOffset({
           offset: scrollOffset.current + SCROLL_INCREMENT,
@@ -423,33 +513,43 @@ const MarketerHomeScreen: React.FC = () => {
     }
   };
 
-  // Instructions that appear during drag and drop
+
+  // 3. دکمه ذخیره را به تابع handleSaveButton متصل کنید:
   const renderDragInstructions = () => {
     if (!isDragging) return null;
 
     return (
-      <View style={styles.dragInstructionContainer}>
+      <Animated.View
+        style={[
+          styles.dragInstructionContainer,
+          { opacity: isDragging ? 1 : 0 },
+          instructionsStyle
+        ]}
+      >
         <Text style={styles.dragInstructionText}>
-          کارت را به مکان دلخواه بکشید و رها کنید
+          {instructionsText}
         </Text>
         <TouchableOpacity
-          style={styles.saveButton}
-          onPress={finishDragging}
+          style={[styles.saveButton, saveButtonStyle]}
+          onPress={handleSaveButton} // تغییر در اینجا
         >
           <View style={styles.saveButtonContent}>
             <MaterialIcons name="save" size={20} color="#fff" />
-            <Text style={styles.saveButtonText}>ذخیره و اتمام</Text>
+            <Text style={[styles.saveButtonText, saveButtonTextStyle]}>
+              {saveButtonText}
+            </Text>
           </View>
         </TouchableOpacity>
-      </View>
+      </Animated.View>
     );
   };
+  // رندر کننده آیتم با انیمیشن‌های پیشرفته
+  const renderItem = ({ item, index }: { item: T; index: number }) => {
+    const itemKey = index.toString();
 
-  // Item renderer with enhanced animations
-  const renderItem = ({ item, index }: { item: MenuItem; index: number }) => {
-    // Initialize animations and refs if needed
-    if (!itemRefs.current[index]) {
-      itemRefs.current[index] = {
+    // مقداردهی اولیه انیمیشن‌ها و رفرنس‌ها در صورت نیاز
+    if (!itemRefs.current[itemKey]) {
+      itemRefs.current[itemKey] = {
         position: { x: 0, y: 0 },
         dimensions: { width: 0, height: 0 },
         scale: new Animated.Value(1),
@@ -460,35 +560,35 @@ const MarketerHomeScreen: React.FC = () => {
       };
     }
 
-    const scale = itemRefs.current[index].scale;
-    const translateX = itemRefs.current[index].translateX;
-    const translateY = itemRefs.current[index].translateY;
-    const opacity = itemRefs.current[index].opacity;
+    const scale = itemRefs.current[itemKey].scale;
+    const translateX = itemRefs.current[itemKey].translateX;
+    const translateY = itemRefs.current[itemKey].translateY;
+    const opacity = itemRefs.current[itemKey].opacity;
 
-    // Start dragging on long press
+    // شروع درگ با فشار طولانی
     const onLongPress = () => {
-      // If already dragging, don't start again
+      // اگر قبلاً در حال درگ هستیم، دوباره شروع نکن
       if (isDragging) return;
 
-      // Make sure position is properly measured before starting to drag
-      if (!itemRefs.current[index]?.position ||
-        !itemRefs.current[index]?.dimensions ||
-        itemRefs.current[index].position.x === 0) {
-        if (itemRefs.current[index]?.component) {
-          itemRefs.current[index].component.measure(
+      // اطمینان از اندازه‌گیری صحیح موقعیت قبل از شروع درگ
+      if (!itemRefs.current[itemKey]?.position ||
+        !itemRefs.current[itemKey]?.dimensions ||
+        itemRefs.current[itemKey].position.x === 0) {
+        if (itemRefs.current[itemKey]?.component) {
+          itemRefs.current[itemKey].component.measure(
             (x: number, y: number, width: number, height: number, pageX: number, pageY: number) => {
               if (typeof pageX === 'number' && typeof pageY === 'number') {
-                itemRefs.current[index].position = {
+                itemRefs.current[itemKey].position = {
                   x: pageX + width / 2,
                   y: pageY + height / 2 - scrollOffset.current
                 };
-                itemRefs.current[index].dimensions = {
+                itemRefs.current[itemKey].dimensions = {
                   width,
                   height
                 };
 
-                // Update grid positions with this measurement
-                gridPositions.current[index] = {
+                // به‌روزرسانی موقعیت‌های شبکه با این اندازه‌گیری
+                gridPositions.current[itemKey] = {
                   x: pageX + width / 2,
                   y: pageY + height / 2 - scrollOffset.current,
                   width,
@@ -506,19 +606,19 @@ const MarketerHomeScreen: React.FC = () => {
       startDragging();
     };
 
-    // Function to start drag with improved animation
+    // تابع شروع درگ با انیمیشن بهبود یافته
     const startDragging = () => {
       setIsDragging(true);
       setDraggedItem(item);
       setDraggedIndex(index);
 
-      // Animate scale up with spring for smoother motion
+      // انیمیشن افزایش مقیاس با اسپرینگ برای حرکت نرم‌تر
       Animated.spring(scale, {
         toValue: 1.1,
         ...SPRING_CONFIG
       }).start();
 
-      // Add a subtle shadow effect
+      // افزودن یک افکت سایه ظریف
       Animated.timing(opacity, {
         toValue: 0.9,
         duration: 100,
@@ -526,35 +626,35 @@ const MarketerHomeScreen: React.FC = () => {
       }).start();
     };
 
-    // Improved pan gesture handler for smoother dragging
+    // هندلر حرکت ژست بهبود یافته برای درگ نرم‌تر
     const onGestureEvent = (event: any) => {
       if (isDragging && draggedIndex === index) {
         const { translationX: tx, translationY: ty, absoluteX, absoluteY } = event.nativeEvent;
 
-        // Store current gesture location
+        // ذخیره موقعیت فعلی حرکت
         lastGestureLocation.current = { x: absoluteX, y: absoluteY };
 
-        // Update animations more smoothly
+        // به‌روزرسانی انیمیشن‌ها به صورت نرم‌تر
         translateX.setValue(tx);
         translateY.setValue(ty);
 
-        // Calculate current position (including scroll offset)
+        // محاسبه موقعیت فعلی (شامل آفست اسکرول)
         const currentPosition = {
-          x: itemRefs.current[index].position.x + tx,
-          y: itemRefs.current[index].position.y + ty
+          x: itemRefs.current[itemKey].position.x + tx,
+          y: itemRefs.current[itemKey].position.y + ty
         };
 
-        // Auto-scroll if needed for smoother experience
+        // اسکرول خودکار در صورت نیاز برای تجربه نرم‌تر
         handleAutoScroll(absoluteY);
 
-        // Find closest item that this can be swapped with
+        // یافتن نزدیک‌ترین آیتم که می‌تواند با آن جابجا شود
         const closestIndex = findClosestItem(currentPosition);
 
-        // Update hovered state to provide visual feedback
+        // به‌روزرسانی وضعیت هاور برای ارائه بازخورد بصری
         if (closestIndex !== -1 && closestIndex !== index) {
           setHoveredIndex(closestIndex);
 
-          // Only swap if not already swapping
+          // فقط در صورتی جابجا کن که قبلاً در حال جابجایی نباشیم
           if (!isSwapping.current) {
             debouncedSwapItems(index, closestIndex);
           }
@@ -564,56 +664,51 @@ const MarketerHomeScreen: React.FC = () => {
       }
     };
 
-    // Pan handler state change with improved end behavior
+    // تغییر وضعیت هندلر پن با رفتار پایان بهبود یافته
     const onHandlerStateChange = (event: any) => {
       const { state } = event.nativeEvent;
       panState.current = state;
 
       if (state === State.BEGAN) {
-        // Reset translations at the beginning
+        // بازنشانی ترجمه‌ها در ابتدا
         translateX.setValue(0);
         translateY.setValue(0);
       }
       else if (state === State.END || state === State.CANCELLED || state === State.FAILED) {
-        // If we're currently dragging this item
+        // اگر در حال حاضر این آیتم را می‌کشیم
         if (isDragging && draggedIndex === index) {
-          // Check for final swap
+          // بررسی برای جابجایی نهایی
           const { translationX: tx, translationY: ty } = event.nativeEvent;
           const currentPosition = {
-            x: itemRefs.current[index].position.x + tx,
-            y: itemRefs.current[index].position.y + ty
+            x: itemRefs.current[itemKey].position.x + tx,
+            y: itemRefs.current[itemKey].position.y + ty
           };
 
-          // Find closest position for final swap
+          // یافتن نزدیک‌ترین موقعیت برای جابجایی نهایی
           const closestIndex = findClosestItem(currentPosition);
 
-          // Perform final swap if needed
+          // انجام جابجایی نهایی در صورت نیاز
           if (closestIndex !== -1 && closestIndex !== index && !isSwapping.current) {
             swapItems(index, closestIndex);
           }
 
-          // ذخیره چیدمان هنگام رها کردن
-          saveLayout();
-
-          // Finish dragging with smoother animations
+          // پایان کشیدن با انیمیشن‌های نرم‌تر
           finishDragging();
         }
       }
 
-      // Add a safety mechanism - if the gesture is in a weird state, reset everything
+      // افزودن یک مکانیسم ایمنی - اگر حرکت در وضعیت عجیبی باشد، همه چیز را بازنشانی کن
       if (state !== State.ACTIVE && state !== State.BEGAN && isDragging) {
-        // Force reset after a short delay to ensure we don't interfere with normal gesture handling
+        // بازنشانی اجباری پس از تاخیر کوتاه برای اطمینان از عدم تداخل با مدیریت معمولی حرکت
         setTimeout(() => {
-          if (isDragging) {  // Double check we're still dragging
-            // ذخیره چیدمان در شرایط اضطراری
-            saveLayout();
+          if (isDragging) {  // بررسی مجدد اینکه آیا هنوز در حال کشیدن هستیم
             finishDragging();
           }
         }, 300);
       }
     };
 
-    // Visual states for current item
+    // وضعیت‌های بصری برای آیتم فعلی
     const isBeingDragged = isDragging && draggedIndex === index;
     const isHovered = hoveredIndex === index && !isBeingDragged;
 
@@ -626,12 +721,15 @@ const MarketerHomeScreen: React.FC = () => {
         <Animated.View
           ref={ref => {
             if (ref) {
-              itemRefs.current[index].component = ref;
+              itemRefs.current[itemKey].component = ref;
             }
           }}
           style={[
             styles.gridItemContainer,
             {
+              width: itemWidth,
+              height: itemHeight,
+              margin: itemMargin / 2,
               transform: [
                 { scale: isBeingDragged ? scale : 1 },
                 { translateX: isBeingDragged ? translateX : 0 },
@@ -639,30 +737,31 @@ const MarketerHomeScreen: React.FC = () => {
               ],
               zIndex: isBeingDragged ? 100 : (isHovered ? 50 : 1),
               opacity: opacity,
-            }
+            },
+            containerStyle
           ]}
           onLayout={(event) => {
             const layout = event.nativeEvent.layout;
 
-            // Measure position with delay to ensure accuracy
+            // اندازه‌گیری موقعیت با تاخیر برای اطمینان از دقت
             setTimeout(() => {
-              if (itemRefs.current[index]?.component) {
-                itemRefs.current[index].component.measure(
+              if (itemRefs.current[itemKey]?.component) {
+                itemRefs.current[itemKey].component.measure(
                   (x: number, y: number, width: number, height: number, pageX: number, pageY: number) => {
                     if (typeof pageX === 'number' && typeof pageY === 'number') {
-                      // Store position relative to scroll
-                      itemRefs.current[index].position = {
+                      // ذخیره موقعیت نسبت به اسکرول
+                      itemRefs.current[itemKey].position = {
                         x: pageX + width / 2,
                         y: pageY + height / 2 - scrollOffset.current
                       };
 
-                      itemRefs.current[index].dimensions = {
+                      itemRefs.current[itemKey].dimensions = {
                         width,
                         height
                       };
 
-                      // Update grid positions
-                      gridPositions.current[index] = {
+                      // به‌روزرسانی موقعیت‌های شبکه
+                      gridPositions.current[itemKey] = {
                         x: pageX + width / 2,
                         y: pageY + height / 2 - scrollOffset.current,
                         width,
@@ -678,27 +777,24 @@ const MarketerHomeScreen: React.FC = () => {
           <TouchableOpacity
             style={[
               styles.gridItem,
-              isBeingDragged && styles.draggingItem,
-              isHovered && styles.hoveredItem
+              { height: itemHeight },
+              itemStyle,
+              isBeingDragged && [styles.draggingItem, draggedItemStyle],
+              isHovered && [styles.hoveredItem, hoveredItemStyle]
             ]}
             onLongPress={onLongPress}
             delayLongPress={200}
             activeOpacity={0.7}
             onPress={() => {
-              // Only navigate if we're not in dragging mode
-              if (!isDragging && item.screenName) {
-                navigation.navigate(item.screenName);
+              // فقط در صورتی حرکت کن که در حالت کشیدن نباشیم
+              if (!isDragging && onItemPress) {
+                onItemPress(item);
               }
             }}
           >
-            <MaterialIcons
-              name={item.icon}
-              size={40}
-              color={item.iconColor || colors.primary}
-            />
-            <Text style={styles.gridText}>{item.name}</Text>
+            {renderItemContent(item, isBeingDragged, isHovered)}
 
-            {/* Drag handle indicator */}
+            {/* نشانگر بهبود یافته دسته کشیدن */}
             {isBeingDragged && (
               <View style={styles.dragHandle}>
                 <MaterialIcons name="drag-handle" size={20} color="#666" />
@@ -710,47 +806,31 @@ const MarketerHomeScreen: React.FC = () => {
     );
   };
 
+  // رندر کامپوننت اصلی
   return (
-    <View style={styles.container}>
-      <View style={styles.logoContainer}>
-        <Image
-          style={styles.logo}
-          source={require("../../../assets/aratile_logo_2.png")}
-        />
-      </View>
-      <View style={styles.headerBox}>
-        <View style={styles.infoBox}>
-          <View style={styles.avatarCircle}>
-            <MaterialIcons name="person" size={26} color="#666666" />
-          </View>
-          <Text style={styles.userName}>کارشناس میدانی</Text>
-        </View>
-        <MaterialIcons name="create" size={24} color="#666666" />
-      </View>
-
-      {/* Display drag instructions when dragging */}
+    <View style={[styles.container, containerStyle]}>
+      {/* نمایش دستورالعمل‌های کشیدن در هنگام کشیدن */}
       {renderDragInstructions()}
 
       <FlatList
         ref={flatListRef}
         data={items}
-        numColumns={2}
+        numColumns={numColumns}
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.list}
         columnWrapperStyle={styles.columnWrapper}
         extraData={[isDragging, draggedIndex, hoveredIndex, items]}
-        scrollEnabled={true}
+        scrollEnabled={true} // همیشه اجازه اسکرول برای تجربه کاربری بهتر
         onScroll={(e) => {
           scrollOffset.current = e.nativeEvent.contentOffset.y;
 
-          // Recalculate grid positions when scrolling
+          // محاسبه مجدد موقعیت‌های شبکه هنگام اسکرول
           if (isDragging) {
             Object.keys(gridPositions.current).forEach(key => {
-              const index = parseInt(key);
-              if (gridPositions.current[index]) {
-                gridPositions.current[index].y =
-                  itemRefs.current[index].position.y -
+              if (gridPositions.current[key]) {
+                gridPositions.current[key].y =
+                  itemRefs.current[key].position.y -
                   scrollOffset.current +
                   e.nativeEvent.contentOffset.y;
               }
@@ -762,34 +842,18 @@ const MarketerHomeScreen: React.FC = () => {
     </View>
   );
 };
+
+// استایل‌های کامپوننت
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 50,
-    backgroundColor: "#FFFFFF",
-  },
-  logoContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingTop: 10,
-  },
-  logo: {
-    width: 100,
-    height: 36,
+    backgroundColor: "#ffffff",
   },
   list: {
-    paddingBottom: 100, // Extra padding at bottom for dragging
-    paddingLeft: 5,
-    paddingRight: 5,
-    marginLeft: 5,
-    marginRight: 5,
+    padding: 5,
+    paddingBottom: 50, // پدینگ اضافی در پایین برای کشیدن
   },
   gridItemContainer: {
-    margin: 5,
-    paddingLeft: 5,
-    paddingRight: 5,
-    paddingBottom: 10,
-    width: itemWidth,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -798,7 +862,6 @@ const styles = StyleSheet.create({
   },
   gridItem: {
     padding: 15,
-    height: 150,
     flexDirection: "column",
     justifyContent: "center",
     alignItems: "center",
@@ -809,63 +872,26 @@ const styles = StyleSheet.create({
     borderColor: "#E4E4E4",
   },
   draggingItem: {
-    borderColor: colors.primary,
+    borderColor: "#1C3F64",
     borderWidth: 2,
     backgroundColor: "#FFFFFF",
-    shadowColor: colors.primary,
+    shadowColor: "#1C3F64",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
     elevation: 10,
   },
   hoveredItem: {
-    borderColor: colors.primary,
+    borderColor: "#1C3F64",
     backgroundColor: "#F0F7FF",
     borderStyle: "dashed",
     borderWidth: 2,
   },
-  gridText: {
-    textAlign: "center",
-    fontSize: 16,
-    fontWeight: Platform.OS === "ios" ? "700" : "normal",
-    fontFamily: getFontFamily("Yekan_Bakh_Bold", "700"),
-    color: "#333333",
-  },
-  headerBox: {
-    flexDirection: "row-reverse",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    marginVertical: 20,
-    width: "100%",
-  },
-  infoBox: {
-    flexDirection: "row-reverse",
-    alignItems: "center",
-    gap: 10,
-  },
-  userName: {
-    fontSize: 18,
-    fontWeight: Platform.OS === "ios" ? "700" : "normal",
-    color: "#666666",
-    fontFamily: getFontFamily("Yekan_Bakh_Bold", "700"),
-  },
-  avatarCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#f0f0f0",
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-  },
   columnWrapper: {
-    flexDirection: "row-reverse",
     justifyContent: "center",
   },
   dragInstructionContainer: {
-    backgroundColor: colors.light,
+    backgroundColor: "#F8F8F8",
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 15,
@@ -879,7 +905,6 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   dragInstructionText: {
-    color: "black",
     fontFamily: getFontFamily("Yekan_Bakh_Bold", "500"),
     textAlign: "center",
     fontSize: 16,
@@ -898,7 +923,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   saveButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: "#1C3F64",
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: 10,
@@ -923,4 +948,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MarketerHomeScreen;
+export default DraggableGrid;
