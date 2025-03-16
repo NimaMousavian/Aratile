@@ -9,7 +9,8 @@ export type ColorKeys =
   | "success"
   | "warning"
   | "primaryLight"
-  | "info";
+  | "info"
+  | "background";
 
 export default {
   primary: "#18395c",
@@ -26,4 +27,5 @@ export default {
   success: "#238B45",
   warning: "#F39C12",
   info: "#2696d9",
+  background: "#f5f5f5",
 };

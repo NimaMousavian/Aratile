@@ -37,9 +37,12 @@ import AddNewShop from "./screens/FieldMarketing/B2BFieldMarketer/AddNewShop";
 import VoiceRecording from "./screens/FieldMarketing/B2BFieldMarketer/VoiceRecording";
 import IssuedInvoices from "./screens/Seller/IssuedInvoices";
 import AddNewProject from "./screens/FieldMarketing/B2CFieldMarketer/AddNewProject";
+import LogingScreen from "./screens/LogingScreen";
 
 export type RootStackParamList = {
   AppSelection: undefined;
+  Login: undefined;
+
   Home: undefined;
   IssuingNewInvoic: undefined;
   BarCodeScanner: undefined;
@@ -97,6 +100,7 @@ const StackNavigator: React.FC = () => {
         component={AppSelectionScreen}
         options={{ headerShown: false }}
       />
+      <Stack.Screen name="Login" component={LogingScreen} />
 
       {/* Seller Screens */}
 
