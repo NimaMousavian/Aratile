@@ -1,14 +1,13 @@
 import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
-import AppTextInput from "../../../components/TextInput";
-import { useNavigation } from "@react-navigation/native";
-import { AppNavigationProp } from "../../../StackNavigator";
-import IconButton from "../../../components/IconButton";
 import colors from "../../../config/colors";
+import AppTextInput from "../../../components/TextInput";
 import AppButton from "../../../components/Button";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useNavigation } from "@react-navigation/native";
+import { AppNavigationProp } from "../../../StackNavigator";
 
-const B2BFieldMarketer = () => {
+const B2CFieldMarketer = () => {
   const navigation = useNavigation<AppNavigationProp>();
   return (
     <View style={styles.container}>
@@ -32,7 +31,7 @@ const B2BFieldMarketer = () => {
       </View>
       <TouchableOpacity
         style={styles.addIconContainer}
-        onPress={() => navigation.navigate("AddNewShop")}
+        onPress={() => navigation.navigate("AddNewProject")}
       >
         <MaterialIcons name="add" size={35} color={"white"} />
       </TouchableOpacity>
@@ -55,4 +54,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default B2BFieldMarketer;
+export default B2CFieldMarketer;

@@ -6,6 +6,7 @@ import {
   TextInputProps,
   Text,
   Platform,
+  ViewStyle,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -77,7 +78,7 @@ const AppTextInput: React.FC<AppTextInputProps> = ({
           />
         )}
         <TextInput
-          style={[styles.textInput, style]}
+          style={[styles.textInput, style, { height: height }]}
           placeholder={placeholder}
           value={value}
           onChangeText={(newValue) => {

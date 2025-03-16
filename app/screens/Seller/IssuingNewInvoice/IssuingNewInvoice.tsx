@@ -114,6 +114,7 @@ const IssuingNewInvoice = () => {
         style={{
           flexDirection: "row-reverse",
           justifyContent: "space-between",
+          alignItems: "center",
         }}
       >
         <TextInput
@@ -123,12 +124,21 @@ const IssuingNewInvoice = () => {
           placeholder="جستجوی خریدار"
           onChangeText={() => {}}
           width={"75%"}
+          containerStyle={{ marginBottom: 0 }}
         ></TextInput>
         <Button
           title="جستجو"
           onPress={() => navigation.navigate("CustomerInfo")}
         />
       </View>
+
+      <FlatList
+        data={selectedProducts}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <ProductPreview title={item.title} orderCount={item.quantity} />
+        )}
+      />
       <TextInput
         autoCapitalize="none"
         autoCorrect={false}
@@ -137,15 +147,8 @@ const IssuingNewInvoice = () => {
         onChangeText={() => {}}
         numberOfLines={4}
         multiline={true}
-        style={{ width: "100%", height: 100 }}
+        height={150}
       ></TextInput>
-      <FlatList
-        data={selectedProducts}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <ProductPreview title={item.title} orderCount={item.quantity} />
-        )}
-      />
       <View>
         <View style={styles.buttonsBox}>
           <Button
@@ -200,15 +203,24 @@ const IssuingNewInvoice = () => {
             onPress={() => setShowProductCodeModal(false)}
             color="danger"
           />
-          <TextInput
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="default"
-            placeholder="کد کالا را وارد کنید"
-            onChangeText={() => {}}
-            style={{ width: "100%" }}
-          ></TextInput>
-          <AppButton title="جستجو" onPress={() => {}} color="success" />
+          <View
+            style={{
+              flexDirection: "row-reverse",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <TextInput
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="default"
+              placeholder="کد کالا را وارد کنید"
+              onChangeText={() => {}}
+              width={"75%"}
+              containerStyle={{ marginBottom: 0 }}
+            ></TextInput>
+            <AppButton title="جستجو" onPress={() => {}} color="primaryLight" />
+          </View>
           {/* <FlatList
             data={sampleProducts}
             keyExtractor={(item) => item.id.toString()}
@@ -273,15 +285,24 @@ const IssuingNewInvoice = () => {
             onPress={() => setShowProductNameModal(false)}
             color="danger"
           />
-          <TextInput
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="default"
-            placeholder="نام کالا را وارد کنید"
-            onChangeText={() => {}}
-            style={{ width: "100%" }}
-          ></TextInput>
-          <AppButton title="جستجو" onPress={() => {}} color="success" />
+          <View
+            style={{
+              flexDirection: "row-reverse",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <TextInput
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="default"
+              placeholder="نام کالا را وارد کنید"
+              onChangeText={() => {}}
+              containerStyle={{ marginBottom: 0 }}
+              width={"75%"}
+            ></TextInput>
+            <AppButton title="جستجو" onPress={() => {}} color="primaryLight" />
+          </View>
           {/* <FlatList
             data={sampleProducts}
             keyExtractor={(item) => item.id.toString()}

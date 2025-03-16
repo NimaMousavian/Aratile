@@ -23,7 +23,6 @@ import CashierHomeScreen from "./screens/Cashier/CashierHomeScreen";
 import ReceiveNewInvoiceScreen from "./screens/Cashier/ReceiveNewInvoiceScreen/ReceiveNewInvoiceScreen";
 import StatusFilterScreen from "./screens/Cashier/ReceiveNewInvoiceScreen/StatusFilterScreen";
 
-
 import styles from "./config/styles";
 import colors from "./config/colors";
 import CustomerInfo from "./screens/Seller/IssuingNewInvoice/CustomerInfo";
@@ -33,9 +32,11 @@ import SupplyRequest from "./screens/Seller/SupplyRequest";
 import AppText from "./components/Text";
 import SupplyRequestList from "./screens/Seller/SupplyRequestList";
 import B2BFieldMarketer from "./screens/FieldMarketing/B2BFieldMarketer/B2BFieldMarketer";
-import B2CFieldMarketer from "./screens/FieldMarketing/B2CFieldMarketer";
+import B2CFieldMarketer from "./screens/FieldMarketing/B2CFieldMarketer/B2CFieldMarketer";
 import AddNewShop from "./screens/FieldMarketing/B2BFieldMarketer/AddNewShop";
+import VoiceRecording from "./screens/FieldMarketing/B2BFieldMarketer/VoiceRecording";
 import IssuedInvoices from "./screens/Seller/IssuedInvoices";
+import AddNewProject from "./screens/FieldMarketing/B2CFieldMarketer/AddNewProject";
 
 export type RootStackParamList = {
   AppSelection: undefined;
@@ -46,7 +47,7 @@ export type RootStackParamList = {
   ProductProperties: undefined;
   SupplyRequest: undefined;
   SupplyRequestList: undefined;
-  IssuedInvoices: undefined;  
+  IssuedInvoices: undefined;
   StatusFilterScreen: undefined;
 
   CashierHome: undefined;
@@ -60,6 +61,8 @@ export type RootStackParamList = {
   B2BFieldMarketer: undefined;
   B2CFieldMarketer: undefined;
   AddNewShop: undefined;
+  VoiceRecording: undefined;
+  AddNewProject: undefined;
 };
 export type AppNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -152,7 +155,7 @@ const StackNavigator: React.FC = () => {
 
       <Stack.Screen
         name="IssuedInvoices"
-        component={IssuedInvoices} 
+        component={IssuedInvoices}
         options={{
           headerShown: false,
           // title: "فاکتور های صادر شده",
@@ -161,8 +164,6 @@ const StackNavigator: React.FC = () => {
           // headerStyle: styles.headerStyle,
         }}
       />
-
-
 
       {/* Cashier Screens */}
 
@@ -200,6 +201,8 @@ const StackNavigator: React.FC = () => {
       <Stack.Screen name="B2BFieldMarketer" component={B2BFieldMarketer} />
       <Stack.Screen name="B2CFieldMarketer" component={B2CFieldMarketer} />
       <Stack.Screen name="AddNewShop" component={AddNewShop} />
+      <Stack.Screen name="VoiceRecording" component={VoiceRecording} />
+      <Stack.Screen name="AddNewProject" component={AddNewProject} />
     </Stack.Navigator>
   );
 };
