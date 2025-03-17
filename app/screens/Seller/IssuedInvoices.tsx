@@ -7,8 +7,6 @@ import {
   TouchableOpacity,
   Platform,
   ViewStyle,
-  TextStyle,
-  TextInput,
   Linking,
   SafeAreaView,
   StatusBar,
@@ -17,6 +15,7 @@ import { Feather, MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import colors from "../../config/colors";
 import ScreenHeader from "../../components/ScreenHeader";
+import SearchInput from "../../components/SearchInput"; 
 
 type FontWeight = "700" | "600" | "500" | "bold" | "semi-bold" | string;
 type StatusType =
@@ -132,6 +131,7 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
         ]}
       >
         <LinearGradient
+          // @ts-ignore: type issues with LinearGradient colors prop
           colors={gradientColors}
           style={styles.purchaseHeader}
           start={{ x: 0, y: 0 }}
@@ -323,6 +323,12 @@ const IssuedInvoices: React.FC = () => {
   const [searchText, setSearchText] = useState<string>("");
   const [activeTab, setActiveTab] = useState<string>("all");
 
+
+  const handleSearch = () => {
+    console.log("Search button pressed with text:", searchText);
+
+  };
+
   const getFilteredItems = () => {
     let filtered = items;
 
@@ -390,28 +396,16 @@ const IssuedInvoices: React.FC = () => {
   return (
     <>
       <ScreenHeader title="فاکتورها" />
-      <SafeAreaView style={styles.safeArea}>
-        <StatusBar backgroundColor="#f5f5f5" barStyle="dark-content" />
+
         <View style={styles.container}>
-          <View style={styles.searchContainer}>
-            <TextInput
-              style={styles.searchInput}
+ 
+          <View style={styles.searchOuterContainer}>
+            <SearchInput
               placeholder="جستجو در فاکتورها..."
-              placeholderTextColor="#999"
               value={searchText}
               onChangeText={setSearchText}
+              onSearch={handleSearch}
             />
-            <Feather
-              name="search"
-              size={20}
-              color="#999"
-              style={styles.searchIcon}
-            />
-            {searchText ? (
-              <TouchableOpacity onPress={() => setSearchText("")}>
-                <Feather name="x" size={20} color="#999" />
-              </TouchableOpacity>
-            ) : null}
           </View>
 
           <View style={styles.tabContainer}>
@@ -562,17 +556,13 @@ const IssuedInvoices: React.FC = () => {
             )}
           </View>
         </View>
-      </SafeAreaView>
+
     </>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#f5f5f5",
-    // paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
-  },
+
   container: {
     flex: 1,
     backgroundColor: "#f5f5f5",
@@ -588,31 +578,10 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontFamily: getFontFamily("Yekan_Bakh_Bold", "bold"),
   },
-  searchContainer: {
-    flexDirection: "row-reverse",
-    alignItems: "center",
-    backgroundColor: "white",
+
+  searchOuterContainer: {
     margin: 15,
     marginBottom: 5,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  searchInput: {
-    flex: 1,
-    fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
-    fontSize: 14,
-    textAlign: "right",
-    padding: 8,
-    height: 40,
-  },
-  searchIcon: {
-    marginLeft: 10,
   },
 
   tabContainer: {

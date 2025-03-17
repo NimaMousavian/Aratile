@@ -7,8 +7,6 @@ import {
   TouchableOpacity,
   Platform,
   ViewStyle,
-  TextStyle,
-  TextInput,
   Linking,
   SafeAreaView,
   StatusBar,
@@ -16,7 +14,7 @@ import {
 import { Feather, MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import colors from "../../../config/colors";
-
+import SearchInput from "../../../components/SearchInput";
 
 type FontWeight = "700" | "600" | "500" | "bold" | "semi-bold" | string;
 type StatusType = "تایید نهایی" | "تعلیق" | "بسته شده" | "لغو شده";
@@ -128,6 +126,8 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
         ]}
       >
         <LinearGradient
+          // @ts-ignore: type issues with LinearGradient colors prop
+
           colors={gradientColors}
           style={styles.purchaseHeader}
           start={{ x: 0, y: 0 }}
@@ -151,7 +151,7 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
         </LinearGradient>
 
         <View style={styles.purchaseContent}>
-          {/* Date moved to first line */}
+        
           {date && (
             <View style={styles.purchaseRow}>
               <View style={styles.purchaseItem}>
@@ -265,7 +265,7 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
 };
 
 const StatusFilterScreen: React.FC = () => {
-  
+
   const [items, setItems] = useState<InspectionItem[]>([
     {
       id: "1",
@@ -277,7 +277,6 @@ const StatusFilterScreen: React.FC = () => {
       sellerPhone: "09123583467",
       status: "تایید نهایی",
       description: "فاکتور به درخواست مشتری لغو شده است",
-
     },
     {
       id: "2",
@@ -301,7 +300,6 @@ const StatusFilterScreen: React.FC = () => {
       sellerPhone: "09304052520",
       status: "بسته شده",
       description: "فاکتور به درخواست مشتری لغو شده است",
-
     },
     {
       id: "4",
@@ -317,7 +315,13 @@ const StatusFilterScreen: React.FC = () => {
   ]);
 
   const [searchText, setSearchText] = useState<string>("");
-  const [activeTab, setActiveTab] = useState<string>("all"); 
+  const [activeTab, setActiveTab] = useState<string>("all");
+
+
+  const handleSearch = () => {
+    console.log("Search button pressed with text:", searchText);
+ 
+  };
 
   const getFilteredItems = () => {
     let filtered = items;
@@ -346,7 +350,7 @@ const StatusFilterScreen: React.FC = () => {
 
   const getCountByStatus = (status: StatusType | null) => {
     if (status === null) {
-      return items.length; 
+      return items.length;
     }
     return items.filter(item => item.status === status).length;
   };
@@ -354,15 +358,15 @@ const StatusFilterScreen: React.FC = () => {
   const getColorsByStatus = (status?: StatusType): string[] => {
     switch (status) {
       case "تایید نهایی":
-        return ["#4CAF50", "#2E7D32"]; 
+        return ["#4CAF50", "#2E7D32"];
       case "تعلیق":
-        return ["#FFA726", "#EF6C00"]; 
+        return ["#FFA726", "#EF6C00"];
       case "بسته شده":
-        return ["#42A5F5", "#1565C0"]; 
+        return ["#42A5F5", "#1565C0"];
       case "لغو شده":
-        return ["#EF5350", "#C62828"]; 
+        return ["#EF5350", "#C62828"];
       default:
-        return ["#9E9E9E", "#616161"]; 
+        return ["#9E9E9E", "#616161"];
     }
   };
 
@@ -387,20 +391,14 @@ const StatusFilterScreen: React.FC = () => {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar backgroundColor="#f5f5f5" barStyle="dark-content" />
       <View style={styles.container}>
-        <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchInput}
+ 
+        <View style={styles.searchOuterContainer}>
+          <SearchInput
             placeholder="جستجو در فاکتورها..."
-            placeholderTextColor="#999"
             value={searchText}
             onChangeText={setSearchText}
+            onSearch={handleSearch}
           />
-              <Feather name="search" size={20} color="#999" style={styles.searchIcon} />
-          {searchText ? (
-            <TouchableOpacity onPress={() => setSearchText("")}>
-              <Feather name="x" size={20} color="#999" />
-            </TouchableOpacity>
-          ) : null}
         </View>
 
         <View style={styles.tabContainer}>
@@ -423,7 +421,7 @@ const StatusFilterScreen: React.FC = () => {
               style={[
                 styles.countText,
                 activeTab === "canceled" && styles.activeCountText,
-                { color: "#EF5350" }, 
+                { color: "#EF5350" },
               ]}
             >
               {convertToPersianNumbers(getCountByStatus("لغو شده"))}
@@ -449,7 +447,7 @@ const StatusFilterScreen: React.FC = () => {
               style={[
                 styles.countText,
                 activeTab === "pending" && styles.activeCountText,
-                { color: "#FFA500" }, 
+                { color: "#FFA500" },
               ]}
             >
               {convertToPersianNumbers(getCountByStatus("تعلیق"))}
@@ -475,7 +473,7 @@ const StatusFilterScreen: React.FC = () => {
               style={[
                 styles.countText,
                 activeTab === "confirmed" && styles.activeCountText,
-                { color: "#4CAF50" }, 
+                { color: "#4CAF50" },
               ]}
             >
               {convertToPersianNumbers(getCountByStatus("تایید نهایی"))}
@@ -501,7 +499,7 @@ const StatusFilterScreen: React.FC = () => {
               style={[
                 styles.countText,
                 activeTab === "closed" && styles.activeCountText,
-                { color: "#3498db" }, 
+                { color: "#3498db" },
               ]}
             >
               {convertToPersianNumbers(getCountByStatus("بسته شده"))}
@@ -524,7 +522,7 @@ const StatusFilterScreen: React.FC = () => {
               style={[
                 styles.countText,
                 activeTab === "all" && styles.activeCountText,
-                { color: "#6B7280" }, 
+                { color: "#6B7280" },
               ]}
             >
               {convertToPersianNumbers(getCountByStatus(null))}
@@ -575,41 +573,20 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontFamily: getFontFamily("Yekan_Bakh_Bold", "bold"),
   },
-  searchContainer: {
-    flexDirection: "row-reverse",
-    alignItems: "center",
-    backgroundColor: "white",
+  // Replace the old search styles with a container for our new component
+  searchOuterContainer: {
     margin: 15,
-    marginBottom: 5, 
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    marginBottom: 5,
   },
-  searchInput: {
-    flex: 1,
-    fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
-    fontSize: 14,
-    textAlign: "right",
-    padding: 8,
-    height: 40,
-  },
-  searchIcon: {
-    marginLeft: 10,
-  },
-  
+
   tabContainer: {
     flexDirection: "row",
     backgroundColor: "#FFFFFF",
     borderRadius: 15,
     marginHorizontal: 15,
-    marginTop: 5, 
-    marginBottom: 5, 
-    padding: 6, 
+    marginTop: 5,
+    marginBottom: 5,
+    padding: 6,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -622,7 +599,7 @@ const styles = StyleSheet.create({
   },
   tab: {
     flex: 1,
-    paddingVertical: 6, 
+    paddingVertical: 6,
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
@@ -632,7 +609,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF3E0",
   },
   confirmedActiveTab: {
-    backgroundColor: "#E8F5E9", 
+    backgroundColor: "#E8F5E9",
   },
   closedActiveTab: {
     backgroundColor: "#E3F2FD",
@@ -645,7 +622,7 @@ const styles = StyleSheet.create({
   },
   tabText: {
     fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
-    fontSize: 11, 
+    fontSize: 11,
     color: "#6B7280",
     textAlign: "center",
   },
@@ -656,7 +633,7 @@ const styles = StyleSheet.create({
   countText: {
     fontFamily: getFontFamily("Yekan_Bakh_Bold", "700"),
     fontSize: 15,
-    marginTop: 4, 
+    marginTop: 4,
     textAlign: "center",
   },
   activeCountText: {

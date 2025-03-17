@@ -188,6 +188,13 @@ const StackNavigator: React.FC = () => {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="StatusFilterScreen"
+        component={StatusFilterScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
 
       <Stack.Screen
         name="CheckCalculator"
