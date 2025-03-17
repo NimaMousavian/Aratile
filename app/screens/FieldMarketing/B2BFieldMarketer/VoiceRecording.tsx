@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
   },
   recordButton: {
     marginVertical: 30,
-    elevation: 5,
+    elevation: 1,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 15,
     margin: 20,
-    elevation: 3,
+    elevation: 1,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.22,

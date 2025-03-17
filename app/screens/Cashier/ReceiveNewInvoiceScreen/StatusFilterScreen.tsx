@@ -15,6 +15,7 @@ import { Feather, MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import colors from "../../../config/colors";
 import SearchInput from "../../../components/SearchInput";
+import ScreenHeader from "../../../components/ScreenHeader";
 
 type FontWeight = "700" | "600" | "500" | "bold" | "semi-bold" | string;
 type StatusType = "تایید نهایی" | "تعلیق" | "بسته شده" | "لغو شده";
@@ -388,8 +389,9 @@ const StatusFilterScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar backgroundColor="#f5f5f5" barStyle="dark-content" />
+    <>
+       <ScreenHeader title="فاکتورها" />
+
       <View style={styles.container}>
  
         <View style={styles.searchOuterContainer}>
@@ -548,7 +550,7 @@ const StatusFilterScreen: React.FC = () => {
           )}
         </View>
       </View>
-    </SafeAreaView>
+</>
   );
 };
 
@@ -594,7 +596,7 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.1,
     shadowRadius: 3,
-    elevation: 4,
+    elevation: 1,
     justifyContent: "space-between",
   },
   tab: {

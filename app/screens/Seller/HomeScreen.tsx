@@ -742,7 +742,6 @@ const HomeScreen: React.FC = () => {
           onLayout={(event) => {
             const layout = event.nativeEvent.layout;
 
-            // Measure position with delay to ensure accuracy
             setTimeout(() => {
               if (itemRefs.current[index]?.component) {
                 itemRefs.current[index].component.measure(
@@ -758,7 +757,6 @@ const HomeScreen: React.FC = () => {
                       typeof pageX === "number" &&
                       typeof pageY === "number"
                     ) {
-                      // Store position relative to scroll
                       itemRefs.current[index].position = {
                         x: pageX + width / 2,
                         y: pageY + height / 2 - scrollOffset.current,
@@ -769,7 +767,6 @@ const HomeScreen: React.FC = () => {
                         height,
                       };
 
-                      // Update grid positions
                       gridPositions.current[index] = {
                         x: pageX + width / 2,
                         y: pageY + height / 2 - scrollOffset.current,
@@ -793,7 +790,6 @@ const HomeScreen: React.FC = () => {
             delayLongPress={200}
             activeOpacity={0.7}
             onPress={() => {
-              // Only navigate if we're not in dragging mode
               if (!isDragging && item.screenName) {
                 navigation.navigate(item.screenName);
               }
@@ -806,7 +802,6 @@ const HomeScreen: React.FC = () => {
             />
             <Text style={styles.gridText}>{item.name}</Text>
 
-            {/* Improved drag handle indicator */}
             {isBeingDragged && (
               <View style={styles.dragHandle}>
                 <MaterialIcons name="drag-handle" size={20} color="#666" />
@@ -840,7 +835,6 @@ const HomeScreen: React.FC = () => {
         <MaterialIcons name="create" size={24} color="#666666" />
       </View>
 
-      {/* Display drag instructions when dragging */}
       {renderDragInstructions()}
 
       <FlatList
@@ -852,11 +846,10 @@ const HomeScreen: React.FC = () => {
         contentContainerStyle={styles.list}
         columnWrapperStyle={styles.columnWrapper}
         extraData={[isDragging, draggedIndex, hoveredIndex, items]}
-        scrollEnabled={true} // Always allow scrolling for better UX
+        scrollEnabled={true} 
         onScroll={(e) => {
           scrollOffset.current = e.nativeEvent.contentOffset.y;
 
-          // Recalculate grid positions when scrolling
           if (isDragging) {
             Object.keys(gridPositions.current).forEach((key) => {
               const index = parseInt(key);
@@ -907,7 +900,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
-    elevation: 3,
+    elevation: 1,
   },
   gridItem: {
     padding: 15,
@@ -916,7 +909,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     gap: 15,
-    backgroundColor: "#F2F2F2", // Color back to original grey
+    backgroundColor: "#F2F2F2", 
     borderRadius: 15,
     borderWidth: 1,
     borderColor: "#E4E4E4",
@@ -929,7 +922,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
-    elevation: 10,
+    elevation: 1,
   },
   hoveredItem: {
     borderColor: colors.primary,
@@ -988,7 +981,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.2,
     shadowRadius: 5,
-    elevation: 5,
+    elevation: 1,
   },
   dragInstructionText: {
 
@@ -1007,7 +1000,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
-    elevation: 2,
+    elevation: 1,
   },
   saveButton: {
     backgroundColor: colors.primary,
@@ -1015,7 +1008,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 10,
     marginTop: 12,
-    elevation: 3,
+    elevation: 1,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,

@@ -39,11 +39,14 @@ import IssuedInvoices from "./screens/Seller/IssuedInvoices";
 import AddNewProject from "./screens/FieldMarketing/B2CFieldMarketer/AddNewProject";
 import LogingScreen from "./screens/LogingScreen";
 import ProfileScreen from "./screens/ProfileScreen";
+import ChangePasswordScreen from "./screens/Seller/ChangePasswordScreen";
+
 
 export type RootStackParamList = {
   AppSelection: undefined;
   Login: undefined;
   Profile: undefined;
+  ChangePassword: undefined;
 
   Home: undefined;
   IssuingNewInvoic: undefined;
@@ -198,6 +201,9 @@ const StackNavigator: React.FC = () => {
           headerShown: false,
         }}
       />
+      <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+
+
 
       <Stack.Screen
         name="CheckCalculator"
