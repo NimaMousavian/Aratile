@@ -110,32 +110,34 @@ const CashierHomeScreen: React.FC = () => {
 
   // Animation configurations for smoother transitions
   const SPRING_CONFIG = {
-    tension: 50,      // Lower tension makes it more elastic
-    friction: 7,      // Lower friction makes it smoother
-    useNativeDriver: true
+    tension: 50, // Lower tension makes it more elastic
+    friction: 7, // Lower friction makes it smoother
+    useNativeDriver: true,
   };
 
   // Timing configuration for smoother animations
   const TIMING_CONFIG = {
     duration: 200,
-    useNativeDriver: true
+    useNativeDriver: true,
   };
 
   // Use a more reliable way to store item positions
   const itemRefs = useRef<{
     [key: number]: {
-      position: { x: number, y: number },
-      dimensions: { width: number, height: number },
-      scale: Animated.Value,
-      translateX: Animated.Value,
-      translateY: Animated.Value,
-      opacity: Animated.Value,
-      component: any
-    }
+      position: { x: number; y: number };
+      dimensions: { width: number; height: number };
+      scale: Animated.Value;
+      translateX: Animated.Value;
+      translateY: Animated.Value;
+      opacity: Animated.Value;
+      component: any;
+    };
   }>({});
 
   // Store fixed grid positions
-  const gridPositions = useRef<{ [key: number]: { x: number, y: number, width: number, height: number } }>({});
+  const gridPositions = useRef<{
+    [key: number]: { x: number; y: number; width: number; height: number };
+  }>({});
 
   // Use this ref to track the overall scroll position
   const scrollOffset = useRef(0);
@@ -167,14 +169,12 @@ const CashierHomeScreen: React.FC = () => {
     }
   };
 
-
   const saveLayout = async () => {
     try {
       await AsyncStorage.setItem(LAYOUT_STORAGE_KEY, JSON.stringify(items));
       setLayoutSaved(true);
 
       console.log("چیدمان ذخیره شد:", items);
-
     } catch (error) {
       console.error("خطا در ذخیره چیدمان:", error);
     }
@@ -190,7 +190,7 @@ const CashierHomeScreen: React.FC = () => {
           x: itemRef.position.x,
           y: itemRef.position.y,
           width: itemRef.dimensions.width,
-          height: itemRef.dimensions.height
+          height: itemRef.dimensions.height,
         };
       }
     });
@@ -217,18 +217,18 @@ const CashierHomeScreen: React.FC = () => {
 
     // Add global touch end listener
     if (isDragging) {
-      if (Platform.OS === 'web') {
-        document.addEventListener('touchend', handleTouchEnd);
-        document.addEventListener('mouseup', handleTouchEnd);
+      if (Platform.OS === "web") {
+        document.addEventListener("touchend", handleTouchEnd);
+        document.addEventListener("mouseup", handleTouchEnd);
 
         return () => {
-          document.removeEventListener('touchend', handleTouchEnd);
-          document.removeEventListener('mouseup', handleTouchEnd);
+          document.removeEventListener("touchend", handleTouchEnd);
+          document.removeEventListener("mouseup", handleTouchEnd);
         };
       }
     }
 
-    return () => { };
+    return () => {};
   }, [isDragging]);
 
   // Safety timeout to prevent cards from getting stuck
@@ -271,8 +271,8 @@ const CashierHomeScreen: React.FC = () => {
         }),
         Animated.timing(itemRefs.current[draggedIndex].opacity, {
           toValue: 1,
-          ...TIMING_CONFIG
-        })
+          ...TIMING_CONFIG,
+        }),
       ]).start(() => {
         // Reset all states only after animation completes
         setIsDragging(false);
@@ -310,7 +310,7 @@ const CashierHomeScreen: React.FC = () => {
   // اتمام کشیدن و ذخیره چیدمان
   const finishDraggingAndSave = () => {
     // ابتدا اتمام حالت کشیدن
-    
+
     // سپس ذخیره چیدمان در دیتابیس محلی
     saveLayout();
     finishDragging();
@@ -351,36 +351,55 @@ const CashierHomeScreen: React.FC = () => {
     setDraggedIndex(toIndex);
 
     // Recalculate grid positions for the swapped items
-    if (itemRefs.current[toIndex]?.component && itemRefs.current[fromIndex]?.component) {
+    if (
+      itemRefs.current[toIndex]?.component &&
+      itemRefs.current[fromIndex]?.component
+    ) {
       setTimeout(() => {
         // Re-measure the positions to ensure they're updated
         itemRefs.current[toIndex].component.measure(
-          (x: number, y: number, width: number, height: number, pageX: number, pageY: number) => {
-            if (typeof pageX === 'number' && typeof pageY === 'number') {
+          (
+            x: number,
+            y: number,
+            width: number,
+            height: number,
+            pageX: number,
+            pageY: number
+          ) => {
+            if (typeof pageX === "number" && typeof pageY === "number") {
               itemRefs.current[toIndex].position = {
                 x: pageX + width / 2,
-                y: pageY + height / 2 - scrollOffset.current
+                y: pageY + height / 2 - scrollOffset.current,
               };
               gridPositions.current[toIndex] = {
                 x: pageX + width / 2,
                 y: pageY + height / 2 - scrollOffset.current,
-                width, height
+                width,
+                height,
               };
             }
           }
         );
 
         itemRefs.current[fromIndex].component.measure(
-          (x: number, y: number, width: number, height: number, pageX: number, pageY: number) => {
-            if (typeof pageX === 'number' && typeof pageY === 'number') {
+          (
+            x: number,
+            y: number,
+            width: number,
+            height: number,
+            pageX: number,
+            pageY: number
+          ) => {
+            if (typeof pageX === "number" && typeof pageY === "number") {
               itemRefs.current[fromIndex].position = {
                 x: pageX + width / 2,
-                y: pageY + height / 2 - scrollOffset.current
+                y: pageY + height / 2 - scrollOffset.current,
               };
               gridPositions.current[fromIndex] = {
                 x: pageX + width / 2,
                 y: pageY + height / 2 - scrollOffset.current,
-                width, height
+                width,
+                height,
               };
             }
           }
@@ -440,7 +459,7 @@ const CashierHomeScreen: React.FC = () => {
       // Calculate distance to the center of this item
       const distance = Math.sqrt(
         Math.pow(position.x - currentPosition.x, 2) +
-        Math.pow(position.y - currentPosition.y, 2)
+          Math.pow(position.y - currentPosition.y, 2)
       );
 
       // Find the closest one regardless of distance
@@ -459,7 +478,7 @@ const CashierHomeScreen: React.FC = () => {
 
     const SCROLL_THRESHOLD = 100;
     const SCROLL_INCREMENT = 5;
-    const { height } = Dimensions.get('window');
+    const { height } = Dimensions.get("window");
 
     // Fix for the scrollTo error - safely access FlatList scrollToOffset method
     if (y < SCROLL_THRESHOLD) {
@@ -467,7 +486,7 @@ const CashierHomeScreen: React.FC = () => {
       if (flatListRef.current.scrollToOffset) {
         flatListRef.current.scrollToOffset({
           offset: Math.max(0, scrollOffset.current - SCROLL_INCREMENT),
-          animated: false
+          animated: false,
         });
       }
     } else if (y > height - SCROLL_THRESHOLD) {
@@ -475,7 +494,7 @@ const CashierHomeScreen: React.FC = () => {
       if (flatListRef.current.scrollToOffset) {
         flatListRef.current.scrollToOffset({
           offset: scrollOffset.current + SCROLL_INCREMENT,
-          animated: false
+          animated: false,
         });
       }
     }
@@ -489,7 +508,7 @@ const CashierHomeScreen: React.FC = () => {
       <Animated.View
         style={[
           styles.dragInstructionContainer,
-          { opacity: isDragging ? 1 : 0 }
+          { opacity: isDragging ? 1 : 0 },
         ]}
       >
         <Text style={styles.dragInstructionText}>
@@ -519,34 +538,44 @@ const CashierHomeScreen: React.FC = () => {
         translateX: new Animated.Value(0),
         translateY: new Animated.Value(0),
         opacity: new Animated.Value(1),
-        component: null
+        component: null,
       };
     }
     const scale = itemRefs.current[index].scale;
     const translateX = itemRefs.current[index].translateX;
     const translateY = itemRefs.current[index].translateY;
     const opacity = itemRefs.current[index].opacity;
-    const isLastItemInOddList = index === items.length - 1 && items.length % 2 !== 0;
+    const isLastItemInOddList =
+      index === items.length - 1 && items.length % 2 !== 0;
     // Start dragging on long press
     const onLongPress = () => {
       // If already dragging, don't start again
       if (isDragging) return;
 
       // Make sure position is properly measured before starting to drag
-      if (!itemRefs.current[index]?.position ||
+      if (
+        !itemRefs.current[index]?.position ||
         !itemRefs.current[index]?.dimensions ||
-        itemRefs.current[index].position.x === 0) {
+        itemRefs.current[index].position.x === 0
+      ) {
         if (itemRefs.current[index]?.component) {
           itemRefs.current[index].component.measure(
-            (x: number, y: number, width: number, height: number, pageX: number, pageY: number) => {
-              if (typeof pageX === 'number' && typeof pageY === 'number') {
+            (
+              x: number,
+              y: number,
+              width: number,
+              height: number,
+              pageX: number,
+              pageY: number
+            ) => {
+              if (typeof pageX === "number" && typeof pageY === "number") {
                 itemRefs.current[index].position = {
                   x: pageX + width / 2,
-                  y: pageY + height / 2 - scrollOffset.current
+                  y: pageY + height / 2 - scrollOffset.current,
                 };
                 itemRefs.current[index].dimensions = {
                   width,
-                  height
+                  height,
                 };
 
                 // Update grid positions with this measurement
@@ -554,7 +583,7 @@ const CashierHomeScreen: React.FC = () => {
                   x: pageX + width / 2,
                   y: pageY + height / 2 - scrollOffset.current,
                   width,
-                  height
+                  height,
                 };
 
                 startDragging();
@@ -577,21 +606,26 @@ const CashierHomeScreen: React.FC = () => {
       // Animate scale up with spring for smoother motion
       Animated.spring(scale, {
         toValue: 1.1,
-        ...SPRING_CONFIG
+        ...SPRING_CONFIG,
       }).start();
 
       // Add a subtle shadow effect
       Animated.timing(opacity, {
         toValue: 0.9,
         duration: 100,
-        useNativeDriver: true
+        useNativeDriver: true,
       }).start();
     };
 
     // Improved pan gesture handler for smoother dragging
     const onGestureEvent = (event: any) => {
       if (isDragging && draggedIndex === index) {
-        const { translationX: tx, translationY: ty, absoluteX, absoluteY } = event.nativeEvent;
+        const {
+          translationX: tx,
+          translationY: ty,
+          absoluteX,
+          absoluteY,
+        } = event.nativeEvent;
 
         // Store current gesture location
         lastGestureLocation.current = { x: absoluteX, y: absoluteY };
@@ -603,7 +637,7 @@ const CashierHomeScreen: React.FC = () => {
         // Calculate current position (including scroll offset)
         const currentPosition = {
           x: itemRefs.current[index].position.x + tx,
-          y: itemRefs.current[index].position.y + ty
+          y: itemRefs.current[index].position.y + ty,
         };
 
         // Auto-scroll if needed for smoother experience
@@ -635,22 +669,29 @@ const CashierHomeScreen: React.FC = () => {
         // Reset translations at the beginning
         translateX.setValue(0);
         translateY.setValue(0);
-      }
-      else if (state === State.END || state === State.CANCELLED || state === State.FAILED) {
+      } else if (
+        state === State.END ||
+        state === State.CANCELLED ||
+        state === State.FAILED
+      ) {
         // If we're currently dragging this item
         if (isDragging && draggedIndex === index) {
           // Check for final swap
           const { translationX: tx, translationY: ty } = event.nativeEvent;
           const currentPosition = {
             x: itemRefs.current[index].position.x + tx,
-            y: itemRefs.current[index].position.y + ty
+            y: itemRefs.current[index].position.y + ty,
           };
 
           // Find closest position for final swap
           const closestIndex = findClosestItem(currentPosition);
 
           // Perform final swap if needed
-          if (closestIndex !== -1 && closestIndex !== index && !isSwapping.current) {
+          if (
+            closestIndex !== -1 &&
+            closestIndex !== index &&
+            !isSwapping.current
+          ) {
             swapItems(index, closestIndex);
           }
 
@@ -666,7 +707,8 @@ const CashierHomeScreen: React.FC = () => {
       if (state !== State.ACTIVE && state !== State.BEGAN && isDragging) {
         // Force reset after a short delay to ensure we don't interfere with normal gesture handling
         setTimeout(() => {
-          if (isDragging) {  // Double check we're still dragging
+          if (isDragging) {
+            // Double check we're still dragging
             // ذخیره چیدمان در این حالت هم تضمین می‌کند که در شرایط مختلف ذخیره انجام شود
             saveLayout();
             finishDragging();
@@ -686,7 +728,7 @@ const CashierHomeScreen: React.FC = () => {
         onHandlerStateChange={onHandlerStateChange}
       >
         <Animated.View
-          ref={ref => {
+          ref={(ref) => {
             if (ref) {
               itemRefs.current[index].component = ref;
             }
@@ -699,11 +741,11 @@ const CashierHomeScreen: React.FC = () => {
               transform: [
                 { scale: isBeingDragged ? scale : 1 },
                 { translateX: isBeingDragged ? translateX : 0 },
-                { translateY: isBeingDragged ? translateY : 0 }
+                { translateY: isBeingDragged ? translateY : 0 },
               ],
-              zIndex: isBeingDragged ? 100 : (isHovered ? 50 : 1),
+              zIndex: isBeingDragged ? 100 : isHovered ? 50 : 1,
               opacity: opacity,
-            }
+            },
           ]}
           onLayout={(event) => {
             const layout = event.nativeEvent.layout;
@@ -712,17 +754,27 @@ const CashierHomeScreen: React.FC = () => {
             setTimeout(() => {
               if (itemRefs.current[index]?.component) {
                 itemRefs.current[index].component.measure(
-                  (x: number, y: number, width: number, height: number, pageX: number, pageY: number) => {
-                    if (typeof pageX === 'number' && typeof pageY === 'number') {
+                  (
+                    x: number,
+                    y: number,
+                    width: number,
+                    height: number,
+                    pageX: number,
+                    pageY: number
+                  ) => {
+                    if (
+                      typeof pageX === "number" &&
+                      typeof pageY === "number"
+                    ) {
                       // Store position relative to scroll
                       itemRefs.current[index].position = {
                         x: pageX + width / 2,
-                        y: pageY + height / 2 - scrollOffset.current
+                        y: pageY + height / 2 - scrollOffset.current,
                       };
 
                       itemRefs.current[index].dimensions = {
                         width,
-                        height
+                        height,
                       };
 
                       // Update grid positions
@@ -730,7 +782,7 @@ const CashierHomeScreen: React.FC = () => {
                         x: pageX + width / 2,
                         y: pageY + height / 2 - scrollOffset.current,
                         width,
-                        height
+                        height,
                       };
                     }
                   }
@@ -745,7 +797,7 @@ const CashierHomeScreen: React.FC = () => {
               // Apply full width styling to the content as well
               isLastItemInOddList && styles.fullWidthItemContent,
               isBeingDragged && styles.draggingItem,
-              isHovered && styles.hoveredItem
+              isHovered && styles.hoveredItem,
             ]}
             onLongPress={onLongPress}
             delayLongPress={200}
@@ -783,7 +835,6 @@ const CashierHomeScreen: React.FC = () => {
           source={require("../../../assets/aratile_logo_2.png")}
         />
       </View>
-
       <View style={styles.headerBox}>
         <View style={styles.infoBox}>
           <View style={styles.avatarCircle}>
@@ -793,12 +844,9 @@ const CashierHomeScreen: React.FC = () => {
         </View>
         <MaterialIcons name="create" size={24} color="#666666" />
       </View>
-
       {/* Display drag instructions when dragging */}
       {renderDragInstructions()}
-
       // اصلاح کامپوننت FlatList برای جلوگیری از بیرون زدن آیتم‌ها
-
       <FlatList
         ref={flatListRef}
         data={items}
@@ -807,7 +855,11 @@ const CashierHomeScreen: React.FC = () => {
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.list}
         // استفاده از استایل متفاوت برای حالت‌های فرد و زوج
-        columnWrapperStyle={(items.length % 2 !== 0) ? styles.unevenColumnWrapper : styles.columnWrapper}
+        columnWrapperStyle={
+          items.length % 2 !== 0
+            ? styles.unevenColumnWrapper
+            : styles.columnWrapper
+        }
         extraData={[isDragging, draggedIndex, hoveredIndex, items]}
         scrollEnabled={true} // Always allow scrolling for better UX
         onScroll={(e) => {
@@ -815,7 +867,7 @@ const CashierHomeScreen: React.FC = () => {
 
           // Recalculate grid positions when scrolling
           if (isDragging) {
-            Object.keys(gridPositions.current).forEach(key => {
+            Object.keys(gridPositions.current).forEach((key) => {
               const index = parseInt(key);
               if (gridPositions.current[index]) {
                 gridPositions.current[index].y =
@@ -851,10 +903,10 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingBottom: 100, // Extra padding at bottom for dragging
-    paddingLeft:5,
-    paddingRight:5,
-    marginLeft:5,
-    marginRight:5,
+    paddingLeft: 5,
+    paddingRight: 5,
+    marginLeft: 5,
+    marginRight: 5,
   },
   gridItemContainer: {
     margin: 5,
@@ -874,7 +926,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     gap: 15,
-    backgroundColor: "#F2F2F2",  // Color back to original grey
+    backgroundColor: "#F2F2F2", // Color back to original grey
     borderRadius: 15,
     borderWidth: 1,
     borderColor: "#E4E4E4",
@@ -998,7 +1050,7 @@ const styles = StyleSheet.create({
   },
   // New styles for full-width item
   fullWidthItem: {
-    width: screenWidth - (2 * itemMargin), // Take full width minus margins
+    width: screenWidth - 2 * itemMargin, // Take full width minus margins
     alignSelf: "center", // اضافه کردن این خط برای حل مشکل بیرون زدگی
   },
   fullWidthItemContent: {

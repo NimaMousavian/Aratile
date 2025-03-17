@@ -24,14 +24,14 @@
       },
       "permissions": [
         "android.permission.CAMERA"
-      ]
+      ],
+      "package": "com.aratile"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-barcode-scanner",
-      "expo-splash-screen\\"
+      "expo-barcode-scanner"
     ],
     "extra": {
       "eas": {

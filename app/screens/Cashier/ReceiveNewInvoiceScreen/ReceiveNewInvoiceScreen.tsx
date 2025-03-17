@@ -535,7 +535,7 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                   ]}
                   note={product.note}
                   noteConfig={{
-                    show: !!product.note && product.note !== "-",
+                    show: true,
                     icon: "notes",
                     iconColor: colors.secondary,
                     label: "توضیحات:",

@@ -66,16 +66,7 @@ const IssuingNewInvoice = () => {
     useState<boolean>(false);
   const [showProductNameModal, setShowProductNameModal] =
     useState<boolean>(false);
-  const [selectedProducts, setSelectedProducts] = useState<IProduct[]>([
-    {
-      id: 1,
-      title: "محصول اول",
-      quantity: "1574",
-      code: "1484",
-      hasColorSpectrum: true,
-      note: "-",
-    },
-  ]);
+  const [selectedProducts, setSelectedProducts] = useState<IProduct[]>([]);
   const [productPropertiesShow, setProductPropertiesShow] =
     useState<boolean>(false);
   const [productToShow, setProductToShow] = useState<IProduct | null>(null);
