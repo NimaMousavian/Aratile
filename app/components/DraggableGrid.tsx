@@ -858,7 +858,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
-    elevation: 3,
+    elevation: 1,
   },
   gridItem: {
     padding: 15,
@@ -879,7 +879,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
-    elevation: 10,
+    elevation: 1,
   },
   hoveredItem: {
     borderColor: "#1C3F64",
@@ -902,7 +902,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.2,
     shadowRadius: 5,
-    elevation: 5,
+    elevation: 1,
   },
   dragInstructionText: {
     fontFamily: getFontFamily("Yekan_Bakh_Bold", "500"),
@@ -920,7 +920,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
-    elevation: 2,
+    elevation: 1,
   },
   saveButton: {
     backgroundColor: "#1C3F64",
@@ -928,7 +928,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 10,
     marginTop: 12,
-    elevation: 3,
+    elevation: 1,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,

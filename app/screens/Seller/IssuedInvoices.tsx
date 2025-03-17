@@ -599,7 +599,7 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.1,
     shadowRadius: 3,
-    elevation: 4,
+    elevation:1,
     justifyContent: "space-between",
   },
   tab: {

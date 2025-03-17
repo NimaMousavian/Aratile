@@ -9,16 +9,22 @@ import { AppNavigationProp } from "../StackNavigator";
 
 interface IProps {
   title: string;
+  isProfilePage?: boolean;
 }
 
-const ScreenHeader: React.FC<IProps> = ({ title }) => {
+const ScreenHeader: React.FC<IProps> = ({ title, isProfilePage = false }) => {
   const navigation = useNavigation<AppNavigationProp>();
+
+
+  const textColor = isProfilePage ? colors.white : colors.dark;
+  const iconColor = isProfilePage ? "white" : "black";
+
   return (
     <View style={styles.header}>
       <TouchableOpacity style={styles.icon} onPress={() => navigation.goBack()}>
-        <MaterialIcons name="arrow-forward-ios" size={24} color="black" />
+        <MaterialIcons name="arrow-forward-ios" size={24} color={iconColor} />
       </TouchableOpacity>
-      <AppText style={styles.headerText}>{title}</AppText>
+      <AppText style={[styles.headerText, { color: textColor }]}>{title}</AppText>
     </View>
   );
 };
@@ -26,9 +32,9 @@ const ScreenHeader: React.FC<IProps> = ({ title }) => {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: {
-    paddingVertical: 20,
-    paddingHorizontal: 16,
-    alignItems: "center",
+    paddingVertical: 16,
+    paddingHorizontal: 55,
+    alignItems: "flex-end",
     justifyContent: "flex-end",
     height: 110,
     // borderBottomLeftRadius: 20,
@@ -37,7 +43,7 @@ const styles = StyleSheet.create({
   headerText: {
     fontFamily: "Yekan_Bakh_Bold",
     fontSize: 24,
-    color: colors.dark,
+    color: colors.dark, 
   },
   icon: {
     position: "absolute",
