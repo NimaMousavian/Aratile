@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     flexDirection: "row-reverse",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: colors.dark,
+    borderColor: colors.gray,
     borderRadius: 8,
     backgroundColor: colors.white,
   },

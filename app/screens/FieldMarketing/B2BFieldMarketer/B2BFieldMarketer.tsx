@@ -8,6 +8,7 @@ import colors from "../../../config/colors";
 import AppButton from "../../../components/Button";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import ScreenHeader from "../../../components/ScreenHeader";
+import SearchInput from "../../../components/SearchInput";
 
 const B2BFieldMarketer = () => {
   const navigation = useNavigation<AppNavigationProp>();
@@ -15,7 +16,7 @@ const B2BFieldMarketer = () => {
     <>
       <ScreenHeader title="بازایابی میدانی B2B" />
       <View style={styles.container}>
-        <View
+        {/* <View
           style={{
             flexDirection: "row-reverse",
             justifyContent: "space-between",
@@ -32,7 +33,12 @@ const B2BFieldMarketer = () => {
             containerStyle={{ marginBottom: 0 }}
           ></AppTextInput>
           <AppButton title="جستجو" onPress={() => {}} />
-        </View>
+        </View> */}
+        <SearchInput
+          value=""
+          onChangeText={() => {}}
+          onSearch={() => navigation.navigate("CustomerInfo")}
+        />
         <TouchableOpacity
           style={styles.addIconContainer}
           onPress={() => navigation.navigate("AddNewShop")}

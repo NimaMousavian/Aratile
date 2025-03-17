@@ -7,6 +7,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useNavigation } from "@react-navigation/native";
 import { AppNavigationProp } from "../../../StackNavigator";
 import ScreenHeader from "../../../components/ScreenHeader";
+import SearchInput from "../../../components/SearchInput";
 
 const B2CFieldMarketer = () => {
   const navigation = useNavigation<AppNavigationProp>();
@@ -14,7 +15,7 @@ const B2CFieldMarketer = () => {
     <>
       <ScreenHeader title="بازایابی میدانی B2C" />
       <View style={styles.container}>
-        <View
+        {/* <View
           style={{
             flexDirection: "row-reverse",
             justifyContent: "space-between",
@@ -31,7 +32,12 @@ const B2CFieldMarketer = () => {
             containerStyle={{ marginBottom: 0 }}
           ></AppTextInput>
           <AppButton title="جستجو" onPress={() => {}} />
-        </View>
+        </View> */}
+        <SearchInput
+          value=""
+          onChangeText={() => {}}
+          onSearch={() => navigation.navigate("CustomerInfo")}
+        />
         <TouchableOpacity
           style={styles.addIconContainer}
           onPress={() => navigation.navigate("AddNewProject")}

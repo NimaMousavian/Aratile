@@ -23,6 +23,8 @@ import { productData } from "../../Cashier/ReceiveNewInvoiceScreen/ReceiveNewInv
 import ProductProperties from "./ProductProperties";
 import IconButton from "../../../components/IconButton";
 import ScreenHeader from "../../../components/ScreenHeader";
+import SearchInput from "../../../components/SearchInput";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
 // const sampleProducts: IProduct[] = [
 //   {
@@ -64,7 +66,16 @@ const IssuingNewInvoice = () => {
     useState<boolean>(false);
   const [showProductNameModal, setShowProductNameModal] =
     useState<boolean>(false);
-  const [selectedProducts, setSelectedProducts] = useState<IProduct[]>([]);
+  const [selectedProducts, setSelectedProducts] = useState<IProduct[]>([
+    {
+      id: 1,
+      title: "محصول اول",
+      quantity: "1574",
+      code: "1484",
+      hasColorSpectrum: true,
+      note: "-",
+    },
+  ]);
   const [productPropertiesShow, setProductPropertiesShow] =
     useState<boolean>(false);
   const [productToShow, setProductToShow] = useState<IProduct | null>(null);
@@ -105,7 +116,7 @@ const IssuingNewInvoice = () => {
   return (
     <>
       <ScreenHeader title="ثبت فاکتور جدید" />
-      <View style={{ flex: 1, padding: 10, paddingTop: 20 }}>
+      <View style={{ flex: 1, padding: 20, paddingTop: 20 }}>
         {/* <TouchableOpacity
         style={styles.addNewCustomerBox}
         onPress={() => setShowCustomerModal(true)}
@@ -120,7 +131,7 @@ const IssuingNewInvoice = () => {
             alignItems: "center",
           }}
         >
-          <TextInput
+          {/* <TextInput
             autoCapitalize="none"
             autoCorrect={false}
             keyboardType="default"
@@ -128,10 +139,11 @@ const IssuingNewInvoice = () => {
             onChangeText={() => {}}
             width={"75%"}
             containerStyle={{ marginBottom: 0 }}
-          ></TextInput>
-          <Button
-            title="جستجو"
-            onPress={() => navigation.navigate("CustomerInfo")}
+          ></TextInput> */}
+          <SearchInput
+            value=""
+            onChangeText={() => {}}
+            onSearch={() => navigation.navigate("CustomerInfo")}
           />
         </View>
 
@@ -201,12 +213,22 @@ const IssuingNewInvoice = () => {
 
         <Modal visible={showProductCodeModal} animationType="slide">
           <View style={{ padding: 20 }}>
-            <Button
+            <TouchableOpacity
+              onPress={() => setShowProductCodeModal(false)}
+              style={{ flexDirection: "row-reverse", marginBottom: 10 }}
+            >
+              <MaterialCommunityIcons
+                name="close-circle"
+                size={40}
+                color={colors.danger}
+              />
+            </TouchableOpacity>
+            {/* <Button
               title="بستن"
               onPress={() => setShowProductCodeModal(false)}
               color="danger"
-            />
-            <View
+            /> */}
+            {/* <View
               style={{
                 flexDirection: "row-reverse",
                 justifyContent: "space-between",
@@ -227,7 +249,8 @@ const IssuingNewInvoice = () => {
                 onPress={() => {}}
                 color="primaryLight"
               />
-            </View>
+            </View> */}
+            <SearchInput value="" onChangeText={() => {}} onSearch={() => {}} />
             {/* <FlatList
             data={sampleProducts}
             keyExtractor={(item) => item.id.toString()}
@@ -287,7 +310,18 @@ const IssuingNewInvoice = () => {
         </Modal>
         <Modal visible={showProductNameModal} animationType="slide">
           <View style={{ padding: 20, flex: 1 }}>
-            <Button
+            <TouchableOpacity
+              onPress={() => setShowProductNameModal(false)}
+              style={{ flexDirection: "row-reverse", marginBottom: 10 }}
+            >
+              <MaterialCommunityIcons
+                name="close-circle"
+                size={40}
+                color={colors.danger}
+              />
+            </TouchableOpacity>
+            <SearchInput value="" onChangeText={() => {}} onSearch={() => {}} />
+            {/* <Button
               title="بستن"
               onPress={() => setShowProductNameModal(false)}
               color="danger"
@@ -313,7 +347,7 @@ const IssuingNewInvoice = () => {
                 onPress={() => {}}
                 color="primaryLight"
               />
-            </View>
+            </View> */}
             {/* <FlatList
             data={sampleProducts}
             keyExtractor={(item) => item.id.toString()}

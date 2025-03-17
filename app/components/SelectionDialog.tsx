@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     borderWidth: 1,
-    borderColor: colors.dark,
+    borderColor: colors.gray,
     borderRadius: 8,
     flexDirection: "row-reverse",
     padding: 12,

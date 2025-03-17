@@ -12,6 +12,7 @@ import HomeScreen from "./app/screens/Seller/HomeScreen";
 import IssuingNewInvoice from "./app/screens/Seller/IssuingNewInvoice/IssuingNewInvoice";
 import StackNavigator from "./app/StackNavigator";
 import { PaperProvider } from "react-native-paper";
+import navigationTheme from "./app/config/navigationTheme";
 
 I18nManager.forceRTL(true);
 
@@ -57,7 +58,7 @@ export default function App(): JSX.Element {
   return (
     <PaperProvider>
       <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
-        <NavigationContainer>
+        <NavigationContainer theme={navigationTheme}>
           <StackNavigator />
         </NavigationContainer>
         <StatusBar style="auto" />

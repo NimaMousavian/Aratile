@@ -10,7 +10,7 @@ import {
   Platform,
   Animated,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage"; // اضافه کردن AsyncStorage
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import colors from "../../config/colors";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useNavigation } from "@react-navigation/native";
@@ -230,7 +230,7 @@ const HomeScreen: React.FC = () => {
       }
     }
 
-    return () => { };
+    return () => {};
   }, [isDragging]);
 
   // Safety timeout to prevent cards from getting stuck
@@ -457,7 +457,7 @@ const HomeScreen: React.FC = () => {
       // Calculate distance to the center of this item
       const distance = Math.sqrt(
         Math.pow(position.x - currentPosition.x, 2) +
-        Math.pow(position.y - currentPosition.y, 2)
+          Math.pow(position.y - currentPosition.y, 2)
       );
 
       // Find the closest one regardless of distance
@@ -702,7 +702,8 @@ const HomeScreen: React.FC = () => {
       if (state !== State.ACTIVE && state !== State.BEGAN && isDragging) {
         // Force reset after a short delay to ensure we don't interfere with normal gesture handling
         setTimeout(() => {
-          if (isDragging) {  // Double check we're still dragging
+          if (isDragging) {
+            // Double check we're still dragging
             // ذخیره چیدمان در شرایط اضطراری
             saveLayout();
             finishDragging();
@@ -991,7 +992,6 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   dragInstructionText: {
-
     fontFamily: getFontFamily("Yekan_Bakh_Bold", "500"),
     textAlign: "center",
     fontSize: 16,

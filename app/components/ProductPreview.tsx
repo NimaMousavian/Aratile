@@ -4,6 +4,7 @@ import colors from "../config/colors";
 import AppText from "./Text";
 import AppButton from "./Button";
 import { toPersianDigits } from "../utils/converters";
+import IconButton from "./IconButton";
 
 interface IProps {
   title: string;
@@ -13,23 +14,37 @@ interface IProps {
 const ProductPreview: React.FC<IProps> = ({ title, orderCount }) => {
   return (
     <View style={styles.container}>
-      <AppText style={{ fontFamily: "Yekan_Bakh_Bold", textAlign: "center" }}>
+      <AppText
+        style={{
+          fontFamily: "Yekan_Bakh_Bold",
+          textAlign: "center",
+          color: colors.primary,
+        }}
+      >
         {title}
       </AppText>
-      <AppText style={{ textAlign: "center" }}>{`تعداد سفارش: ${toPersianDigits(
-        orderCount
-      )} متر مربع`}</AppText>
+      <View style={styles.divider}></View>
+      <View style={styles.orderCountContainer}>
+        <AppText
+          style={{ textAlign: "center", color: colors.medium }}
+        >{`تعداد سفارش:`}</AppText>
+        <AppText style={styles.orderCountText}>{`${toPersianDigits(
+          orderCount
+        )} متر مربع`}</AppText>
+      </View>
       <View style={styles.buttonContainer}>
-        <AppButton
-          title="ویرایش"
+        <IconButton
+          text="ویرایش"
           onPress={() => {}}
-          color="warning"
+          iconName="edit"
+          backgroundColor={colors.warning}
           style={{ width: "48%" }}
         />
-        <AppButton
-          title="حذف"
+        <IconButton
+          text="حذف"
           onPress={() => {}}
-          color="danger"
+          iconName="delete"
+          backgroundColor={colors.danger}
           style={{ width: "48%" }}
         />
       </View>
@@ -42,13 +57,29 @@ const styles = StyleSheet.create({
     flex: 1,
     borderWidth: 1,
     borderRadius: 15,
-    borderColor: colors.primary,
-    padding: 15,
+    borderColor: colors.gray,
+    padding: 10,
     marginVertical: 15,
   },
   buttonContainer: {
     flexDirection: "row-reverse",
     gap: 10,
+    marginTop: 12,
+  },
+  divider: {
+    width: "100%",
+    height: 1,
+    backgroundColor: colors.gray,
+    marginVertical: 10,
+  },
+  orderCountContainer: {
+    flexDirection: "row-reverse",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  orderCountText: {
+    fontFamily: "Yekan_Bakh_Bold",
+    marginRight: 8,
   },
 });
 
