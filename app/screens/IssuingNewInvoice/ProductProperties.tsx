@@ -10,11 +10,11 @@ import {
   Modal,
   Easing,
   Platform,
-  Alert,
   Clipboard,
   KeyboardAvoidingView,
   ScrollView,
 } from "react-native";
+import UnsavedChangesModal from "./UnsavedChangesModal";
 import { LinearGradient } from "expo-linear-gradient";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import colors from "../../config/colors";
@@ -70,30 +70,21 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
   const slideAnimation = useRef(new Animated.Value(0)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
 
-  // مقدار ثابت موجودی
-  const defaultQuantity = "10000";
+  const defaultQuantity = "5000";
 
-  // تنظیم مقادیر اولیه
   useEffect(() => {
     if (product && visible) {
-      setQuantity(defaultQuantity);
-      setDisplayQuantity(toPersianDigits(defaultQuantity));
+      setQuantity("");
+      setDisplayQuantity("");
       setNote(product.note || "");
       setManualCalculation(product.manualCalculation || false);
     }
   }, [product, visible]);
 
-  // شنونده‌های رویداد صفحه کلید - غیرفعال شده برای جلوگیری از حرکت محتوا
   useEffect(() => {
-    // کیبورد لیسنرها غیرفعال شدند تا محتوا ثابت بماند
-    // اگر می‌خواهید که کیبورد محتوا را بالا نبرد، این قسمت باید غیرفعال باشد
-
-    return () => {
-      // پاکسازی لیسنرها در صورت فعال بودن
-    };
+    return () => {};
   }, []);
 
-  // انیمیشن نمایش دراور
   useEffect(() => {
     if (visible) {
       slideAnimation.setValue(0);
@@ -115,7 +106,6 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
     }
   }, [visible, slideAnimation, backdropOpacity]);
 
-  // نمایش پیام toast
   const showToast = (
     message: string,
     type: "success" | "error" | "warning" | "info" = "error"
@@ -133,7 +123,9 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
     }
   };
 
-  // بستن دراور
+  const [unsavedChangesModalVisible, setUnsavedChangesModalVisible] =
+    useState<boolean>(false);
+
   const closeDrawer = () => {
     if (
       product &&
@@ -141,23 +133,12 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
         note !== product.note ||
         manualCalculation !== (product.manualCalculation || false))
     ) {
-      Alert.alert(
-        "تغییرات ذخیره نشده",
-        "آیا مطمئن هستید که می‌خواهید بدون ذخیره تغییرات خارج شوید؟",
-        [
-          { text: "خیر", style: "cancel" },
-          {
-            text: "بله",
-            onPress: () => performClose(),
-          },
-        ]
-      );
+      setUnsavedChangesModalVisible(true);
     } else {
       performClose();
     }
   };
 
-  // اجرای انیمیشن بستن دراور
   const performClose = () => {
     Animated.parallel([
       Animated.timing(slideAnimation, {
@@ -176,7 +157,6 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
     });
   };
 
-  // اعتبارسنجی ورودی
   const validateInput = (): boolean => {
     if (!quantity || quantity.trim() === "") {
       showToast("لطفاً مقدار را وارد کنید", "warning");
@@ -192,7 +172,6 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
     return true;
   };
 
-  // محاسبه پارامترهای محصول
   const handleCalculate = () => {
     if (!product) return;
 
@@ -208,7 +187,6 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
     }, 1000);
   };
 
-  // ذخیره محصول با ویژگی‌های به‌روزرسانی شده
   const handleSave = () => {
     if (!product) return;
 
@@ -223,14 +201,12 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
     }
   };
 
-  // تغییر مقدار با اعتبارسنجی
   const handleQuantityChange = (text: string) => {
     const cleanedText = text.replace(/[^0-9.]/g, "");
     setDisplayQuantity(toPersianDigits(cleanedText));
     setQuantity(toEnglishDigits(cleanedText));
   };
 
-  // کپی کردن کد محصول
   const copyProductCode = () => {
     if (product && product.code) {
       Clipboard.setString(product.code);
@@ -238,7 +214,6 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
     }
   };
 
-  // استایل‌های انیمیشن
   const animatedStyle = {
     transform: [
       {
@@ -256,194 +231,205 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
 
   if (!product || !visible) return null;
 
-  // مقدار موجودی قابل تعهد همیشه 10000
   const displayStockQuantity = toPersianDigits(defaultQuantity);
 
-  // محاسبه ارتفاع منطقه اسکرول‌پذیر و فضای دکمه‌ها
-  const buttonAreaHeight = 100; // ارتفاع تقریبی برای دکمه‌ها + فاصله
+  const buttonAreaHeight = 100;
 
-  // استفاده از Modal برای هر دو پلتفرم Android و iOS
   return (
-    <Modal
-      visible={visible}
-      transparent={true}
-      animationType="none"
-      onRequestClose={closeDrawer}
-      statusBarTranslucent={true}
-    >
-      <Toast
-        visible={toastVisible}
-        message={toastMessage}
-        type={toastType}
-        onDismiss={() => setToastVisible(false)}
+    <>
+      <UnsavedChangesModal
+        visible={unsavedChangesModalVisible}
+        onClose={() => setUnsavedChangesModalVisible(false)}
+        onConfirm={() => {
+          setUnsavedChangesModalVisible(false);
+          performClose();
+        }}
       />
 
-      <View style={styles.modalContainer}>
-        <Animated.View style={[styles.backdrop, backdropStyle]}>
-          <TouchableOpacity
-            style={styles.backdropTouchable}
-            activeOpacity={1}
-            onPress={closeDrawer}
-          />
-        </Animated.View>
+      <Modal
+        visible={visible}
+        transparent={true}
+        animationType="none"
+        onRequestClose={closeDrawer}
+        statusBarTranslucent={true}
+      >
+        <Toast
+          visible={toastVisible}
+          message={toastMessage}
+          type={toastType}
+          onDismiss={() => setToastVisible(false)}
+        />
 
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "position" : undefined}
-          style={styles.keyboardAvoidingContainer}
-          pointerEvents="box-none"
-          keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
-          enabled={false}
-        >
-          <Animated.View
-            style={[
-              styles.drawerContainer,
-              animatedStyle,
-              {
-                height: Platform.OS === "ios" ? height * 0.8 : "80%",
-                width: Platform.OS === "ios" ? width : "100%",
-              },
-            ]}
+        <View style={styles.modalContainer}>
+          <Animated.View style={[styles.backdrop, backdropStyle]}>
+            <TouchableOpacity
+              style={styles.backdropTouchable}
+              activeOpacity={1}
+              onPress={closeDrawer}
+            />
+          </Animated.View>
+
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "position" : undefined}
+            style={styles.keyboardAvoidingContainer}
+            pointerEvents="box-none"
+            keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
+            enabled={false}
           >
-            <LinearGradient
-              colors={[colors.secondary, colors.primary]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.header}
+            <Animated.View
+              style={[
+                styles.drawerContainer,
+                animatedStyle,
+                {
+                  height: Platform.OS === "ios" ? height * 0.8 : "80%",
+                  width: Platform.OS === "ios" ? width : "100%",
+                },
+              ]}
             >
-              <View style={styles.headerContent}>
-                <MaterialIcons name="shopping-cart" size={24} color="white" />
-                <Text style={styles.headerTitle}>مشخصات محصول</Text>
-              </View>
-              <TouchableOpacity
-                onPress={closeDrawer}
-                style={styles.closeButton}
+              <LinearGradient
+                colors={[colors.secondary, colors.primary]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.header}
               >
-                <MaterialIcons
-                  name="close"
-                  size={32}
-                  color="white"
-                  style={{ marginLeft: -4 }}
-                />
-              </TouchableOpacity>
-            </LinearGradient>
+                <View style={styles.headerContent}>
+                  <MaterialIcons name="shopping-cart" size={24} color="white" />
+                  <Text style={styles.headerTitle}>مشخصات محصول</Text>
+                </View>
+                <TouchableOpacity
+                  onPress={closeDrawer}
+                  style={styles.closeButton}
+                >
+                  <MaterialIcons
+                    name="close"
+                    size={32}
+                    color="white"
+                    style={{ marginLeft: -4 }}
+                  />
+                </TouchableOpacity>
+              </LinearGradient>
 
-            <View style={styles.contentContainer}>
-              <ScrollView
-                style={styles.scrollView}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.scrollViewContent}
-              >
-                <View style={styles.productContainer}>
-                  <AppText style={styles.productTitle}>{product.title}</AppText>
-                  <View style={styles.divider}></View>
-
-                  <View style={styles.properties}>
-                    <AppText style={styles.propertyLabel}>
-                      موجودی قابل تعهد:
+              <View style={styles.contentContainer}>
+                <ScrollView
+                  style={styles.scrollView}
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={styles.scrollViewContent}
+                >
+                  <View style={styles.productContainer}>
+                    <AppText style={styles.productTitle}>
+                      {product.title}
                     </AppText>
-                    <AppText>{displayStockQuantity}</AppText>
-                  </View>
+                    <View style={styles.divider}></View>
 
-                  <View style={styles.properties}>
-                    <AppText style={styles.propertyLabel}>طیف:</AppText>
-                    <AppText>
-                      {product.hasColorSpectrum ? "دارد" : "ندارد"}
-                    </AppText>
-                  </View>
-
-                  {product.price ? (
                     <View style={styles.properties}>
-                      <AppText style={styles.propertyLabel}>قیمت:</AppText>
+                      <AppText style={styles.propertyLabel}>
+                        موجودی قابل تعهد:
+                      </AppText>
+                      <AppText>{displayStockQuantity}</AppText>
+                    </View>
+
+                    <View style={styles.properties}>
+                      <AppText style={styles.propertyLabel}>طیف:</AppText>
                       <AppText>
-                        {toPersianDigits(product.price.toLocaleString())} ریال
+                        {product.hasColorSpectrum ? "دارد" : "ندارد"}
                       </AppText>
                     </View>
-                  ) : null}
 
-                  {product.code ? (
-                    <TouchableOpacity
-                      onPress={copyProductCode}
-                      style={styles.copyableProperty}
-                    >
+                    {product.price ? (
                       <View style={styles.properties}>
-                        <AppText style={styles.propertyLabel}>
-                          کد محصول:
+                        <AppText style={styles.propertyLabel}>قیمت:</AppText>
+                        <AppText>
+                          {toPersianDigits(product.price.toLocaleString())} ریال
                         </AppText>
-                        <View style={styles.codeContainer}>
-                          <AppText>{toPersianDigits(product.code)}</AppText>
-                          <MaterialIcons
-                            name="content-copy"
-                            size={18}
-                            color={colors.medium}
-                            style={{ marginRight: 5 }}
-                          />
-                        </View>
                       </View>
-                    </TouchableOpacity>
-                  ) : null}
-                </View>
+                    ) : null}
 
-                <View style={styles.inputsContainer}>
+                    {product.code ? (
+                      <TouchableOpacity
+                        onPress={copyProductCode}
+                        style={styles.copyableProperty}
+                      >
+                        <View style={styles.properties}>
+                          <AppText style={styles.propertyLabel}>
+                            کد محصول:
+                          </AppText>
+                          <View style={styles.codeContainer}>
+                            <AppText>{toPersianDigits(product.code)}</AppText>
+                            <MaterialIcons
+                              name="content-copy"
+                              size={18}
+                              color={colors.medium}
+                              style={{ marginRight: 5 }}
+                            />
+                          </View>
+                        </View>
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+
+                  <View style={styles.inputsContainer}>
+                    <AppTextInput
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      keyboardType="number-pad"
+                      icon="straighten"
+                      placeholder="تعداد سفارش خریدار (متر مربع)"
+                      value={displayQuantity}
+                      onChangeText={handleQuantityChange}
+                    />
+
+                    <Checkbox
+                      label="محاسبه به صورت دستی انجام شود"
+                      checked={manualCalculation}
+                      onPress={() => setManualCalculation(!manualCalculation)}
+                    />
+
+                    <AppButton
+                      title={isCalculating ? "در حال محاسبه..." : "محاسبه کن"}
+                      onPress={handleCalculate}
+                      color="secondary"
+                      disabled={isCalculating}
+                    />
+                  </View>
+
                   <AppTextInput
                     autoCapitalize="none"
                     autoCorrect={false}
-                    keyboardType="number-pad"
-                    icon="straighten"
-                    placeholder="تعداد سفارش خریدار (متر مربع)"
-                    value={displayQuantity}
-                    onChangeText={handleQuantityChange}
+                    keyboardType="default"
+                    icon="text-snippet"
+                    placeholder="توضیحات"
+                    value={note}
+                    onChangeText={setNote}
+                    multiline
+                    numberOfLines={5}
+                    height={150}
+                    textAlign="right"
+                    isLargeInput={true}
                   />
 
-                  <Checkbox
-                    label="محاسبه به صورت دستی انجام شود"
-                    checked={manualCalculation}
-                    onPress={() => setManualCalculation(!manualCalculation)}
-                  />
+                  <View style={{ height: buttonAreaHeight }} />
+                </ScrollView>
 
+                <View style={styles.buttonContainer}>
                   <AppButton
-                    title={isCalculating ? "در حال محاسبه..." : "محاسبه کن"}
-                    onPress={handleCalculate}
-                    color="secondary"
-                    disabled={isCalculating}
+                    title="ثبت کالا"
+                    onPress={handleSave}
+                    color="success"
+                    style={styles.actionButton}
+                  />
+                  <AppButton
+                    title="انصراف"
+                    onPress={closeDrawer}
+                    color="danger"
+                    style={styles.actionButton}
                   />
                 </View>
-
-                <AppTextInput
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  keyboardType="default"
-                  icon="notes"
-                  placeholder="توضیحات"
-                  value={note}
-                  onChangeText={setNote}
-                  multiline
-                  numberOfLines={5}
-                  height={120}
-                />
-
-                {/* اضافه کردن فضای خالی برای نمایش کامل محتوا بالای دکمه‌ها */}
-                <View style={{ height: buttonAreaHeight }} />
-              </ScrollView>
-
-              <View style={styles.buttonContainer}>
-                <AppButton
-                  title="ثبت کالا"
-                  onPress={handleSave}
-                  color="success"
-                  style={styles.actionButton}
-                />
-                <AppButton
-                  title="انصراف"
-                  onPress={closeDrawer}
-                  color="danger"
-                  style={styles.actionButton}
-                />
               </View>
-            </View>
-          </Animated.View>
-        </KeyboardAvoidingView>
-      </View>
-    </Modal>
+            </Animated.View>
+          </KeyboardAvoidingView>
+        </View>
+      </Modal>
+    </>
   );
 };
 
@@ -451,7 +437,7 @@ const styles = StyleSheet.create({
   modalContainer: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: "flex-end",
-    zIndex: 9999, // Increased z-index to ensure it appears above other modals
+    zIndex: 9999,
   },
   keyboardAvoidingContainer: {
     flex: 1,
@@ -513,7 +499,7 @@ const styles = StyleSheet.create({
   },
   scrollViewContent: {
     padding: 16,
-    paddingBottom: 0, // کاهش فاصله از پایین زیرا ما خودمان یک view با ارتفاع buttonAreaHeight اضافه کرده‌ایم
+    paddingBottom: 0,
   },
   productContainer: {
     borderWidth: 1,

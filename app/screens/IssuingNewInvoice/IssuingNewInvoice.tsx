@@ -350,11 +350,8 @@ const IssuingNewInvoice: React.FC = () => {
           )}
         </ScrollView>
 
-        {/* Buttons section at bottom, no longer contains the description field */}
         <View style={styles.bottomFixedContainer}>
-          {/* Action buttons - positioned directly below the notes input */}
           <View style={styles.actionButtonsContainer}>
-            {/* Add buttons row */}
             <View style={styles.iconButtonsContainer}>
               <TouchableOpacity
                 style={styles.iconButton}
@@ -404,7 +401,6 @@ const IssuingNewInvoice: React.FC = () => {
               </TouchableOpacity>
             </View>
 
-            {/* Submit button */}
             <View style={styles.submitButtonContainer}>
               <TouchableOpacity
                 style={styles.submitButton}
@@ -572,7 +568,6 @@ const styles = StyleSheet.create({
     marginTop: 5,
     textAlign: "center",
   },
-  // Bottom container for action buttons only
   bottomFixedContainer: {
     backgroundColor: colors.light,
     width: "100%",
@@ -592,7 +587,6 @@ const styles = StyleSheet.create({
     marginBottom: 0,
     paddingHorizontal: 2,
   },
-  // Container for add buttons and submit button
   actionButtonsContainer: {
     marginTop: 5,
   },
