@@ -37,6 +37,7 @@ import SupplyRequestList from "./screens/SupplyRequestList";
 import IssuedInvoices from "./screens/IssuedInvoices";
 import ChangePasswordScreen from "./screens/ChangePasswordScreen";
 import AddNewColleague from "./screens/IssuingNewInvoice/AddNewColleague";
+import { Colleague } from "./screens/IssuingNewInvoice/ColleagueSearchModal";
 
 export type RootStackParamList = {
   AppSelection: undefined;
@@ -48,7 +49,7 @@ export type RootStackParamList = {
 
   IssuingNewInvoice: { scannedCode?: string };
   BarCodeScanner: undefined;
-  CustomerInfo: undefined;
+  CustomerInfo: { customer: Colleague };
   AddNewColleague: undefined;
   ProductProperties: undefined;
   SupplyRequest: undefined;
