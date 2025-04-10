@@ -18,10 +18,13 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Feather } from "@expo/vector-icons";
-import colors from "../../../config/colors";
-import ProductCard from "../../../components/ProductCard";
-import Toast from "../../../components/Toast";
-import { toPersianDigits, toEnglishDigits } from "../../../utils/numberConversions";
+import colors from "../../config/colors";
+import ProductCard from "../../components/ProductCard";
+import Toast from "../../components/Toast";
+import {
+  toPersianDigits,
+  toEnglishDigits,
+} from "../../utils/numberConversions";
 import { Product } from "./IssuingNewInvoice";
 
 const { height } = Dimensions.get("window");
@@ -41,7 +44,10 @@ interface ProductSearchDrawerProps {
   onClose: () => void;
   onProductSelect: (product: Product) => void;
   searchProduct: (query: string) => Promise<APIProduct[]>;
-  onError?: (message: string, type: 'success' | 'error' | 'warning' | 'info') => void;
+  onError?: (
+    message: string,
+    type: "success" | "error" | "warning" | "info"
+  ) => void;
 }
 
 const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
@@ -60,12 +66,17 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
 
   const [toastVisible, setToastVisible] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string>("");
-  const [toastType, setToastType] = useState<'success' | 'error' | 'warning' | 'info'>('error');
+  const [toastType, setToastType] = useState<
+    "success" | "error" | "warning" | "info"
+  >("error");
 
   const slideAnimation = useRef(new Animated.Value(0)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
 
-  const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'error') => {
+  const showToast = (
+    message: string,
+    type: "success" | "error" | "warning" | "info" = "error"
+  ) => {
     if (onError) {
       onError(message, type);
     } else {
@@ -90,11 +101,11 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
 
   useEffect(() => {
     const keyboardWillShowListener = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
-      e => setKeyboardHeight(e.endCoordinates.height)
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
+      (e) => setKeyboardHeight(e.endCoordinates.height)
     );
     const keyboardWillHideListener = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
       () => setKeyboardHeight(0)
     );
 
@@ -214,9 +225,10 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
           icon: "attach-money",
           iconColor: colors.secondary,
           label: "قیمت:",
-          value: item.Price !== null
-            ? toPersianDigits(item.Price.toLocaleString()) + " ریال"
-            : "0 ریال",
+          value:
+            item.Price !== null
+              ? toPersianDigits(item.Price.toLocaleString()) + " ریال"
+              : "0 ریال",
         },
         {
           icon: "check-circle",
@@ -266,9 +278,7 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
       />
 
       <View style={styles.modalContainer}>
-        <Animated.View
-          style={[styles.backdrop, backdropStyle]}
-        >
+        <Animated.View style={[styles.backdrop, backdropStyle]}>
           <TouchableOpacity
             style={styles.backdropTouchable}
             activeOpacity={1}
@@ -283,7 +293,7 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
             {
               paddingBottom: keyboardHeight > 0 ? keyboardHeight : 20,
               height: "80%",
-            }
+            },
           ]}
         >
           <LinearGradient
@@ -366,15 +376,20 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
                 <Text style={styles.emptyResultText}>
                   {hasSearched
                     ? "محصولی با این مشخصات یافت نشد"
-                    : "برای یافتن محصول، عبارت جستجو را وارد کنید و دکمه جستجو را فشار دهید"
-                  }
+                    : "برای یافتن محصول، عبارت جستجو را وارد کنید و دکمه جستجو را فشار دهید"}
                 </Text>
                 {hasSearched && searchQuery.length > 0 && (
                   <View style={styles.searchTipsContainer}>
                     <Text style={styles.searchTipsTitle}>راهنمای جستجو:</Text>
-                    <Text style={styles.searchTipText}>- نام محصول را به صورت کامل وارد کنید</Text>
-                    <Text style={styles.searchTipText}>- کد محصول را به صورت دقیق وارد کنید</Text>
-                    <Text style={styles.searchTipText}>- از کلمات کلیدی استفاده کنید</Text>
+                    <Text style={styles.searchTipText}>
+                      - نام محصول را به صورت کامل وارد کنید
+                    </Text>
+                    <Text style={styles.searchTipText}>
+                      - کد محصول را به صورت دقیق وارد کنید
+                    </Text>
+                    <Text style={styles.searchTipText}>
+                      - از کلمات کلیدی استفاده کنید
+                    </Text>
                   </View>
                 )}
               </View>

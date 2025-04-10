@@ -13,9 +13,9 @@ import {
 } from "react-native";
 import { Feather, MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import colors from "../../../config/colors";
-import SearchInput from "../../../components/SearchInput";
-import ScreenHeader from "../../../components/ScreenHeader";
+import colors from "../../config/colors";
+import SearchInput from "../../components/SearchInput";
+import ScreenHeader from "../../components/ScreenHeader";
 
 type FontWeight = "700" | "600" | "500" | "bold" | "semi-bold" | string;
 type StatusType = "تایید نهایی" | "تعلیق" | "بسته شده" | "لغو شده";
@@ -135,7 +135,11 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
           end={{ x: 1, y: 0 }}
         >
           <View style={styles.headerTitleContainer}>
-            <MaterialIcons name={headerIcon} size={22} color={colors.white || "#fff"} />
+            <MaterialIcons
+              name={headerIcon}
+              size={22}
+              color={colors.white || "#fff"}
+            />
             <Text style={styles.purchaseHeaderText}>{headerTitle}</Text>
           </View>
 
@@ -152,7 +156,6 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
         </LinearGradient>
 
         <View style={styles.purchaseContent}>
-        
           {date && (
             <View style={styles.purchaseRow}>
               <View style={styles.purchaseItem}>
@@ -266,7 +269,6 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
 };
 
 const StatusFilterScreen: React.FC = () => {
-
   const [items, setItems] = useState<InspectionItem[]>([
     {
       id: "1",
@@ -318,23 +320,21 @@ const StatusFilterScreen: React.FC = () => {
   const [searchText, setSearchText] = useState<string>("");
   const [activeTab, setActiveTab] = useState<string>("all");
 
-
   const handleSearch = () => {
     console.log("Search button pressed with text:", searchText);
- 
   };
 
   const getFilteredItems = () => {
     let filtered = items;
 
     if (activeTab === "confirmed") {
-      filtered = items.filter(item => item.status === "تایید نهایی");
+      filtered = items.filter((item) => item.status === "تایید نهایی");
     } else if (activeTab === "pending") {
-      filtered = items.filter(item => item.status === "تعلیق");
+      filtered = items.filter((item) => item.status === "تعلیق");
     } else if (activeTab === "closed") {
-      filtered = items.filter(item => item.status === "بسته شده");
+      filtered = items.filter((item) => item.status === "بسته شده");
     } else if (activeTab === "canceled") {
-      filtered = items.filter(item => item.status === "لغو شده");
+      filtered = items.filter((item) => item.status === "لغو شده");
     }
 
     if (searchText) {
@@ -353,7 +353,7 @@ const StatusFilterScreen: React.FC = () => {
     if (status === null) {
       return items.length;
     }
-    return items.filter(item => item.status === status).length;
+    return items.filter((item) => item.status === status).length;
   };
 
   const getColorsByStatus = (status?: StatusType): string[] => {
@@ -390,10 +390,9 @@ const StatusFilterScreen: React.FC = () => {
 
   return (
     <>
-       <ScreenHeader title="فاکتورها" />
+      <ScreenHeader title="فاکتورها" />
 
       <View style={styles.container}>
- 
         <View style={styles.searchOuterContainer}>
           <SearchInput
             placeholder="جستجو در فاکتورها..."
@@ -550,7 +549,7 @@ const StatusFilterScreen: React.FC = () => {
           )}
         </View>
       </View>
-</>
+    </>
   );
 };
 
@@ -749,7 +748,7 @@ const styles = StyleSheet.create({
   noteContainer: {
     flexDirection: "row-reverse",
     alignItems: "flex-start",
-    width: '100%',
+    width: "100%",
   },
   noteTextContainer: {
     flexDirection: "column",
@@ -762,7 +761,7 @@ const styles = StyleSheet.create({
     fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
     color: "#757575",
     marginBottom: 4,
-    alignSelf: 'flex-end',
+    alignSelf: "flex-end",
   },
   noteContent: {
     fontSize: 15,
@@ -770,7 +769,7 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: "right",
     color: "#212121",
-    width: '100%',
+    width: "100%",
   },
   callButtonCircle: {
     width: 40,

@@ -1,5 +1,5 @@
 import axios from "axios";
-import appConfig from "../../../../../config";
+import appConfig from "../../../../config";
 
 // Interface for PersonGroup based on API response
 interface PersonGroup {
@@ -35,12 +35,12 @@ const PersonGroupService = {
   async getPersonGroupNames(): Promise<string[]> {
     try {
       const personGroups = await this.getAllActive();
-      return personGroups.map(group => group.PersonGroupName);
+      return personGroups.map((group) => group.PersonGroupName);
     } catch (error) {
       console.error("Error getting person group names:", error);
       return [];
     }
-  }
+  },
 };
 
 export default PersonGroupService;

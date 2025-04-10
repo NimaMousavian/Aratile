@@ -1,14 +1,10 @@
 // InvoiceTotalCalculator.tsx - بدون اسکرول داخلی
 import React, { useEffect, useState } from "react";
-import {
-  StyleSheet,
-  View,
-  Text,
-} from "react-native";
+import { StyleSheet, View, Text } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import colors from "../../../config/colors";
-import { toPersianDigits } from "../../../utils/numberConversions";
+import colors from "../../config/colors";
+import { toPersianDigits } from "../../utils/numberConversions";
 import { Product } from "./IssuingNewInvoice";
 
 interface InvoiceTotalProps {
@@ -18,7 +14,7 @@ interface InvoiceTotalProps {
 
 const InvoiceTotalCalculator: React.FC<InvoiceTotalProps> = ({
   products,
-  containerStyle
+  containerStyle,
 }) => {
   const [totalQuantity, setTotalQuantity] = useState<number>(0);
   const [totalPrice, setTotalPrice] = useState<number>(0);
@@ -38,7 +34,7 @@ const InvoiceTotalCalculator: React.FC<InvoiceTotalProps> = ({
     const price = products.reduce((sum, product) => {
       const qty = parseFloat(product.quantity) || 0;
       const productPrice = product.price || 0;
-      return sum + (qty * productPrice);
+      return sum + qty * productPrice;
     }, 0);
     setTotalPrice(price);
 
@@ -69,29 +65,39 @@ const InvoiceTotalCalculator: React.FC<InvoiceTotalProps> = ({
         <View style={styles.contentInnerContainer}>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>تعداد اقلام:</Text>
-            <Text style={styles.summaryValue}>{toPersianDigits(products.length.toString())}</Text>
+            <Text style={styles.summaryValue}>
+              {toPersianDigits(products.length.toString())}
+            </Text>
           </View>
 
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>مجموع مقدار:</Text>
-            <Text style={styles.summaryValue}>{toPersianDigits(totalQuantity.toFixed(2))} متر مربع</Text>
+            <Text style={styles.summaryValue}>
+              {toPersianDigits(totalQuantity.toFixed(2))} متر مربع
+            </Text>
           </View>
 
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>جمع کل:</Text>
-            <Text style={styles.summaryValue}>{toPersianDigits(totalPrice.toLocaleString())} ریال</Text>
+            <Text style={styles.summaryValue}>
+              {toPersianDigits(totalPrice.toLocaleString())} ریال
+            </Text>
           </View>
 
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>مالیات (۹٪):</Text>
-            <Text style={styles.summaryValue}>{toPersianDigits(tax.toLocaleString())} ریال</Text>
+            <Text style={styles.summaryValue}>
+              {toPersianDigits(tax.toLocaleString())} ریال
+            </Text>
           </View>
 
           <View style={styles.divider} />
 
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>مبلغ نهایی:</Text>
-            <Text style={styles.totalValue}>{toPersianDigits(finalTotal.toLocaleString())} ریال</Text>
+            <Text style={styles.totalValue}>
+              {toPersianDigits(finalTotal.toLocaleString())} ریال
+            </Text>
           </View>
         </View>
       </View>

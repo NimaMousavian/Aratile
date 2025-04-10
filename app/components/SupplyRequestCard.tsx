@@ -1,7 +1,7 @@
 import React from "react";
 import { Platform, StyleSheet, View } from "react-native";
 import colors from "../config/colors";
-import { getFontFamily } from "../screens/Cashier/ReceiveNewInvoiceScreen/ReceiveNewInvoiceScreen";
+import { getFontFamily } from "../screens/ReceiveNewInvoiceScreen/ReceiveNewInvoiceScreen";
 import Text from "./Text";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { ISupplyRequest } from "../config/types";

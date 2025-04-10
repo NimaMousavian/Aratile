@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { Modal, Platform, StyleSheet, View } from "react-native";
-import AppText from "../../components/Text";
-import AppButton from "../../components/Button";
-import AppTextInput from "../../components/TextInput";
-import { ISupplyRequest } from "../../config/types";
-import colors from "../../config/colors";
-import ProductCard from "../../components/ProductCard";
-import { productData } from "../Cashier/ReceiveNewInvoiceScreen/ReceiveNewInvoiceScreen";
+import AppText from "../components/Text";
+import AppButton from "../components/Button";
+import AppTextInput from "../components/TextInput";
+import { ISupplyRequest } from "../config/types";
+import colors from "../config/colors";
+import ProductCard from "../components/ProductCard";
 import { FlatList } from "react-native-gesture-handler";
-import ScreenHeader from "../../components/ScreenHeader";
+import ScreenHeader from "../components/ScreenHeader";
+import { productData } from "./ReceiveNewInvoiceScreen/ReceiveNewInvoiceScreen";
 
 const SupplyRequest = () => {
   const [showModal, setShowModal] = useState<boolean>(false);

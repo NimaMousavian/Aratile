@@ -1,8 +1,10 @@
 import axios from "axios";
-import appConfig from "../../../../../config";
-import { toPersianDigits, toEnglishDigits, NumberConverterInput } from "../../../../utils/numberConversions";
-
-
+import appConfig from "../../../../config";
+import {
+  toPersianDigits,
+  toEnglishDigits,
+  NumberConverterInput,
+} from "../../../utils/numberConversions";
 
 // مدل داده برای ایجاد شخص جدید
 export interface CreatePersonDTO {
@@ -22,25 +24,30 @@ export interface CreatePersonDTO {
  * @param obj آبجکت حاوی فیلدهای متنی
  * @returns آبجکت با اعداد تبدیل شده به انگلیسی
  */
-const convertObjectNumbersToEnglish = <T extends Record<string, any>>(obj: T): T => {
+const convertObjectNumbersToEnglish = <T extends Record<string, any>>(
+  obj: T
+): T => {
   const result = { ...obj };
 
   for (const key in result) {
-    if (typeof result[key] === 'string') {
+    if (typeof result[key] === "string") {
       // تبدیل فیلدهای متنی با اعداد فارسی به انگلیسی
       result[key] = toEnglishDigits(result[key]);
 
       // تبدیل اعداد فارسی در نام و نام خانوادگی به انگلیسی به صورت ویژه
-      if (key === 'FirstName' || key === 'LastName') {
+      if (key === "FirstName" || key === "LastName") {
         result[key] = toEnglishDigits(result[key]);
       }
-    } else if (typeof result[key] === 'object' && result[key] !== null) {
+    } else if (typeof result[key] === "object" && result[key] !== null) {
       // بازگشتی برای آبجکت‌های تو در تو
       if (Array.isArray(result[key])) {
         // اگر آرایه باشد
         result[key] = result[key].map((item: any) =>
-          typeof item === 'object' ? convertObjectNumbersToEnglish(item) :
-            typeof item === 'string' ? toEnglishDigits(item) : item
+          typeof item === "object"
+            ? convertObjectNumbersToEnglish(item)
+            : typeof item === "string"
+            ? toEnglishDigits(item)
+            : item
         );
       } else {
         // اگر آبجکت باشد
@@ -70,20 +77,24 @@ const PersonManagementService = {
 
       // اطمینان از تبدیل اعداد فارسی در نام و نام خانوادگی
       if (convertedPersonData.FirstName) {
-        convertedPersonData.FirstName = toEnglishDigits(convertedPersonData.FirstName);
+        convertedPersonData.FirstName = toEnglishDigits(
+          convertedPersonData.FirstName
+        );
       }
 
       if (convertedPersonData.LastName) {
-        convertedPersonData.LastName = toEnglishDigits(convertedPersonData.LastName);
+        convertedPersonData.LastName = toEnglishDigits(
+          convertedPersonData.LastName
+        );
       }
 
       console.log("ارسال درخواست ایجاد شخص:", convertedPersonData);
 
       const response = await axios.post<number>(apiUrl, convertedPersonData, {
         headers: {
-          'Content-Type': 'application/json',
-          'accept': '*/*'
-        }
+          "Content-Type": "application/json",
+          accept: "*/*",
+        },
       });
 
       console.log("پاسخ ایجاد شخص:", response.data);
@@ -132,7 +143,9 @@ const PersonManagementService = {
   getPersonGroupIdsByNames: async (groupNames: string[]): Promise<number[]> => {
     try {
       // تبدیل اعداد فارسی به انگلیسی در آرایه نام‌های گروه
-      const convertedGroupNames = groupNames.map(name => toEnglishDigits(name));
+      const convertedGroupNames = groupNames.map((name) =>
+        toEnglishDigits(name)
+      );
 
       const response = await axios.get(
         `${appConfig.mobileApi}PersonGroup/GetAllActive?page=1&pageSize=1000`
@@ -167,7 +180,10 @@ const PersonManagementService = {
    * @param provinceName نام استان
    * @returns شناسه شهر
    */
-  getCityIdByName: async (cityName: string, provinceName: string): Promise<number | null> => {
+  getCityIdByName: async (
+    cityName: string,
+    provinceName: string
+  ): Promise<number | null> => {
     try {
       // تبدیل اعداد فارسی به انگلیسی در نام شهر و استان
       const convertedCityName = toEnglishDigits(cityName);
@@ -196,7 +212,7 @@ const PersonManagementService = {
           "City/GetByProvinceId",
           "City/GetAllActiveByProvinceId",
           "City/GetAllByProvinceId",
-          "City/GetCitiesByProvinceId"
+          "City/GetCitiesByProvinceId",
         ];
 
         for (const endpoint of possibleEndpoints) {
@@ -221,13 +237,15 @@ const PersonManagementService = {
         }
       }
 
-      console.error(`شهر با نام ${convertedCityName} در استان ${convertedProvinceName} یافت نشد`);
+      console.error(
+        `شهر با نام ${convertedCityName} در استان ${convertedProvinceName} یافت نشد`
+      );
       return null;
     } catch (error) {
       console.error("خطا در دریافت شناسه شهر:", error);
       return null;
     }
-  }
+  },
 };
 
 export default PersonManagementService;

@@ -2,10 +2,10 @@ import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
 import { CameraView, Camera } from "expo-camera";
 import { BarCodeScannerResult } from "expo-barcode-scanner";
-import AppButton from "../../../components/Button";
+import AppButton from "../../components/Button";
 import { useNavigation } from "@react-navigation/native";
-import { AppNavigationProp } from "../../../StackNavigator";
-import colors from "../../../config/colors";
+import { AppNavigationProp } from "../../StackNavigator";
+import colors from "../../config/colors";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { LinearGradient } from "expo-linear-gradient";
 
@@ -26,13 +26,15 @@ const BarcodeScanner = () => {
   const handleBarcodeScanned = ({ data }: BarCodeScannerResult) => {
     setScanned(true);
     // مستقیماً کد اسکن شده را به صفحه قبلی می‌فرستیم
-    navigation.navigate('IssuingNewInvoice', { scannedCode: data });
+    navigation.navigate("IssuingNewInvoice", { scannedCode: data });
   };
 
   if (hasPermission === null) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.permissionText}>درحال درخواست دسترسی به دوربین...</Text>
+        <Text style={styles.permissionText}>
+          درحال درخواست دسترسی به دوربین...
+        </Text>
       </View>
     );
   }
@@ -40,7 +42,10 @@ const BarcodeScanner = () => {
   if (hasPermission === false) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.permissionText}>دسترسی به دوربین مجاز نیست. لطفاً از تنظیمات دستگاه، دسترسی دوربین را فعال کنید.</Text>
+        <Text style={styles.permissionText}>
+          دسترسی به دوربین مجاز نیست. لطفاً از تنظیمات دستگاه، دسترسی دوربین را
+          فعال کنید.
+        </Text>
         <AppButton
           title="بازگشت"
           onPress={() => navigation.goBack()}

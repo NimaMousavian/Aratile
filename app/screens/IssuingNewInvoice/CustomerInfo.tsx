@@ -1,18 +1,27 @@
 import React, { useState, useEffect } from "react";
-import { ScrollView, StyleSheet, View, TouchableOpacity, ActivityIndicator } from "react-native";
-import AppTextInput from "../../../components/TextInput";
-import AppButton from "../../../components/Button";
-import SelectionBottomSheet from "../../../components/SelectionDialog";
-import ScreenHeader from "../../../components/ScreenHeader";
-import { InputContainer } from "../../FieldMarketing/B2BFieldMarketer/AddNewShop";
+import {
+  ScrollView,
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
+import AppTextInput from "../../components/TextInput";
+import AppButton from "../../components/Button";
+import SelectionBottomSheet from "../../components/SelectionDialog";
+import ScreenHeader from "../../components/ScreenHeader";
+
 import ColleagueBottomSheet, { Colleague } from "./ColleagueSearchModal";
-import Toast from "../../../components/Toast";
-import colors from "../../../config/colors";
+import Toast from "../../components/Toast";
+import colors from "../../config/colors";
 import LocationService from "./api/LocationService";
 import PersonGroupService from "./api/PersonGroupService";
-import PersonManagementService, { CreatePersonDTO } from "./api/PersonManagementService";
+import PersonManagementService, {
+  CreatePersonDTO,
+} from "./api/PersonManagementService";
+import { InputContainer } from "../B2BFieldMarketer/AddNewShop";
 
-type ToastType = 'success' | 'error' | 'warning' | 'info';
+type ToastType = "success" | "error" | "warning" | "info";
 
 interface Province {
   ProvinceId: number;
@@ -33,14 +42,18 @@ const CustomerInfo = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // State for selections
-  const [selectedCustomerTypes, setSelectedCustomerTypes] = useState<string[]>([]);
-  const [selectedCustomerTypesString, setSelectedCustomerTypesString] = useState("");
+  const [selectedCustomerTypes, setSelectedCustomerTypes] = useState<string[]>(
+    []
+  );
+  const [selectedCustomerTypesString, setSelectedCustomerTypesString] =
+    useState("");
   const [selectedColleague, setSelectedColleague] = useState<Colleague>({
     id: "",
     name: "",
-    phone: ""
+    phone: "",
   });
-  const [isColleagueBottomSheetVisible, setIsColleagueBottomSheetVisible] = useState(false);
+  const [isColleagueBottomSheetVisible, setIsColleagueBottomSheetVisible] =
+    useState(false);
 
   const [selectedProvince, setSelectedProvince] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
@@ -96,7 +109,9 @@ const CustomerInfo = () => {
     setSelectedCity("");
 
     try {
-      const cityNames = await LocationService.getCityNamesByProvinceName(provinceName);
+      const cityNames = await LocationService.getCityNamesByProvinceName(
+        provinceName
+      );
 
       if (cityNames.length === 0) {
         setCities(["خطا در دریافت شهرها، لطفاً دوباره تلاش کنید"]);
@@ -198,7 +213,9 @@ const CustomerInfo = () => {
 
     try {
       // دریافت شناسه استان
-      const provinceId = await LocationService.getProvinceIdByName(selectedProvince);
+      const provinceId = await LocationService.getProvinceIdByName(
+        selectedProvince
+      );
       if (!provinceId) {
         showToast("خطا در دریافت شناسه استان", "error");
         setIsSubmitting(false);
@@ -206,7 +223,10 @@ const CustomerInfo = () => {
       }
 
       // دریافت شناسه شهر
-      const cityId = await PersonManagementService.getCityIdByName(selectedCity, selectedProvince);
+      const cityId = await PersonManagementService.getCityIdByName(
+        selectedCity,
+        selectedProvince
+      );
       if (!cityId) {
         showToast("خطا در دریافت شناسه شهر", "error");
         setIsSubmitting(false);
@@ -216,7 +236,9 @@ const CustomerInfo = () => {
       // دریافت شناسه‌های گروه مشتری
       let personGroupIds: number[] = [];
       if (selectedCustomerTypes.length > 0) {
-        personGroupIds = await PersonManagementService.getPersonGroupIdsByNames(selectedCustomerTypes);
+        personGroupIds = await PersonManagementService.getPersonGroupIdsByNames(
+          selectedCustomerTypes
+        );
         if (personGroupIds.length === 0 && selectedCustomerTypes.length > 0) {
           showToast("خطا در دریافت شناسه‌های گروه مشتری", "warning");
           // اما عملیات را ادامه می‌دهیم
@@ -231,13 +253,15 @@ const CustomerInfo = () => {
         Mobile: mobile,
         ProvinceId: provinceId,
         CityId: cityId,
-        MarketingChannelId: null, // مقدار پیش‌فرض
+        MarketingChannelId: "", // مقدار پیش‌فرض
         Address: address,
-        PersonGroupIdList: personGroupIds
+        PersonGroupIdList: personGroupIds,
       };
 
       // ارسال درخواست ایجاد شخص
-      const newPersonId = await PersonManagementService.createPerson(personData);
+      const newPersonId = await PersonManagementService.createPerson(
+        personData
+      );
 
       // نمایش پیام موفقیت
       showToast(`مشتری با موفقیت ثبت شد.`, "success");
@@ -255,7 +279,6 @@ const CustomerInfo = () => {
       setSelectedCustomerTypesString("");
       setSelectedColleague({ id: "", name: "", phone: "" });
       setCities([]);
-
     } catch (error) {
       console.error("خطا در ثبت مشتری:", error);
       showToast("خطا در ثبت مشتری. لطفاً دوباره تلاش کنید", "error");
@@ -278,7 +301,6 @@ const CustomerInfo = () => {
       <View style={styles.container}>
         <ScrollView>
           <InputContainer title="اطلاعات مشتری">
-
             <AppTextInput
               autoCapitalize="none"
               autoCorrect={false}
@@ -334,7 +356,7 @@ const CustomerInfo = () => {
             <TouchableOpacity
               activeOpacity={0.7}
               onPress={() => setIsColleagueBottomSheetVisible(true)}
-              style={{ width: '100%' }}
+              style={{ width: "100%" }}
             >
               <AppTextInput
                 autoCapitalize="none"
@@ -342,8 +364,12 @@ const CustomerInfo = () => {
                 keyboardType="default"
                 icon="person-search"
                 placeholder="معرف"
-                value={selectedColleague.name ? `${selectedColleague.name} (${selectedColleague.phone})` : ""}
-                onChangeText={() => { }}
+                value={
+                  selectedColleague.name
+                    ? `${selectedColleague.name} (${selectedColleague.phone})`
+                    : ""
+                }
+                onChangeText={() => {}}
                 editable={false}
               />
             </TouchableOpacity>
@@ -386,7 +412,6 @@ const CustomerInfo = () => {
               textAlign="right"
               isLargeInput={true}
             />
-
           </InputContainer>
 
           <InputContainer title="سایر اطلاعات">
@@ -435,7 +460,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 15,
-    paddingBottom:15,
+    paddingBottom: 15,
     backgroundColor: colors.background,
   },
   rightAlignedInput: {
@@ -452,9 +477,9 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     marginTop: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  }
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });
 
 export default CustomerInfo;

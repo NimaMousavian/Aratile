@@ -12,16 +12,16 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../../../StackNavigator";
+import { RootStackParamList } from "../../StackNavigator";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { LinearGradient } from "expo-linear-gradient";
-import colors from "../../../config/colors";
-import IconButtonSquare from "../../../components/IconButtonSquare";
-import ProductCard from "../../../components/ProductCard";
-import DynamicModal from "../../../components/DynamicModal";
-import IconButton from "../../../components/IconButton";
-import PurchaseInfoCard from "../../../components/PurchaseInfoCard";
-import ScreenHeader from "../../../components/ScreenHeader";
+import colors from "../../config/colors";
+import IconButtonSquare from "../../components/IconButtonSquare";
+import ProductCard from "../../components/ProductCard";
+import DynamicModal from "../../components/DynamicModal";
+import IconButton from "../../components/IconButton";
+import PurchaseInfoCard from "../../components/PurchaseInfoCard";
+import ScreenHeader from "../../components/ScreenHeader";
 interface PurchaseData {
   buyer: {
     name: string;
@@ -453,8 +453,7 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
   return (
     <>
       <ScreenHeader title="ثبت فاکتور جدید" />
- 
-    
+
       <SafeAreaView style={styles.safeAreaBottom}>
         <View style={styles.container}>
           <ScrollView

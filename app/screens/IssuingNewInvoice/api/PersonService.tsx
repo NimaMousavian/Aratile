@@ -1,5 +1,5 @@
 import axios from "axios";
-import appConfig from "../../../../../config";
+import appConfig from "../../../../config";
 
 export interface Person {
   PersonId: number;
@@ -44,7 +44,10 @@ class PersonService {
   ): Promise<SearchResponse> {
     try {
       const response = await axios.get<SearchResponse>(
-        `${appConfig.mobileApi}Person/SearchPersonByMobileOrFullName?page=${page}&pageSize=${pageSize}${query ? `&query=${encodeURIComponent(query)}` : ""
+        `${
+          appConfig.mobileApi
+        }Person/SearchPersonByMobileOrFullName?page=${page}&pageSize=${pageSize}${
+          query ? `&query=${encodeURIComponent(query)}` : ""
         }`
       );
       return response.data;
@@ -55,7 +58,9 @@ class PersonService {
 
   static async getPersonById(personId: number): Promise<Person> {
     try {
-      const response = await axios.get<Person>(`${appConfig.mobileApi}Person/GetPersonById/${personId}`);
+      const response = await axios.get<Person>(
+        `${appConfig.mobileApi}Person/GetPersonById/${personId}`
+      );
       return response.data;
     } catch (error) {
       throw error;
@@ -64,16 +69,25 @@ class PersonService {
 
   static async createPerson(personData: Partial<Person>): Promise<number> {
     try {
-      const response = await axios.post<number>(`${appConfig.mobileApi}Person/CreatePerson`, personData);
+      const response = await axios.post<number>(
+        `${appConfig.mobileApi}Person/CreatePerson`,
+        personData
+      );
       return response.data;
     } catch (error) {
       throw error;
     }
   }
 
-  static async updatePerson(personId: number, personData: Partial<Person>): Promise<boolean> {
+  static async updatePerson(
+    personId: number,
+    personData: Partial<Person>
+  ): Promise<boolean> {
     try {
-      const response = await axios.put<boolean>(`${appConfig.mobileApi}Person/UpdatePerson/${personId}`, personData);
+      const response = await axios.put<boolean>(
+        `${appConfig.mobileApi}Person/UpdatePerson/${personId}`,
+        personData
+      );
       return response.data;
     } catch (error) {
       throw error;

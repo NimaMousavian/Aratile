@@ -1,5 +1,5 @@
 import axios from "axios";
-import appConfig from "../../../../../config";
+import appConfig from "../../../../config";
 
 // تعریف مدل‌های داده
 export interface Province {
@@ -66,7 +66,7 @@ const LocationService = {
   getProvinceNames: async (): Promise<string[]> => {
     try {
       const provinces = await LocationService.getAllProvinces();
-      return provinces.map(province => province.ProvinceName);
+      return provinces.map((province) => province.ProvinceName);
     } catch (error) {
       console.error("خطا در دریافت نام استان‌ها:", error);
       return [];
@@ -84,7 +84,7 @@ const LocationService = {
         "City/GetByProvinceId",
         "City/GetAllActiveByProvinceId",
         "City/GetAllByProvinceId",
-        "City/GetCitiesByProvinceId"
+        "City/GetCitiesByProvinceId",
       ];
 
       let response = null;
@@ -117,7 +117,10 @@ const LocationService = {
       }
       return [];
     } catch (error) {
-      console.error(`خطا در دریافت شهرهای استان با شناسه ${provinceId}:`, error);
+      console.error(
+        `خطا در دریافت شهرهای استان با شناسه ${provinceId}:`,
+        error
+      );
       throw error;
     }
   },
@@ -126,13 +129,15 @@ const LocationService = {
    * دریافت نام‌های شهرهای یک استان با نام استان
    * ابتدا استان با نام مشخص پیدا می‌شود، سپس شهرهای آن دریافت می‌شوند
    */
-  getCityNamesByProvinceName: async (provinceName: string): Promise<string[]> => {
+  getCityNamesByProvinceName: async (
+    provinceName: string
+  ): Promise<string[]> => {
     try {
       // ابتدا همه استان‌ها را دریافت می‌کنیم
       const provinces = await LocationService.getAllProvinces();
 
       // استان مورد نظر را پیدا می‌کنیم
-      const province = provinces.find(p => p.ProvinceName === provinceName);
+      const province = provinces.find((p) => p.ProvinceName === provinceName);
 
       if (!province) {
         console.error(`استان با نام ${provinceName} یافت نشد`);
@@ -141,14 +146,14 @@ const LocationService = {
 
       try {
         // شهرهای استان را دریافت می‌کنیم
-        const cities = await LocationService.getCitiesByProvinceId(province.ProvinceId);
+        const cities = await LocationService.getCitiesByProvinceId(
+          province.ProvinceId
+        );
 
         // نام شهرها را برمی‌گردانیم
-        return cities.map(city => city.CityName);
+        return cities.map((city) => city.CityName);
       } catch (error) {
         console.error(`خطا در دریافت شهرهای استان ${provinceName}:`, error);
-
-   
 
         // برای سایر استان‌ها، یک لیست خالی برگردان
         return [];
@@ -165,14 +170,14 @@ const LocationService = {
   getProvinceIdByName: async (provinceName: string): Promise<number | null> => {
     try {
       const provinces = await LocationService.getAllProvinces();
-      const province = provinces.find(p => p.ProvinceName === provinceName);
+      const province = provinces.find((p) => p.ProvinceName === provinceName);
 
       return province ? province.ProvinceId : null;
     } catch (error) {
       console.error(`خطا در دریافت شناسه استان ${provinceName}:`, error);
       return null;
     }
-  }
+  },
 };
 
 export default LocationService;

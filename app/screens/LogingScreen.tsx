@@ -1,7 +1,6 @@
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import ScreenHeader from "../components/ScreenHeader";
-import { InputContainer } from "./FieldMarketing/B2BFieldMarketer/AddNewShop";
 import AppTextInput from "../components/TextInput";
 import AppButton from "../components/Button";
 import colors from "../config/colors";

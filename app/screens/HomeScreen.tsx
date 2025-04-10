@@ -10,10 +10,10 @@ import {
   Platform,
   Animated,
 } from "react-native";
-import colors from "../../config/colors";
+import colors from "../config/colors";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useNavigation } from "@react-navigation/native";
-import { AppNavigationProp, RootStackParamList } from "../../StackNavigator";
+import { AppNavigationProp, RootStackParamList } from "../StackNavigator";
 import { PanGestureHandler, State } from "react-native-gesture-handler";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -787,7 +787,7 @@ const HomeScreen: React.FC = () => {
       <View style={styles.logoContainer}>
         <Image
           style={styles.logo}
-          source={require("../../../assets/logo-aratile.png")}
+          source={require("../../assets/logo-aratile.png")}
         />
       </View>
 

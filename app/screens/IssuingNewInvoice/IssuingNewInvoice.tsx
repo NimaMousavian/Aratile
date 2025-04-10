@@ -16,17 +16,17 @@ import ProductSearchDrawer from "./ProductSearchDrawer";
 
 // Components
 import ColleagueBottomSheet from "../IssuingNewInvoice/ColleagueSearchModal";
-import ProductCard from "../../../components/ProductCard";
-import ScreenHeader from "../../../components/ScreenHeader";
-import AppTextInput from "../../../components/TextInput";
-import Toast from "../../../components/Toast";
+import ProductCard from "../../components/ProductCard";
+import ScreenHeader from "../../components/ScreenHeader";
+import AppTextInput from "../../components/TextInput";
+import Toast from "../../components/Toast";
 import ProductPropertiesDrawer from "./ProductProperties";
 import InvoiceTotalCalculator from "./InvoiceTotalCalculator";
 
 // Utilities and Configuration
-import colors from "../../../config/colors";
-import { toPersianDigits } from "../../../utils/numberConversions";
-import useProductScanner from "../../../Hooks/useProductScanner";
+import colors from "../../config/colors";
+import { toPersianDigits } from "../../utils/numberConversions";
+import useProductScanner from "../../Hooks/useProductScanner";
 
 // At the top of IssuingNewInvoice.tsx, add:
 export interface Product {
@@ -64,22 +64,31 @@ const IssuingNewInvoice: React.FC = () => {
   } = useProductScanner();
 
   // UI state
-  const [showProductSearchDrawer, setShowProductSearchDrawer] = useState<boolean>(false);
-  const [showProductProperties, setShowProductProperties] = useState<boolean>(false);
+  const [showProductSearchDrawer, setShowProductSearchDrawer] =
+    useState<boolean>(false);
+  const [showProductProperties, setShowProductProperties] =
+    useState<boolean>(false);
   const [productToShow, setProductToShow] = useState<Product | null>(null);
-  const [selectedColleague, setSelectedColleague] = useState<Colleague | null>(null);
+  const [selectedColleague, setSelectedColleague] = useState<Colleague | null>(
+    null
+  );
   const [showColleagueSheet, setShowColleagueSheet] = useState<boolean>(false);
   const [invoiceNote, setInvoiceNote] = useState<string>("");
 
   // Toast state
   const [toastVisible, setToastVisible] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string>("");
-  const [toastType, setToastType] = useState<'success' | 'error' | 'warning' | 'info'>('error');
+  const [toastType, setToastType] = useState<
+    "success" | "error" | "warning" | "info"
+  >("error");
 
   const navigation = useNavigation<AppNavigationProp>();
 
   // Display toast notification
-  const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'error') => {
+  const showToast = (
+    message: string,
+    type: "success" | "error" | "warning" | "info" = "error"
+  ) => {
     setToastMessage(message);
     setToastType(type);
     setToastVisible(true);
@@ -99,7 +108,12 @@ const IssuingNewInvoice: React.FC = () => {
   };
 
   // Add product from properties drawer
-  const handleAddProduct = (product: Product, quantity: string, note: string, manualCalculation: boolean) => {
+  const handleAddProduct = (
+    product: Product,
+    quantity: string,
+    note: string,
+    manualCalculation: boolean
+  ) => {
     // محاسبه قیمت کل محصول بر اساس مقدار
     const quantityNum = parseFloat(quantity) || 0;
     const unitPrice = product.price || 0;
@@ -109,7 +123,7 @@ const IssuingNewInvoice: React.FC = () => {
       ...product,
       quantity: quantity,
       note: note,
-      manualCalculation: manualCalculation
+      manualCalculation: manualCalculation,
       // قیمت کل در کامپوننت InvoiceTotalCalculator محاسبه می‌شود
     };
 
@@ -183,29 +197,55 @@ const IssuingNewInvoice: React.FC = () => {
           >
             <View style={styles.customerRow}>
               <View style={styles.customerField}>
-                <MaterialIcons name="person" size={24} color="white" style={styles.customerIcon} />
+                <MaterialIcons
+                  name="person"
+                  size={24}
+                  color="white"
+                  style={styles.customerIcon}
+                />
                 <Text style={styles.customerLabel}>مشتری</Text>
               </View>
               <View style={styles.customerButtonsContainer}>
                 {selectedColleague && (
                   <TouchableOpacity
-                    style={[styles.iconCircleSmall, { backgroundColor: "#fef2e0" }]}
-                    onPress={() => navigation.navigate("CustomerInfo", { customer: selectedColleague })}
+                    style={[
+                      styles.iconCircleSmall,
+                      { backgroundColor: "#fef2e0" },
+                    ]}
+                    onPress={() =>
+                      navigation.navigate("CustomerInfo", {
+                        customer: selectedColleague,
+                      })
+                    }
                   >
-                    <MaterialIcons name="edit" size={22} color={colors.warning} />
+                    <MaterialIcons
+                      name="edit"
+                      size={22}
+                      color={colors.warning}
+                    />
                   </TouchableOpacity>
                 )}
                 <TouchableOpacity
-                  style={[styles.iconCircleSmall, { backgroundColor: "#e5f9ec" }]}
+                  style={[
+                    styles.iconCircleSmall,
+                    { backgroundColor: "#e5f9ec" },
+                  ]}
                   onPress={() => navigation.navigate("CustomerInfo")}
                 >
                   <MaterialIcons name="add" size={22} color={colors.success} />
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.iconCircleSmall, { backgroundColor: "#e4edf8" }]}
+                  style={[
+                    styles.iconCircleSmall,
+                    { backgroundColor: "#e4edf8" },
+                  ]}
                   onPress={() => setShowColleagueSheet(true)}
                 >
-                  <MaterialIcons name="search" size={22} color={colors.primary} />
+                  <MaterialIcons
+                    name="search"
+                    size={22}
+                    color={colors.primary}
+                  />
                 </TouchableOpacity>
               </View>
             </View>
@@ -226,15 +266,14 @@ const IssuingNewInvoice: React.FC = () => {
         {isLoading && (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={styles.loadingText}>در حال بارگذاری اطلاعات محصول...</Text>
+            <Text style={styles.loadingText}>
+              در حال بارگذاری اطلاعات محصول...
+            </Text>
           </View>
         )}
 
         {/* Products list and Notes input (scrollable content) */}
-        <ScrollView
-          style={styles.scrollableContent}
-          ref={scrollViewRef}
-        >
+        <ScrollView style={styles.scrollableContent} ref={scrollViewRef}>
           {/* Products list */}
           <View style={styles.productsSection}>
             {selectedProducts.map((product) => (
@@ -258,7 +297,9 @@ const IssuingNewInvoice: React.FC = () => {
                     icon: "attach-money",
                     iconColor: colors.secondary,
                     label: "قیمت:",
-                    value: toPersianDigits((product.price || 0).toLocaleString()) + " ریال",
+                    value:
+                      toPersianDigits((product.price || 0).toLocaleString()) +
+                      " ریال",
                   },
                 ]}
                 note={product.note ? toPersianDigits(product.note) : ""}
@@ -274,7 +315,9 @@ const IssuingNewInvoice: React.FC = () => {
                   iconSize: 36,
                   iconColor: colors.secondary,
                 }}
-                containerStyle={Platform.OS === "android" ? styles.androidCardAdjustment : {}}
+                containerStyle={
+                  Platform.OS === "android" ? styles.androidCardAdjustment : {}
+                }
                 onLongPress={() => {
                   Alert.alert(
                     "حذف محصول",
@@ -286,8 +329,8 @@ const IssuingNewInvoice: React.FC = () => {
                         onPress: () => {
                           removeProduct(product.id);
                           showToast("محصول با موفقیت حذف شد", "info");
-                        }
-                      }
+                        },
+                      },
                     ]
                   );
                 }}
@@ -297,8 +340,14 @@ const IssuingNewInvoice: React.FC = () => {
             {/* Empty state */}
             {selectedProducts.length === 0 && (
               <View style={styles.emptyProductsContainer}>
-                <MaterialIcons name="shopping-cart" size={50} color={colors.medium} />
-                <Text style={styles.emptyProductsText}>محصولی به فاکتور اضافه نشده است</Text>
+                <MaterialIcons
+                  name="shopping-cart"
+                  size={50}
+                  color={colors.medium}
+                />
+                <Text style={styles.emptyProductsText}>
+                  محصولی به فاکتور اضافه نشده است
+                </Text>
                 <Text style={styles.emptyProductsSubText}>
                   برای افزودن محصول، از دکمه + یا اسکن بارکد استفاده کنید
                 </Text>
@@ -334,28 +383,53 @@ const IssuingNewInvoice: React.FC = () => {
 
         {/* Bottom section */}
         <View style={styles.fixedBottomSection}>
-
           {/* Add buttons - moved after the notes */}
           <View style={styles.iconButtonsContainer}>
-            <TouchableOpacity style={styles.iconButton} onPress={() => {
-              // Ensure the properties drawer is closed before opening search
-              if (showProductProperties) {
-                setShowProductProperties(false);
-                setTimeout(() => {
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={() => {
+                // Ensure the properties drawer is closed before opening search
+                if (showProductProperties) {
+                  setShowProductProperties(false);
+                  setTimeout(() => {
+                    setShowProductSearchDrawer(true);
+                  }, 300);
+                } else {
                   setShowProductSearchDrawer(true);
-                }, 300);
-              } else {
-                setShowProductSearchDrawer(true);
-              }
-            }}>
-              <View style={[styles.iconCircle, { backgroundColor: "#FFFFFF", borderColor: `${colors.success}40` }]}>
+                }
+              }}
+            >
+              <View
+                style={[
+                  styles.iconCircle,
+                  {
+                    backgroundColor: "#FFFFFF",
+                    borderColor: `${colors.success}40`,
+                  },
+                ]}
+              >
                 <MaterialIcons name="add" size={30} color={colors.success} />
               </View>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("BarCodeScanner")}>
-              <View style={[styles.iconCircle, { backgroundColor: "#FFFFFF", borderColor: `${colors.secondary}40` }]}>
-                <MaterialIcons name="camera-alt" size={30} color={colors.secondary} />
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={() => navigation.navigate("BarCodeScanner")}
+            >
+              <View
+                style={[
+                  styles.iconCircle,
+                  {
+                    backgroundColor: "#FFFFFF",
+                    borderColor: `${colors.secondary}40`,
+                  },
+                ]}
+              >
+                <MaterialIcons
+                  name="camera-alt"
+                  size={30}
+                  color={colors.secondary}
+                />
               </View>
             </TouchableOpacity>
           </View>
@@ -415,8 +489,8 @@ const styles = StyleSheet.create({
     paddingBottom: 15,
     paddingTop: 5,
     backgroundColor: colors.background,
-    display: 'flex',
-    flexDirection: 'column',
+    display: "flex",
+    flexDirection: "column",
   },
   customerContainer: {
     flexDirection: "column",
@@ -498,14 +572,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 2,
   },
   loadingContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.7)",
     zIndex: 1000,
   },
   loadingText: {
@@ -523,8 +597,8 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   emptyProductsContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     padding: 40,
   },
   emptyProductsText: {
@@ -538,11 +612,11 @@ const styles = StyleSheet.create({
     fontFamily: "Yekan_Bakh_Regular",
     color: colors.medium,
     marginTop: 5,
-    textAlign: 'center',
+    textAlign: "center",
   },
   fixedBottomSection: {
     backgroundColor: colors.light,
-    width: '100%',
+    width: "100%",
   },
   iconButtonsContainer: {
     flexDirection: "row-reverse",

@@ -17,13 +17,16 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import colors from "../../../config/colors";
-import { toPersianDigits, toEnglishDigits } from "../../../utils/numberConversions";
-import AppText from "../../../components/Text";
-import AppButton from "../../../components/Button";
-import AppTextInput from "../../../components/TextInput";
-import Checkbox from "../../../components/CheckBox";
-import Toast from "../../../components/Toast";
+import colors from "../../config/colors";
+import {
+  toPersianDigits,
+  toEnglishDigits,
+} from "../../utils/numberConversions";
+import AppText from "../../components/Text";
+import AppButton from "../../components/Button";
+import AppTextInput from "../../components/TextInput";
+import Checkbox from "../../components/CheckBox";
+import Toast from "../../components/Toast";
 import { Product } from "./IssuingNewInvoice";
 
 const { height, width } = Dimensions.get("window");
@@ -32,8 +35,16 @@ interface ProductPropertiesDrawerProps {
   visible: boolean;
   onClose: () => void;
   product: Product | null;
-  onSave: (product: Product, quantity: string, note: string, manualCalculation: boolean) => boolean;
-  onError?: (message: string, type: 'success' | 'error' | 'warning' | 'info') => void;
+  onSave: (
+    product: Product,
+    quantity: string,
+    note: string,
+    manualCalculation: boolean
+  ) => boolean;
+  onError?: (
+    message: string,
+    type: "success" | "error" | "warning" | "info"
+  ) => void;
 }
 
 const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
@@ -52,7 +63,9 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
 
   const [toastVisible, setToastVisible] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string>("");
-  const [toastType, setToastType] = useState<'success' | 'error' | 'warning' | 'info'>('error');
+  const [toastType, setToastType] = useState<
+    "success" | "error" | "warning" | "info"
+  >("error");
 
   const slideAnimation = useRef(new Animated.Value(0)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
@@ -103,7 +116,10 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
   }, [visible, slideAnimation, backdropOpacity]);
 
   // نمایش پیام toast
-  const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'error') => {
+  const showToast = (
+    message: string,
+    type: "success" | "error" | "warning" | "info" = "error"
+  ) => {
     if (onError) {
       onError(message, type);
     } else {
@@ -119,8 +135,12 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
 
   // بستن دراور
   const closeDrawer = () => {
-    if (product && (quantity !== product.quantity || note !== product.note ||
-      manualCalculation !== (product.manualCalculation || false))) {
+    if (
+      product &&
+      (quantity !== product.quantity ||
+        note !== product.note ||
+        manualCalculation !== (product.manualCalculation || false))
+    ) {
       Alert.alert(
         "تغییرات ذخیره نشده",
         "آیا مطمئن هستید که می‌خواهید بدون ذخیره تغییرات خارج شوید؟",
@@ -128,8 +148,8 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
           { text: "خیر", style: "cancel" },
           {
             text: "بله",
-            onPress: () => performClose()
-          }
+            onPress: () => performClose(),
+          },
         ]
       );
     } else {
@@ -205,7 +225,7 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
 
   // تغییر مقدار با اعتبارسنجی
   const handleQuantityChange = (text: string) => {
-    const cleanedText = text.replace(/[^0-9.]/g, '');
+    const cleanedText = text.replace(/[^0-9.]/g, "");
     setDisplayQuantity(toPersianDigits(cleanedText));
     setQuantity(toEnglishDigits(cleanedText));
   };
@@ -259,9 +279,7 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
       />
 
       <View style={styles.modalContainer}>
-        <Animated.View
-          style={[styles.backdrop, backdropStyle]}
-        >
+        <Animated.View style={[styles.backdrop, backdropStyle]}>
           <TouchableOpacity
             style={styles.backdropTouchable}
             activeOpacity={1}
@@ -270,10 +288,10 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
         </Animated.View>
 
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'position' : undefined}
+          behavior={Platform.OS === "ios" ? "position" : undefined}
           style={styles.keyboardAvoidingContainer}
           pointerEvents="box-none"
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
           enabled={false}
         >
           <Animated.View
@@ -281,9 +299,9 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
               styles.drawerContainer,
               animatedStyle,
               {
-                height: Platform.OS === 'ios' ? height * 0.8 : "80%",
-                width: Platform.OS === 'ios' ? width : "100%",
-              }
+                height: Platform.OS === "ios" ? height * 0.8 : "80%",
+                width: Platform.OS === "ios" ? width : "100%",
+              },
             ]}
           >
             <LinearGradient
@@ -293,14 +311,13 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
               style={styles.header}
             >
               <View style={styles.headerContent}>
-                <MaterialIcons
-                  name="shopping-cart"
-                  size={24}
-                  color="white"
-                />
+                <MaterialIcons name="shopping-cart" size={24} color="white" />
                 <Text style={styles.headerTitle}>مشخصات محصول</Text>
               </View>
-              <TouchableOpacity onPress={closeDrawer} style={styles.closeButton}>
+              <TouchableOpacity
+                onPress={closeDrawer}
+                style={styles.closeButton}
+              >
                 <MaterialIcons
                   name="close"
                   size={32}
@@ -317,9 +334,7 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
                 contentContainerStyle={styles.scrollViewContent}
               >
                 <View style={styles.productContainer}>
-                  <AppText style={styles.productTitle}>
-                    {product.title}
-                  </AppText>
+                  <AppText style={styles.productTitle}>{product.title}</AppText>
                   <View style={styles.divider}></View>
 
                   <View style={styles.properties}>
@@ -331,23 +346,37 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
 
                   <View style={styles.properties}>
                     <AppText style={styles.propertyLabel}>طیف:</AppText>
-                    <AppText>{product.hasColorSpectrum ? "دارد" : "ندارد"}</AppText>
+                    <AppText>
+                      {product.hasColorSpectrum ? "دارد" : "ندارد"}
+                    </AppText>
                   </View>
 
                   {product.price ? (
                     <View style={styles.properties}>
                       <AppText style={styles.propertyLabel}>قیمت:</AppText>
-                      <AppText>{toPersianDigits(product.price.toLocaleString())} ریال</AppText>
+                      <AppText>
+                        {toPersianDigits(product.price.toLocaleString())} ریال
+                      </AppText>
                     </View>
                   ) : null}
 
                   {product.code ? (
-                    <TouchableOpacity onPress={copyProductCode} style={styles.copyableProperty}>
+                    <TouchableOpacity
+                      onPress={copyProductCode}
+                      style={styles.copyableProperty}
+                    >
                       <View style={styles.properties}>
-                        <AppText style={styles.propertyLabel}>کد محصول:</AppText>
+                        <AppText style={styles.propertyLabel}>
+                          کد محصول:
+                        </AppText>
                         <View style={styles.codeContainer}>
                           <AppText>{toPersianDigits(product.code)}</AppText>
-                          <MaterialIcons name="content-copy" size={18} color={colors.medium} style={{ marginRight: 5 }} />
+                          <MaterialIcons
+                            name="content-copy"
+                            size={18}
+                            color={colors.medium}
+                            style={{ marginRight: 5 }}
+                          />
                         </View>
                       </View>
                     </TouchableOpacity>
@@ -447,12 +476,12 @@ const styles = StyleSheet.create({
     elevation: 16,
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: "#000",
         shadowOffset: { width: 0, height: -2 },
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
-      }
-    })
+      },
+    }),
   },
   header: {
     flexDirection: "row-reverse",
@@ -477,7 +506,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
-    position: 'relative',
+    position: "relative",
   },
   scrollView: {
     flex: 1,
@@ -519,8 +548,8 @@ const styles = StyleSheet.create({
     marginVertical: 5,
   },
   codeContainer: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
   },
   inputsContainer: {
     borderWidth: 1,

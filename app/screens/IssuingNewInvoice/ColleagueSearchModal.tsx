@@ -11,13 +11,17 @@ import {
   Keyboard,
   Platform,
   ActivityIndicator,
-  Easing
+  Easing,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import colors from "../../../config/colors";
+import colors from "../../config/colors";
 import PersonService from "./api/PersonService";
-import { toPersianDigits, toEnglishDigits, NumberConverterInput } from "../../../utils/numberConversions";
+import {
+  toPersianDigits,
+  toEnglishDigits,
+  NumberConverterInput,
+} from "../../utils/numberConversions";
 
 // تعریف تایپ‌های مورد نیاز
 export interface Colleague {
@@ -44,7 +48,7 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
   visible,
   onClose,
   onSelectColleague,
-  title = "انتخاب شخص معرف" // مقدار پیش‌فرض برای عنوان
+  title = "انتخاب شخص معرف", // مقدار پیش‌فرض برای عنوان
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [colleagues, setColleagues] = useState<Colleague[]>([]);
@@ -123,11 +127,11 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
   // مدیریت کیبورد در iOS
   useEffect(() => {
     const keyboardWillShowListener = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
-      e => setKeyboardHeight(e.endCoordinates.height)
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
+      (e) => setKeyboardHeight(e.endCoordinates.height)
     );
     const keyboardWillHideListener = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
       () => setKeyboardHeight(0)
     );
 
@@ -147,7 +151,11 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
   };
 
   // دریافت اطلاعات همکاران از API
-  const fetchColleagues = async (searchTerm = "", page = 1, isReset = false) => {
+  const fetchColleagues = async (
+    searchTerm = "",
+    page = 1,
+    isReset = false
+  ) => {
     if (page === 1) {
       setLoading(true);
     } else {
@@ -155,29 +163,40 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
     }
 
     try {
-      const response = await PersonService.searchPersonByMobileOrFullName(searchTerm, page);
+      const response = await PersonService.searchPersonByMobileOrFullName(
+        searchTerm,
+        page
+      );
 
       const { Items, TotalPages, TotalCount } = response;
       setTotalPages(TotalPages);
       setHasMore(page < TotalPages);
 
-      console.log(`تعداد کل آیتم‌ها: ${toPersianDigits(TotalCount)}, صفحه: ${toPersianDigits(page)}/${toPersianDigits(TotalPages)}`);
+      console.log(
+        `تعداد کل آیتم‌ها: ${toPersianDigits(
+          TotalCount
+        )}, صفحه: ${toPersianDigits(page)}/${toPersianDigits(TotalPages)}`
+      );
 
       // تبدیل داده‌های دریافتی به فرمت مورد نیاز
-      const transformedData: Colleague[] = Items.map(item => ({
+      const transformedData: Colleague[] = Items.map((item) => ({
         id: item.PersonId.toString(),
         name: toPersianDigits(item.FullName), // Convert any numbers in names to Persian
         phone: toPersianDigits(item.Mobile) || "",
         groups: item.PersonGroupsStr ? item.PersonGroupsStr.split("، ") : [],
-        introducingCode: item.IntroducingCode ? toPersianDigits(item.IntroducingCode) : ""
+        introducingCode: item.IntroducingCode
+          ? toPersianDigits(item.IntroducingCode)
+          : "",
       }));
 
       // حذف آیتم‌های تکراری با استفاده از Map
       const uniqueItems = Array.from(
-        new Map(transformedData.map(item => [item.id, item])).values()
+        new Map(transformedData.map((item) => [item.id, item])).values()
       );
 
-      console.log(`تعداد آیتم‌های یکتا: ${toPersianDigits(uniqueItems.length)}`);
+      console.log(
+        `تعداد آیتم‌های یکتا: ${toPersianDigits(uniqueItems.length)}`
+      );
 
       // اگر صفحه اول است یا ریست شده، جایگزین شود. در غیر این صورت به اطلاعات موجود اضافه شود
       if (page === 1 || isReset) {
@@ -187,7 +206,7 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
         // اضافه کردن آیتم‌های جدید و حذف تکراری‌ها
         const newItems = [...colleagues, ...uniqueItems];
         const uniqueNewItems = Array.from(
-          new Map(newItems.map(item => [item.id, item])).values()
+          new Map(newItems.map((item) => [item.id, item])).values()
         );
 
         setColleagues(uniqueNewItems);
@@ -234,7 +253,9 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
     onSelectColleague({
       ...colleague,
       phone: toPersianDigits(colleague.phone),
-      introducingCode: colleague.introducingCode ? toPersianDigits(colleague.introducingCode) : ""
+      introducingCode: colleague.introducingCode
+        ? toPersianDigits(colleague.introducingCode)
+        : "",
     });
     onClose();
   };
@@ -275,12 +296,7 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
 
   return (
     <View style={styles.container}>
-      <Animated.View
-        style={[
-          styles.backdrop,
-          { opacity: backdropOpacity }
-        ]}
-      >
+      <Animated.View style={[styles.backdrop, { opacity: backdropOpacity }]}>
         <TouchableOpacity
           style={styles.backdropTouchable}
           activeOpacity={1}
@@ -295,7 +311,7 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
             transform: [{ translateY }],
             paddingBottom: keyboardHeight > 0 ? keyboardHeight : 20,
             height: filteredColleagues.length > 4 ? "80%" : "auto",
-          }
+          },
         ]}
       >
         <LinearGradient
@@ -305,11 +321,7 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
           style={styles.header}
         >
           <View style={styles.headerContent}>
-            <MaterialIcons
-              name="person-search"
-              size={24}
-              color="white"
-            />
+            <MaterialIcons name="person-search" size={24} color="white" />
             <Text style={styles.headerTitle}>{title}</Text>
           </View>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
@@ -331,11 +343,17 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
               returnKeyType="search"
             />
             {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={handleClearSearch} style={styles.clearButton}>
+              <TouchableOpacity
+                onPress={handleClearSearch}
+                style={styles.clearButton}
+              >
                 <MaterialIcons name="close" size={20} color={colors.medium} />
               </TouchableOpacity>
             )}
-            <TouchableOpacity onPress={handleSearch} style={styles.searchButton}>
+            <TouchableOpacity
+              onPress={handleSearch}
+              style={styles.searchButton}
+            >
               <MaterialIcons name="search" size={20} color={colors.medium} />
             </TouchableOpacity>
           </View>
@@ -363,21 +381,34 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
                 >
                   <View style={styles.resultItemContent}>
                     <View style={styles.nameSection}>
-                      <Text style={styles.resultName}>{toPersianDigits(item.name)}</Text>
+                      <Text style={styles.resultName}>
+                        {toPersianDigits(item.name)}
+                      </Text>
                       <View style={styles.groupContainer}>
-                        <MaterialIcons name="person" size={18} color="#bfbfbf" style={styles.personIcon} />
-                        {item.groups && item.groups.length > 0
+                        <MaterialIcons
+                          name="person"
+                          size={18}
+                          color="#bfbfbf"
+                          style={styles.personIcon}
+                        />
+                        {item.groups && item.groups.length > 0 && (
                           // && item.groups[0] !== "-"
-                          && (
-                            <Text style={styles.resultGroups}>
-                              {toPersianDigits(item.groups[0])}
-                            </Text>
-                          )}
+                          <Text style={styles.resultGroups}>
+                            {toPersianDigits(item.groups[0])}
+                          </Text>
+                        )}
                       </View>
                     </View>
                     <View style={styles.phoneSection}>
-                      <MaterialIcons name="smartphone" size={18} color="#bfbfbf" style={styles.phoneIcon} />
-                      <Text style={styles.resultPhone}>{toPersianDigits(item.phone)}</Text>
+                      <MaterialIcons
+                        name="smartphone"
+                        size={18}
+                        color="#bfbfbf"
+                        style={styles.phoneIcon}
+                      />
+                      <Text style={styles.resultPhone}>
+                        {toPersianDigits(item.phone)}
+                      </Text>
                     </View>
                   </View>
                 </TouchableOpacity>
@@ -391,7 +422,11 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
             />
           ) : (
             <View style={styles.noResultsContainer}>
-              <MaterialIcons name="search-off" size={48} color={colors.medium} />
+              <MaterialIcons
+                name="search-off"
+                size={48}
+                color={colors.medium}
+              />
               <Text style={styles.noResultsText}>نتیجه‌ای یافت نشد</Text>
             </View>
           )}

@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from "react";
 import { ScrollView, StyleSheet, View, Alert } from "react-native";
-import AppText from "../../../components/Text";
-import AppTextInput from "../../../components/TextInput";
-import { getFontFamily } from "../../Cashier/ReceiveNewInvoiceScreen/ReceiveNewInvoiceScreen";
-import colors from "../../../config/colors";
+import AppText from "../../components/Text";
+import AppTextInput from "../../components/TextInput";
+
+import colors from "../../config/colors";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   DatePickerField,
   PersianDatePicker,
-} from "../../../components/PersianDatePicker";
-import IconButton from "../../../components/IconButton";
+} from "../../components/PersianDatePicker";
+import IconButton from "../../components/IconButton";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
-import { AppNavigationProp } from "../../../StackNavigator";
+import { AppNavigationProp } from "../../StackNavigator";
 import { MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
-import IconButtonSquare from "../../../components/IconButtonSquare";
-import SelectionDialog from "../../../components/SelectionDialog";
-import AppModal from "../../../components/AppModal";
-import ScreenHeader from "../../../components/ScreenHeader";
+import IconButtonSquare from "../../components/IconButtonSquare";
+import SelectionDialog from "../../components/SelectionDialog";
+import AppModal from "../../components/AppModal";
+import ScreenHeader from "../../components/ScreenHeader";
 
 export const InputContainer: React.FC<{
   title: string;

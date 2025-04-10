@@ -1,12 +1,18 @@
 import React, { useState } from "react";
-import { StyleSheet, View, TouchableOpacity, ScrollView, Alert } from "react-native";
+import {
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import ScreenHeader from "../../components/ScreenHeader";
+import ScreenHeader from "../components/ScreenHeader";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import AppText from "../../components/Text";
-import AppButton from "../../components/Button";
-import AppTextInput from "../../components/TextInput";
-import colors from "../../config/colors";
+import AppText from "../components/Text";
+import AppButton from "../components/Button";
+import AppTextInput from "../components/TextInput";
+import colors from "../config/colors";
 
 const ChangePasswordScreen = () => {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -18,7 +24,7 @@ const ChangePasswordScreen = () => {
   const [errors, setErrors] = useState({
     currentPassword: "",
     newPassword: "",
-    confirmPassword: ""
+    confirmPassword: "",
   });
 
   const validateForm = () => {
@@ -26,7 +32,7 @@ const ChangePasswordScreen = () => {
     const newErrors = {
       currentPassword: "",
       newPassword: "",
-      confirmPassword: ""
+      confirmPassword: "",
     };
 
     if (!currentPassword) {
@@ -46,7 +52,8 @@ const ChangePasswordScreen = () => {
       newErrors.confirmPassword = "لطفا تکرار رمز عبور جدید را وارد کنید";
       isValid = false;
     } else if (confirmPassword !== newPassword) {
-      newErrors.confirmPassword = "تکرار رمز عبور با رمز عبور جدید مطابقت ندارد";
+      newErrors.confirmPassword =
+        "تکرار رمز عبور با رمز عبور جدید مطابقت ندارد";
       isValid = false;
     }
 
@@ -57,11 +64,9 @@ const ChangePasswordScreen = () => {
   const handleChangePassword = () => {
     if (validateForm()) {
       // Here you would implement the API call to change the password
-      Alert.alert(
-        "موفقیت",
-        "رمز عبور شما با موفقیت تغییر یافت",
-        [{ text: "تایید" }]
-      );
+      Alert.alert("موفقیت", "رمز عبور شما با موفقیت تغییر یافت", [
+        { text: "تایید" },
+      ]);
 
       // Reset form
       setCurrentPassword("");
@@ -74,14 +79,13 @@ const ChangePasswordScreen = () => {
     return isVisible ? "visibility-off" : "visibility";
   };
 
-
   const PasswordInput = ({
     value,
     onChangeText,
     label,
     secure,
     toggleSecure,
-    error
+    error,
   }: {
     value: string;
     onChangeText: (text: string) => void;
@@ -98,7 +102,10 @@ const ChangePasswordScreen = () => {
           onChangeInput={(id: string, val: string) => onChangeText(val)}
           inputId="password"
           secureTextEntry={secure}
-          containerStyle={[styles.passInputContainer, error ? styles.inputError : null]}
+          containerStyle={[
+            styles.passInputContainer,
+            error ? styles.inputError : null,
+          ]}
           inputContainerStyle={[error ? { borderColor: colors.danger } : null]}
         />
         <TouchableOpacity
@@ -125,7 +132,7 @@ const ChangePasswordScreen = () => {
         end={{ x: 1, y: 1 }}
       />
 
-      <ScreenHeader title="تغییر رمز عبور" isProfilePage={ true} />
+      <ScreenHeader title="تغییر رمز عبور" isProfilePage={true} />
 
       <View style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -145,7 +152,9 @@ const ChangePasswordScreen = () => {
                 value={currentPassword}
                 onChangeText={setCurrentPassword}
                 secure={!showCurrentPassword}
-                toggleSecure={() => setShowCurrentPassword(!showCurrentPassword)}
+                toggleSecure={() =>
+                  setShowCurrentPassword(!showCurrentPassword)
+                }
                 error={errors.currentPassword}
               />
 
@@ -163,7 +172,9 @@ const ChangePasswordScreen = () => {
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secure={!showConfirmPassword}
-                toggleSecure={() => setShowConfirmPassword(!showConfirmPassword)}
+                toggleSecure={() =>
+                  setShowConfirmPassword(!showConfirmPassword)
+                }
                 error={errors.confirmPassword}
               />
             </View>
@@ -171,16 +182,34 @@ const ChangePasswordScreen = () => {
             <View style={styles.passwordTips}>
               <AppText style={styles.tipsTitle}>نکات امنیتی:</AppText>
               <View style={styles.tipRow}>
-                <MaterialIcons name="check-circle" size={16} color={colors.success} />
-                <AppText style={styles.tipText}>حداقل 8 کاراکتر استفاده کنید</AppText>
+                <MaterialIcons
+                  name="check-circle"
+                  size={16}
+                  color={colors.success}
+                />
+                <AppText style={styles.tipText}>
+                  حداقل 8 کاراکتر استفاده کنید
+                </AppText>
               </View>
               <View style={styles.tipRow}>
-                <MaterialIcons name="check-circle" size={16} color={colors.success} />
-                <AppText style={styles.tipText}>ترکیبی از حروف، اعداد و علائم استفاده کنید</AppText>
+                <MaterialIcons
+                  name="check-circle"
+                  size={16}
+                  color={colors.success}
+                />
+                <AppText style={styles.tipText}>
+                  ترکیبی از حروف، اعداد و علائم استفاده کنید
+                </AppText>
               </View>
               <View style={styles.tipRow}>
-                <MaterialIcons name="check-circle" size={16} color={colors.success} />
-                <AppText style={styles.tipText}>از اطلاعات شخصی مانند نام یا تاریخ تولد استفاده نکنید</AppText>
+                <MaterialIcons
+                  name="check-circle"
+                  size={16}
+                  color={colors.success}
+                />
+                <AppText style={styles.tipText}>
+                  از اطلاعات شخصی مانند نام یا تاریخ تولد استفاده نکنید
+                </AppText>
               </View>
             </View>
 

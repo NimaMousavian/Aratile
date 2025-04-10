@@ -1,14 +1,14 @@
 import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
-import AppTextInput from "../../../components/TextInput";
+import AppTextInput from "../../components/TextInput";
 import { useNavigation } from "@react-navigation/native";
-import { AppNavigationProp } from "../../../StackNavigator";
-import IconButton from "../../../components/IconButton";
-import colors from "../../../config/colors";
-import AppButton from "../../../components/Button";
+import { AppNavigationProp } from "../../StackNavigator";
+import IconButton from "../../components/IconButton";
+import colors from "../../config/colors";
+import AppButton from "../../components/Button";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import ScreenHeader from "../../../components/ScreenHeader";
-import SearchInput from "../../../components/SearchInput";
+import ScreenHeader from "../../components/ScreenHeader";
+import SearchInput from "../../components/SearchInput";
 
 const B2BFieldMarketer = () => {
   const navigation = useNavigation<AppNavigationProp>();
