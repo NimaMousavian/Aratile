@@ -15,32 +15,27 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 
 import AppSelectionScreen from "./screens/AppSelectionScreen";
-import HomeScreen from "./screens/Seller/HomeScreen";
-import IssuingNewInvoice from "./screens/Seller/IssuingNewInvoice/IssuingNewInvoice";
-import BarcodeScanner from "./screens/Seller/IssuingNewInvoice/BarcodeScanner";
-import MarketerHomeScreen from "./screens/FieldMarketing/MarketerHomeScreen";
-import CashierHomeScreen from "./screens/Cashier/CashierHomeScreen";
-import ReceiveNewInvoiceScreen from "./screens/Cashier/ReceiveNewInvoiceScreen/ReceiveNewInvoiceScreen";
-import StatusFilterScreen from "./screens/Cashier/ReceiveNewInvoiceScreen/StatusFilterScreen";
-
 import styles from "./config/styles";
 import colors from "./config/colors";
-import CustomerInfo from "./screens/Seller/IssuingNewInvoice/CustomerInfo";
-import ProductProperties from "./screens/Seller/IssuingNewInvoice/ProductProperties";
 import { IProduct } from "./config/types";
-import SupplyRequest from "./screens/Seller/SupplyRequest";
 import AppText from "./components/Text";
-import SupplyRequestList from "./screens/Seller/SupplyRequestList";
-import B2BFieldMarketer from "./screens/FieldMarketing/B2BFieldMarketer/B2BFieldMarketer";
-import B2CFieldMarketer from "./screens/FieldMarketing/B2CFieldMarketer/B2CFieldMarketer";
-import AddNewShop from "./screens/FieldMarketing/B2BFieldMarketer/AddNewShop";
-import VoiceRecording from "./screens/FieldMarketing/B2BFieldMarketer/VoiceRecording";
-import IssuedInvoices from "./screens/Seller/IssuedInvoices";
-import AddNewProject from "./screens/FieldMarketing/B2CFieldMarketer/AddNewProject";
 import LogingScreen from "./screens/LogingScreen";
 import ProfileScreen from "./screens/ProfileScreen";
-import ChangePasswordScreen from "./screens/Seller/ChangePasswordScreen";
-
+import B2BFieldMarketer from "./screens/B2BFieldMarketer/B2BFieldMarketer";
+import B2CFieldMarketer from "./screens/B2CFieldMarketer/B2CFieldMarketer";
+import AddNewShop from "./screens/B2BFieldMarketer/AddNewShop";
+import VoiceRecordingScreen from "./screens/B2BFieldMarketer/VoiceRecording";
+import AddNewProject from "./screens/B2CFieldMarketer/AddNewProject";
+import ReceiveNewInvoiceScreen from "./screens/ReceiveNewInvoiceScreen/ReceiveNewInvoiceScreen";
+import StatusFilterScreen from "./screens/ReceiveNewInvoiceScreen/StatusFilterScreen";
+import HomeScreen from "./screens/HomeScreen";
+import IssuingNewInvoice from "./screens/IssuingNewInvoice/IssuingNewInvoice";
+import BarcodeScanner from "./screens/IssuingNewInvoice/BarcodeScanner";
+import CustomerInfo from "./screens/IssuingNewInvoice/CustomerInfo";
+import SupplyRequest from "./screens/SupplyRequest";
+import SupplyRequestList from "./screens/SupplyRequestList";
+import IssuedInvoices from "./screens/IssuedInvoices";
+import ChangePasswordScreen from "./screens/ChangePasswordScreen";
 
 export type RootStackParamList = {
   AppSelection: undefined;
@@ -50,8 +45,8 @@ export type RootStackParamList = {
 
   Home: undefined;
 
-  IssuingNewInvoic: { scannedCode?: string };
-  BarCodeScanner: undefined; 
+  IssuingNewInvoice: { scannedCode?: string };
+  BarCodeScanner: undefined;
   CustomerInfo: undefined;
   ProductProperties: undefined;
   SupplyRequest: undefined;
@@ -82,7 +77,7 @@ const StackNavigator: React.FC = () => {
   const navigation = useNavigation<NavigationProps["navigation"]>();
   return (
     <Stack.Navigator
-      initialRouteName="AppSelection"
+      initialRouteName="Home"
       screenOptions={{
         headerShown: false,
         cardStyle: { backgroundColor: "#FFFFFF" },
@@ -117,7 +112,7 @@ const StackNavigator: React.FC = () => {
         options={{ headerShown: false }}
       />
       <Stack.Screen
-        name="IssuingNewInvoice"  // This is correct
+        name="IssuingNewInvoice" // This is correct
         component={IssuingNewInvoice}
         options={{ headerShown: false }}
       />
@@ -153,7 +148,7 @@ const StackNavigator: React.FC = () => {
 
       {/* Cashier Screens */}
 
-      <Stack.Screen
+      {/* <Stack.Screen
         name="CashierHome"
         component={CashierHomeScreen}
         options={{
@@ -161,7 +156,7 @@ const StackNavigator: React.FC = () => {
           // title: "صفحه اصلی صندوقدار",
           // headerTitleAlign: "center",
         }}
-      />
+      /> */}
 
       <Stack.Screen
         name="ReceiveNewInvoice"
@@ -179,8 +174,6 @@ const StackNavigator: React.FC = () => {
       />
       <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
 
-
-
       <Stack.Screen
         name="CheckCalculator"
         component={PlaceholderScreen}
@@ -193,11 +186,10 @@ const StackNavigator: React.FC = () => {
         }}
       />
       {/* FieldMarketing Screens */}
-      <Stack.Screen name="MarketerHome" component={MarketerHomeScreen} />
       <Stack.Screen name="B2BFieldMarketer" component={B2BFieldMarketer} />
       <Stack.Screen name="B2CFieldMarketer" component={B2CFieldMarketer} />
       <Stack.Screen name="AddNewShop" component={AddNewShop} />
-      <Stack.Screen name="VoiceRecording" component={VoiceRecording} />
+      <Stack.Screen name="VoiceRecording" component={VoiceRecordingScreen} />
       <Stack.Screen name="AddNewProject" component={AddNewProject} />
     </Stack.Navigator>
   );
