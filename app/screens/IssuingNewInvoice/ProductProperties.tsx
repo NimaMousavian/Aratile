@@ -54,6 +54,8 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
   onSave,
   onError,
 }) => {
+  console.log(product);
+
   const [quantity, setQuantity] = useState<string>("1");
   const [displayQuantity, setDisplayQuantity] = useState<string>("۱");
   const [note, setNote] = useState<string>("");
@@ -294,7 +296,7 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
               >
                 <View style={styles.headerContent}>
                   <MaterialIcons name="shopping-cart" size={24} color="white" />
-                  <Text style={styles.headerTitle}>مشخصات محصول</Text>
+                  <Text style={styles.headerTitle}>افزودن محصول به سفارش</Text>
                 </View>
                 <TouchableOpacity
                   onPress={closeDrawer}
@@ -321,29 +323,6 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
                     </AppText>
                     <View style={styles.divider}></View>
 
-                    <View style={styles.properties}>
-                      <AppText style={styles.propertyLabel}>
-                        موجودی قابل تعهد:
-                      </AppText>
-                      <AppText>{displayStockQuantity}</AppText>
-                    </View>
-
-                    <View style={styles.properties}>
-                      <AppText style={styles.propertyLabel}>طیف:</AppText>
-                      <AppText>
-                        {product.hasColorSpectrum ? "دارد" : "ندارد"}
-                      </AppText>
-                    </View>
-
-                    {product.price ? (
-                      <View style={styles.properties}>
-                        <AppText style={styles.propertyLabel}>قیمت:</AppText>
-                        <AppText>
-                          {toPersianDigits(product.price.toLocaleString())} ریال
-                        </AppText>
-                      </View>
-                    ) : null}
-
                     {product.code ? (
                       <TouchableOpacity
                         onPress={copyProductCode}
@@ -365,6 +344,29 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
                         </View>
                       </TouchableOpacity>
                     ) : null}
+
+                    {product.price ? (
+                      <View style={styles.properties}>
+                        <AppText style={styles.propertyLabel}>قیمت:</AppText>
+                        <AppText>
+                          {toPersianDigits(product.price.toLocaleString())} ریال
+                        </AppText>
+                      </View>
+                    ) : null}
+
+                    <View style={styles.properties}>
+                      <AppText style={styles.propertyLabel}>
+                        موجودی قابل تعهد:
+                      </AppText>
+                      <AppText>{displayStockQuantity}</AppText>
+                    </View>
+
+                    {/* <View style={styles.properties}>
+                      <AppText style={styles.propertyLabel}>طیف:</AppText>
+                      <AppText>
+                        {product.hasColorSpectrum ? "دارد" : "ندارد"}
+                      </AppText>
+                    </View> */}
                   </View>
 
                   <View style={styles.inputsContainer}>

@@ -36,8 +36,14 @@ const useProductScanner = () => {
         `${API_BASE_URL}Product/SearchBySKUOrName?query=${sku}&page=1&pageSize=20`
       );
 
-      if (response.data && response.data.Items && response.data.Items.length > 0) {
+      if (
+        response.data &&
+        response.data.Items &&
+        response.data.Items.length > 0
+      ) {
         const productData = response.data.Items[0];
+
+        console.log("product data: ", productData);
 
         // Convert API product to IProduct format
         const newProduct: IProduct = {
@@ -50,7 +56,9 @@ const useProductScanner = () => {
         };
 
         // Check if the product is already in the list
-        const productExists = selectedProducts.some(p => p.code === newProduct.code);
+        const productExists = selectedProducts.some(
+          (p) => p.code === newProduct.code
+        );
 
         if (productExists) {
           Alert.alert(
@@ -63,11 +71,9 @@ const useProductScanner = () => {
           setSelectedProducts([...selectedProducts, newProduct]);
         }
       } else {
-        Alert.alert(
-          "محصول یافت نشد",
-          "محصولی با این کد یافت نشد.",
-          [{ text: "متوجه شدم" }]
-        );
+        Alert.alert("محصول یافت نشد", "محصولی با این کد یافت نشد.", [
+          { text: "متوجه شدم" },
+        ]);
       }
     } catch (error) {
       console.error("Error fetching product:", error);
@@ -94,11 +100,9 @@ const useProductScanner = () => {
       return response.data.Items;
     } catch (error) {
       console.error("Error searching products:", error);
-      Alert.alert(
-        "خطا",
-        "خطا در جستجوی محصولات. لطفاً دوباره تلاش کنید.",
-        [{ text: "متوجه شدم" }]
-      );
+      Alert.alert("خطا", "خطا در جستجوی محصولات. لطفاً دوباره تلاش کنید.", [
+        { text: "متوجه شدم" },
+      ]);
       return [];
     } finally {
       setIsLoading(false);
@@ -107,20 +111,20 @@ const useProductScanner = () => {
 
   // Function to remove product from selected products
   const removeProduct = (productId: number) => {
-    setSelectedProducts(selectedProducts.filter(product => product.id !== productId));
+    setSelectedProducts(
+      selectedProducts.filter((product) => product.id !== productId)
+    );
   };
 
   // Function to add product from search
   const addProduct = (product: IProduct) => {
     // Check if the product is already in the list
-    const productExists = selectedProducts.some(p => p.code === product.code);
+    const productExists = selectedProducts.some((p) => p.code === product.code);
 
     if (productExists) {
-      Alert.alert(
-        "محصول تکراری",
-        "این محصول قبلاً به فاکتور اضافه شده است.",
-        [{ text: "متوجه شدم" }]
-      );
+      Alert.alert("محصول تکراری", "این محصول قبلاً به فاکتور اضافه شده است.", [
+        { text: "متوجه شدم" },
+      ]);
       return false;
     } else {
       setSelectedProducts([...selectedProducts, product]);
@@ -148,7 +152,7 @@ const useProductScanner = () => {
     removeProduct,
     addProduct,
     setSelectedProducts,
-    convertApiDataToProduct
+    convertApiDataToProduct,
   };
 };
 

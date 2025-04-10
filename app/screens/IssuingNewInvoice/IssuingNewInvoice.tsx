@@ -28,7 +28,7 @@ import { toPersianDigits } from "../../utils/numberConversions";
 import useProductScanner from "../../Hooks/useProductScanner";
 
 export interface Product {
-  id: string;
+  id: number;
   title: string;
   code?: string;
   quantity: string;

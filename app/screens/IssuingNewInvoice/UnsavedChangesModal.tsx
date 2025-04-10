@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import colors from "../../../config/colors";
+import colors from "../../config/colors";
 
 interface UnsavedChangesModalProps {
   visible: boolean;
@@ -61,11 +61,7 @@ const UnsavedChangesModal: React.FC<UnsavedChangesModalProps> = ({
             style={styles.modalHeader}
           >
             <View style={styles.headerContent}>
-              <MaterialIcons
-                name="warning"
-                size={24}
-                color="white"
-              />
+              <MaterialIcons name="warning" size={24} color="white" />
               <Text style={styles.headerTitle}>تغییرات ذخیره نشده</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
@@ -187,7 +183,7 @@ const styles = StyleSheet.create({
   },
   spacer: {
     height: -10,
-    padding:-500,// افزایش ارتفاع فضای خالی برای مدال بلندتر
+    padding: -500, // افزایش ارتفاع فضای خالی برای مدال بلندتر
   },
   buttonContainer: {
     flexDirection: "row-reverse",
