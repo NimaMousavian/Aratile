@@ -202,7 +202,6 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
     };
 
     onProductSelect(product);
-    // Close the search drawer immediately after selection
     closeDrawer();
   };
 
@@ -214,7 +213,7 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
         {
           icon: "qr-code",
           iconColor: colors.secondary,
-          label: "کد محصول:",
+          label: "کد:",
           value: toPersianDigits(item.SKU),
         },
         {
