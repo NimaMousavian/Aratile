@@ -33,7 +33,7 @@ interface Province {
   ActiveStr: string;
 }
 
-const CustomerInfo = () => {
+const AddNewColleague = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [mobile, setMobile] = useState("");
@@ -317,7 +317,7 @@ const CustomerInfo = () => {
 
   return (
     <>
-      <ScreenHeader title="ثبت خریدار جدید" />
+      <ScreenHeader title="ثبت معرف جدید" />
 
       <Toast
         visible={toastVisible}
@@ -391,27 +391,6 @@ const CustomerInfo = () => {
               loading={loadingCustomerJob}
             />
 
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => setIsColleagueBottomSheetVisible(true)}
-              style={{ width: "100%" }}
-            >
-              <AppTextInput
-                autoCapitalize="none"
-                autoCorrect={false}
-                keyboardType="default"
-                icon="person-search"
-                placeholder="معرف"
-                value={
-                  selectedColleague.name
-                    ? `${selectedColleague.name} (${selectedColleague.phone})`
-                    : ""
-                }
-                onChangeText={() => {}}
-                editable={false}
-              />
-            </TouchableOpacity>
-
             <View style={styles.rowContainer}>
               <View style={styles.halfWidth}>
                 <SelectionBottomSheet
@@ -484,12 +463,6 @@ const CustomerInfo = () => {
           )}
         </ScrollView>
       </View>
-
-      <ColleagueBottomSheet
-        visible={isColleagueBottomSheetVisible}
-        onClose={() => setIsColleagueBottomSheetVisible(false)}
-        onSelectColleague={handleSelectColleague}
-      />
     </>
   );
 };
@@ -520,4 +493,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CustomerInfo;
+export default AddNewColleague;

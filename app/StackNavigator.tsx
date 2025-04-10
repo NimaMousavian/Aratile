@@ -36,6 +36,7 @@ import SupplyRequest from "./screens/SupplyRequest";
 import SupplyRequestList from "./screens/SupplyRequestList";
 import IssuedInvoices from "./screens/IssuedInvoices";
 import ChangePasswordScreen from "./screens/ChangePasswordScreen";
+import AddNewColleague from "./screens/IssuingNewInvoice/AddNewColleague";
 
 export type RootStackParamList = {
   AppSelection: undefined;
@@ -48,6 +49,7 @@ export type RootStackParamList = {
   IssuingNewInvoice: { scannedCode?: string };
   BarCodeScanner: undefined;
   CustomerInfo: undefined;
+  AddNewColleague: undefined;
   ProductProperties: undefined;
   SupplyRequest: undefined;
   SupplyRequestList: undefined;
@@ -129,6 +131,16 @@ const StackNavigator: React.FC = () => {
           headerTitleStyle: styles.headerTitleStyle,
           headerStyle: styles.headerStyle,
           title: "مشخصات خریدار",
+        }}
+      />
+      <Stack.Screen
+        name="AddNewColleague"
+        component={AddNewColleague}
+        options={{
+          headerTitleAlign: "center",
+          headerTitleStyle: styles.headerTitleStyle,
+          headerStyle: styles.headerStyle,
+          title: "ثبت معرف جدید",
         }}
       />
       <Stack.Screen name="SupplyRequest" component={SupplyRequest} />

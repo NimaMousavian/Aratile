@@ -23,6 +23,10 @@ import {
   NumberConverterInput,
 } from "../../utils/numberConversions";
 import SearchInput from "../../components/SearchInput";
+import IconButton from "../../components/IconButton";
+import AppButton from "../../components/Button";
+import { useNavigation } from "@react-navigation/native";
+import { AppNavigationProp } from "../../StackNavigator";
 
 export interface Colleague {
   id: string;
@@ -53,6 +57,8 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
   title = "انتخاب شخص معرف",
   pageSize = DEFAULT_PAGE_SIZE,
 }) => {
+  const navigation = useNavigation<AppNavigationProp>();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [colleagues, setColleagues] = useState<Colleague[]>([]);
   const [filteredColleagues, setFilteredColleagues] = useState<Colleague[]>([]);
@@ -414,6 +420,12 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
                 color={colors.medium}
               />
               <Text style={styles.noResultsText}>نتیجه‌ای یافت نشد</Text>
+              <AppButton
+                title={"افزودن معرف جدید"}
+                onPress={() => navigation.navigate("AddNewColleague")}
+                style={{ width: "100%" }}
+                color="success"
+              />
 
               {onAddNewPerson && (
                 <TouchableOpacity

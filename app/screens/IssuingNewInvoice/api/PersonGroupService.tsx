@@ -39,6 +39,17 @@ const PersonGroupService = {
       return [];
     }
   },
+  async getPersonJobs(): Promise<string[]> {
+    try {
+      const response = await axios.get(
+        `${appConfig.mobileApi}PersonJob/GetAllActive?page=1&pageSize=1000`
+      );
+      return response.data.Items;
+    } catch (error) {
+      console.error("Error fetching person groups:", error);
+      return [];
+    }
+  },
 };
 
 export default PersonGroupService;
