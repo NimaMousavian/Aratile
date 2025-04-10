@@ -14,7 +14,6 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useNavigation } from "@react-navigation/native";
 import ProductSearchDrawer from "./ProductSearchDrawer";
 
-// Components
 import ColleagueBottomSheet from "../IssuingNewInvoice/ColleagueSearchModal";
 import ProductCard from "../../components/ProductCard";
 import ScreenHeader from "../../components/ScreenHeader";
@@ -28,7 +27,6 @@ import colors from "../../config/colors";
 import { toPersianDigits } from "../../utils/numberConversions";
 import useProductScanner from "../../Hooks/useProductScanner";
 
-// At the top of IssuingNewInvoice.tsx, add:
 export interface Product {
   id: string;
   title: string;
@@ -43,7 +41,6 @@ export interface Product {
 interface Colleague {
   id: string;
   name: string;
-  // Add other properties as needed
 }
 
 interface AppNavigationProp {
@@ -51,10 +48,8 @@ interface AppNavigationProp {
 }
 
 const IssuingNewInvoice: React.FC = () => {
-  // Create a ref for the ScrollView
   const scrollViewRef = useRef<ScrollView>(null);
 
-  // Custom hook for product management
   const {
     isLoading,
     selectedProducts,
@@ -63,7 +58,6 @@ const IssuingNewInvoice: React.FC = () => {
     addProduct,
   } = useProductScanner();
 
-  // UI state
   const [showProductSearchDrawer, setShowProductSearchDrawer] =
     useState<boolean>(false);
   const [showProductProperties, setShowProductProperties] =
@@ -75,7 +69,6 @@ const IssuingNewInvoice: React.FC = () => {
   const [showColleagueSheet, setShowColleagueSheet] = useState<boolean>(false);
   const [invoiceNote, setInvoiceNote] = useState<string>("");
 
-  // Toast state
   const [toastVisible, setToastVisible] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string>("");
   const [toastType, setToastType] = useState<
@@ -84,7 +77,6 @@ const IssuingNewInvoice: React.FC = () => {
 
   const navigation = useNavigation<AppNavigationProp>();
 
-  // Display toast notification
   const showToast = (
     message: string,
     type: "success" | "error" | "warning" | "info" = "error"
@@ -94,45 +86,33 @@ const IssuingNewInvoice: React.FC = () => {
     setToastVisible(true);
   };
 
-  // Handle product selection from search
   const handleProductSelected = (product: Product) => {
-    // Close the search drawer first
     setShowProductSearchDrawer(false);
 
-    // Wait for search drawer animation to complete before showing properties drawer
     setTimeout(() => {
-      // Set product and show properties drawer
       setProductToShow(product);
       setShowProductProperties(true);
-    }, 300); // Match the animation duration of the drawer
+    }, 300);
   };
 
-  // Add product from properties drawer
   const handleAddProduct = (
     product: Product,
     quantity: string,
     note: string,
     manualCalculation: boolean
   ) => {
-    // محاسبه قیمت کل محصول بر اساس مقدار
     const quantityNum = parseFloat(quantity) || 0;
     const unitPrice = product.price || 0;
 
-    // ایجاد محصول با ویژگی‌های به‌روزرسانی شده
     const productWithProps = {
       ...product,
       quantity: quantity,
       note: note,
       manualCalculation: manualCalculation,
-      // قیمت کل در کامپوننت InvoiceTotalCalculator محاسبه می‌شود
     };
 
     if (addProduct(productWithProps)) {
       showToast("محصول با موفقیت اضافه شد", "success");
-
-      // اسکرول به پایین انجام نمی‌شود، چون توضیحات در پایین قرار دارد
-      // و می‌خواهیم کاربر بتواند محصول اضافه شده را ببیند
-
       return true;
     } else {
       showToast("خطا در افزودن محصول", "error");
@@ -140,18 +120,14 @@ const IssuingNewInvoice: React.FC = () => {
     }
   };
 
-  // متد برای بستن دراور مشخصات محصول
   const handleCloseProductProperties = () => {
-    // بستن دراور
     setShowProductProperties(false);
 
-    // پس از مدت کوتاهی، محصول را پاک می‌کنیم
     setTimeout(() => {
       setProductToShow(null);
     }, 500);
   };
 
-  // Submit invoice
   const submitInvoice = () => {
     if (!selectedColleague) {
       showToast("لطفاً ابتدا مشتری را انتخاب کنید", "warning");
@@ -163,11 +139,9 @@ const IssuingNewInvoice: React.FC = () => {
       return;
     }
 
-    // API call would go here
     Alert.alert("موفقیت", "فاکتور با موفقیت ثبت شد.");
   };
 
-  // Ensure the drawers don't open simultaneously
   useEffect(() => {
     if (showProductSearchDrawer && showProductProperties) {
       setShowProductProperties(false);
@@ -178,7 +152,6 @@ const IssuingNewInvoice: React.FC = () => {
     <>
       <ScreenHeader title="صدور فاکتور جدید" />
 
-      {/* Toast notifications */}
       <Toast
         visible={toastVisible}
         message={toastMessage}
@@ -187,7 +160,6 @@ const IssuingNewInvoice: React.FC = () => {
       />
 
       <View style={styles.container}>
-        {/* Customer selection section */}
         <View style={styles.customerContainer}>
           <LinearGradient
             colors={[colors.secondary, colors.primary]}
@@ -257,12 +229,11 @@ const IssuingNewInvoice: React.FC = () => {
                 {toPersianDigits(selectedColleague.name)}
               </Text>
             ) : (
-              <Text style={styles.noCustomerText}>مشتری انتخاب نشده است</Text>
+              <Text style={styles.noCustomerText}>مشتری انتخاب نشده است.</Text>
             )}
           </View>
         </View>
 
-        {/* Loading indicator */}
         {isLoading && (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.primary} />
@@ -272,9 +243,7 @@ const IssuingNewInvoice: React.FC = () => {
           </View>
         )}
 
-        {/* Products list and Notes input (scrollable content) */}
         <ScrollView style={styles.scrollableContent} ref={scrollViewRef}>
-          {/* Products list */}
           <View style={styles.productsSection}>
             {selectedProducts.map((product) => (
               <ProductCard
@@ -296,7 +265,7 @@ const IssuingNewInvoice: React.FC = () => {
                   {
                     icon: "attach-money",
                     iconColor: colors.secondary,
-                    label: "قیمت:",
+                    label: "قیمت هر واحد:",
                     value:
                       toPersianDigits((product.price || 0).toLocaleString()) +
                       " ریال",
@@ -337,7 +306,6 @@ const IssuingNewInvoice: React.FC = () => {
               />
             ))}
 
-            {/* Empty state */}
             {selectedProducts.length === 0 && (
               <View style={styles.emptyProductsContainer}>
                 <MaterialIcons
@@ -355,98 +323,100 @@ const IssuingNewInvoice: React.FC = () => {
             )}
           </View>
 
-          {/* خلاصه فاکتور - قبل از توضیحات */}
           {selectedProducts.length > 0 && (
             <View style={styles.invoiceTotalContainer}>
               <InvoiceTotalCalculator products={selectedProducts} />
             </View>
           )}
 
-          {/* Notes input - در انتهای ScrollView قرار گرفته */}
-          <View style={styles.notesInputContainer}>
-            <AppTextInput
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="default"
-              icon="text-snippet"
-              placeholder="توضیحات"
-              onChangeText={(text) => setInvoiceNote(text)}
-              value={invoiceNote}
-              multiline
-              numberOfLines={5}
-              height={150}
-              textAlign="right"
-              isLargeInput={true}
-            />
-          </View>
+          {/* Description input inside ScrollView, appears after adding products */}
+          {selectedProducts.length > 0 && (
+            <View style={styles.notesInputContainer}>
+              <AppTextInput
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="default"
+                icon="text-snippet"
+                placeholder="توضیحات"
+                onChangeText={(text) => setInvoiceNote(text)}
+                value={invoiceNote}
+                multiline
+                numberOfLines={3}
+                height={100}
+                textAlign="right"
+                isLargeInput={true}
+              />
+            </View>
+          )}
         </ScrollView>
 
-        {/* Bottom section */}
-        <View style={styles.fixedBottomSection}>
-          {/* Add buttons - moved after the notes */}
-          <View style={styles.iconButtonsContainer}>
-            <TouchableOpacity
-              style={styles.iconButton}
-              onPress={() => {
-                // Ensure the properties drawer is closed before opening search
-                if (showProductProperties) {
-                  setShowProductProperties(false);
-                  setTimeout(() => {
+        {/* Buttons section at bottom, no longer contains the description field */}
+        <View style={styles.bottomFixedContainer}>
+          {/* Action buttons - positioned directly below the notes input */}
+          <View style={styles.actionButtonsContainer}>
+            {/* Add buttons row */}
+            <View style={styles.iconButtonsContainer}>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => {
+                  if (showProductProperties) {
+                    setShowProductProperties(false);
+                    setTimeout(() => {
+                      setShowProductSearchDrawer(true);
+                    }, 300);
+                  } else {
                     setShowProductSearchDrawer(true);
-                  }, 300);
-                } else {
-                  setShowProductSearchDrawer(true);
-                }
-              }}
-            >
-              <View
-                style={[
-                  styles.iconCircle,
-                  {
-                    backgroundColor: "#FFFFFF",
-                    borderColor: `${colors.success}40`,
-                  },
-                ]}
+                  }
+                }}
               >
-                <MaterialIcons name="add" size={30} color={colors.success} />
-              </View>
-            </TouchableOpacity>
+                <View
+                  style={[
+                    styles.iconCircle,
+                    {
+                      backgroundColor: "#FFFFFF",
+                      borderColor: `${colors.success}40`,
+                    },
+                  ]}
+                >
+                  <MaterialIcons name="add" size={30} color={colors.success} />
+                </View>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.iconButton}
-              onPress={() => navigation.navigate("BarCodeScanner")}
-            >
-              <View
-                style={[
-                  styles.iconCircle,
-                  {
-                    backgroundColor: "#FFFFFF",
-                    borderColor: `${colors.secondary}40`,
-                  },
-                ]}
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => navigation.navigate("BarCodeScanner")}
               >
-                <MaterialIcons
-                  name="camera-alt"
-                  size={30}
-                  color={colors.secondary}
-                />
-              </View>
-            </TouchableOpacity>
-          </View>
+                <View
+                  style={[
+                    styles.iconCircle,
+                    {
+                      backgroundColor: "#FFFFFF",
+                      borderColor: `${colors.secondary}40`,
+                    },
+                  ]}
+                >
+                  <MaterialIcons
+                    name="camera-alt"
+                    size={30}
+                    color={colors.secondary}
+                  />
+                </View>
+              </TouchableOpacity>
+            </View>
 
-          {/* Submit button */}
-          <View style={styles.submitButtonContainer}>
-            <TouchableOpacity
-              style={styles.submitButton}
-              onPress={submitInvoice}
-            >
-              <MaterialIcons name="done" size={28} color="#FFFFFF" />
-              <Text style={styles.submitButtonText}>ثبت</Text>
-            </TouchableOpacity>
+            {/* Submit button */}
+            <View style={styles.submitButtonContainer}>
+              <TouchableOpacity
+                style={styles.submitButton}
+                onPress={submitInvoice}
+              >
+                <MaterialIcons name="done" size={28} color="#FFFFFF" />
+                <Text style={styles.submitButtonText}>ثبت</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
-        {/* Product search drawer */}
         <ProductSearchDrawer
           visible={showProductSearchDrawer}
           onClose={() => setShowProductSearchDrawer(false)}
@@ -455,7 +425,6 @@ const IssuingNewInvoice: React.FC = () => {
           onError={showToast}
         />
 
-        {/* Product properties drawer - using Modal for both platforms */}
         {productToShow && (
           <ProductPropertiesDrawer
             visible={showProductProperties}
@@ -467,7 +436,6 @@ const IssuingNewInvoice: React.FC = () => {
         )}
       </View>
 
-      {/* Customer selection bottom sheet */}
       <ColleagueBottomSheet
         title="انتخاب مشتری"
         visible={showColleagueSheet}
@@ -486,7 +454,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 15,
-    paddingBottom: 15,
+    paddingBottom: 0,
     paddingTop: 5,
     backgroundColor: colors.background,
     display: "flex",
@@ -554,22 +522,12 @@ const styles = StyleSheet.create({
   noCustomerText: {
     fontSize: 14,
     color: colors.medium,
-    fontFamily: "Yekan_Bakh_Regular",
-    fontStyle: "italic",
+    fontFamily: "Yekan_Bakh_Bold",
+
     textAlign: "center",
   },
   scrollableContent: {
     flex: 1,
-  },
-  notesInputContainer: {
-    marginBottom: 20,
-    paddingTop: 20,
-    paddingHorizontal: 2,
-  },
-  invoiceTotalContainer: {
-    marginTop: 10,
-    marginBottom: 15,
-    paddingHorizontal: 2,
   },
   loadingContainer: {
     position: "absolute",
@@ -589,7 +547,7 @@ const styles = StyleSheet.create({
     color: colors.medium,
   },
   productsSection: {
-    marginBottom: 10,
+    marginBottom: 5,
   },
   androidCardAdjustment: {
     borderWidth: 3,
@@ -614,14 +572,34 @@ const styles = StyleSheet.create({
     marginTop: 5,
     textAlign: "center",
   },
-  fixedBottomSection: {
+  // Bottom container for action buttons only
+  bottomFixedContainer: {
     backgroundColor: colors.light,
     width: "100%",
+    paddingBottom: 10,
+    borderTopWidth: 1,
+    borderTopColor: colors.gray,
+  },
+  notesInputContainer: {
+    paddingHorizontal: 0,
+    paddingVertical: 10,
+    marginTop: 5,
+    // height: 200,
+    marginBottom: 10,
+  },
+  invoiceTotalContainer: {
+    marginTop: 0,
+    marginBottom: 0,
+    paddingHorizontal: 2,
+  },
+  // Container for add buttons and submit button
+  actionButtonsContainer: {
+    marginTop: 5,
   },
   iconButtonsContainer: {
     flexDirection: "row-reverse",
     justifyContent: "center",
-    marginVertical: 15,
+    marginVertical: 10,
   },
   iconButton: {
     marginHorizontal: 20,
@@ -641,8 +619,8 @@ const styles = StyleSheet.create({
     shadowRadius: 1,
   },
   submitButtonContainer: {
-    marginTop: 4,
-    marginBottom: 10,
+    marginTop: 0,
+    marginBottom: 0,
   },
   submitButton: {
     backgroundColor: colors.primary,
