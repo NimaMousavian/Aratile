@@ -1,7 +1,6 @@
 import axios from "axios";
 import appConfig from "../../../../../config";
 
-// Interface for PersonGroup based on API response
 interface PersonGroup {
   PersonGroupId: number;
   PersonGroupName: string;
@@ -10,7 +9,6 @@ interface PersonGroup {
   ActiveStr: string;
 }
 
-// API response interface for PersonGroups
 interface PersonGroupResponse {
   Items: PersonGroup[];
   Page: number;
