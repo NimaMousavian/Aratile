@@ -85,7 +85,7 @@ interface ProductCardProps {
   titleContainerStyle?: StyleProp<ViewStyle>;
   titleStyle?: StyleProp<TextStyle>;
 
- 
+
   onPress?: () => void;
 
 
@@ -153,11 +153,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </View>
       )}
 
-  
+
       <View style={styles.productDetailsContainer}>
         <View style={styles.infoWithImageContainer}>
           <View style={styles.infoSection}>
-        
+
             {fields.map((field, index) => (
               <View
                 key={index}
@@ -196,7 +196,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             ))}
           </View>
 
-      
+
           {qrConfig.show && (
             <View style={[styles.productImagePlaceholder, qrConfig.containerStyle]}>
               <MaterialIcons
@@ -210,23 +210,25 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
         {noteConfig.show && note && (
           <View style={[styles.productCodeContainer, noteConfig.containerStyle]}>
-            {noteConfig.icon && (
-              <MaterialIcons
-                name={noteConfig.icon}
-                size={noteConfig.iconSize}
-                color={noteConfig.iconColor}
-              />
-            )}
+            <View style={styles.noteHeaderContainer}>
+              {noteConfig.icon && (
+                <MaterialIcons
+                  name={noteConfig.icon}
+                  size={noteConfig.iconSize}
+                  color={noteConfig.iconColor}
+                />
+              )}
 
-            {noteConfig.label && (
-              <Text style={[
-                styles.secondaryLabel,
-                styles.iconTextSpacing,
-                noteConfig.labelStyle
-              ]}>
-                {noteConfig.label}
-              </Text>
-            )}
+              {noteConfig.label && (
+                <Text style={[
+                  styles.secondaryLabel,
+                  styles.iconTextSpacing,
+                  noteConfig.labelStyle
+                ]}>
+                  {noteConfig.label}
+                </Text>
+              )}
+            </View>
 
             <Text style={[
               styles.regularNoteContent,
@@ -318,8 +320,8 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   productCodeContainer: {
-    flexDirection: "row-reverse",
-    alignItems: "center",
+    flexDirection: "column",
+    alignItems: "flex-end",
     paddingRight: 0,
     padding: 12,
     marginTop: 8,
@@ -327,10 +329,19 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#e1e1e1",
   },
+  noteHeaderContainer: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    marginBottom: 8,
+    alignSelf: "flex-end",
+  },
   regularNoteContent: {
     fontSize: 15,
     color: colors.dark,
     fontFamily: getFontFamily("Yekan_Bakh_Bold", "500"),
+    textAlign: "right",
+    width: "100%",
+    paddingRight: 22,
   },
 });
 

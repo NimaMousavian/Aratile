@@ -51,6 +51,10 @@ const MarketerHomeScreen: React.FC = () => {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [layoutSaved, setLayoutSaved] = useState(false);
+  // Added state to control the visibility of the save button
+  const [showSaveButton, setShowSaveButton] = useState(false);
+  // Added state to track if layout has been modified
+  const [layoutModified, setLayoutModified] = useState(false);
 
   // Animation configurations
   const SPRING_CONFIG = {
@@ -122,6 +126,8 @@ const MarketerHomeScreen: React.FC = () => {
       console.log("تلاش برای ذخیره چیدمان:", items);
       await AsyncStorage.setItem(MARKETER_LAYOUT_STORAGE_KEY, JSON.stringify(items));
       setLayoutSaved(true);
+      setLayoutModified(false); // Reset the modified flag after saving
+      setShowSaveButton(false); // Hide the save button after saving
       console.log("چیدمان با موفقیت ذخیره شد");
     } catch (error) {
       console.error("خطا در ذخیره چیدمان:", error);
@@ -200,8 +206,11 @@ const MarketerHomeScreen: React.FC = () => {
 
   // Function to finish dragging and reset state
   const finishDragging = () => {
-    // ذخیره چیدمان قبل از اتمام عملیات کشیدن
-    saveLayout();
+    // Set layoutModified to true to show that changes need to be saved
+    setLayoutModified(true);
+
+    // Show the save button instead of automatically saving
+    setShowSaveButton(true);
 
     if (draggedIndex !== null) {
       // Reset animations with spring for a smoother finish
@@ -223,7 +232,7 @@ const MarketerHomeScreen: React.FC = () => {
           ...TIMING_CONFIG
         })
       ]).start(() => {
-        // Reset all states only after animation completes
+        // Reset dragging states only after animation completes
         setIsDragging(false);
         setDraggedItem(null);
         setDraggedIndex(null);
@@ -241,7 +250,7 @@ const MarketerHomeScreen: React.FC = () => {
         });
       });
     } else {
-      // If no draggedIndex, just reset states
+      // If no draggedIndex, just reset dragging states
       setIsDragging(false);
       setDraggedItem(null);
       setDraggedIndex(null);
@@ -285,10 +294,11 @@ const MarketerHomeScreen: React.FC = () => {
     // Update the items state
     setItems(newItems);
 
-    // ذخیره چیدمان بعد از هر جابجایی
-    setTimeout(() => {
-      saveLayout();
-    }, 100);
+    // Mark layout as modified
+    setLayoutModified(true);
+
+    // Show the save button
+    setShowSaveButton(true);
 
     // Update the dragged index
     setDraggedIndex(toIndex);
@@ -423,22 +433,32 @@ const MarketerHomeScreen: React.FC = () => {
     }
   };
 
-  // Instructions that appear during drag and drop
-  const renderDragInstructions = () => {
-    if (!isDragging) return null;
+  // Instructions that appear during drag and drop or when layout is modified
+  const renderInstructionsAndSaveButton = () => {
+    // Only show instructions during dragging or when layout is modified
+    if (!isDragging && !showSaveButton) return null;
 
     return (
       <View style={styles.dragInstructionContainer}>
-        <Text style={styles.dragInstructionText}>
-          کارت را به مکان دلخواه بکشید و رها کنید
-        </Text>
+        {isDragging ? (
+          <Text style={styles.dragInstructionText}>
+            کارت را به مکان دلخواه بکشید و رها کنید
+          </Text>
+        ) : showSaveButton && (
+          <Text style={styles.dragInstructionText}>
+            چیدمان جدید ایجاد شد. برای اتمام روی دکمه زیر کلیک کنید
+          </Text>
+        )}
+
         <TouchableOpacity
           style={styles.saveButton}
-          onPress={finishDragging}
+          onPress={isDragging ? finishDragging : saveLayout}
         >
           <View style={styles.saveButtonContent}>
             <MaterialIcons name="save" size={20} color="#fff" />
-            <Text style={styles.saveButtonText}>ذخیره و اتمام</Text>
+            <Text style={styles.saveButtonText}>
+              ذخیره و اتمام
+            </Text>
           </View>
         </TouchableOpacity>
       </View>
@@ -592,8 +612,9 @@ const MarketerHomeScreen: React.FC = () => {
             swapItems(index, closestIndex);
           }
 
-          // ذخیره چیدمان هنگام رها کردن
-          saveLayout();
+          // Instead of saving layout immediately, just mark it as modified and show the save button
+          setLayoutModified(true);
+          setShowSaveButton(true);
 
           // Finish dragging with smoother animations
           finishDragging();
@@ -605,8 +626,9 @@ const MarketerHomeScreen: React.FC = () => {
         // Force reset after a short delay to ensure we don't interfere with normal gesture handling
         setTimeout(() => {
           if (isDragging) {  // Double check we're still dragging
-            // ذخیره چیدمان در شرایط اضطراری
-            saveLayout();
+            // Mark layout as modified instead of saving immediately
+            setLayoutModified(true);
+            setShowSaveButton(true);
             finishDragging();
           }
         }, 300);
@@ -728,8 +750,8 @@ const MarketerHomeScreen: React.FC = () => {
         <MaterialIcons name="create" size={24} color="#666666" />
       </View>
 
-      {/* Display drag instructions when dragging */}
-      {renderDragInstructions()}
+      {/* Display instructions and save button when needed */}
+      {renderInstructionsAndSaveButton()}
 
       <FlatList
         ref={flatListRef}
@@ -739,7 +761,7 @@ const MarketerHomeScreen: React.FC = () => {
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.list}
         columnWrapperStyle={styles.columnWrapper}
-        extraData={[isDragging, draggedIndex, hoveredIndex, items]}
+        extraData={[isDragging, draggedIndex, hoveredIndex, items, showSaveButton]}
         scrollEnabled={true}
         onScroll={(e) => {
           scrollOffset.current = e.nativeEvent.contentOffset.y;
@@ -762,6 +784,7 @@ const MarketerHomeScreen: React.FC = () => {
     </View>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

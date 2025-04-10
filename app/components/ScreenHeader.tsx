@@ -17,10 +17,13 @@ const ScreenHeader: React.FC<IProps> = ({ title, isProfilePage = false }) => {
 
 
   const textColor = isProfilePage ? colors.white : colors.dark;
-  const iconColor = isProfilePage ? "white" : "black";
+  const iconColor = isProfilePage ? "white" : colors.secondary;
 
   return (
-    <View style={styles.header}>
+    <View style={[
+      styles.header,
+      { backgroundColor: isProfilePage ? 'transparent' : colors.background }
+    ]}>
       <TouchableOpacity style={styles.icon} onPress={() => navigation.goBack()}>
         <MaterialIcons name="arrow-forward-ios" size={24} color={iconColor} />
       </TouchableOpacity>
@@ -33,22 +36,23 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   header: {
     paddingVertical: 16,
-    paddingHorizontal: 55,
+    paddingHorizontal: 45,
     alignItems: "flex-end",
     justifyContent: "flex-end",
     height: 110,
+    backgroundColor: colors.background,
     // borderBottomLeftRadius: 20,
     // borderBottomRightRadius: 20,
   },
   headerText: {
-    fontFamily: "Yekan_Bakh_Bold",
-    fontSize: 24,
-    color: colors.dark, 
+    fontFamily: "Yekan_Bakh_Fat",
+    fontSize: 23,
+    color: colors.dark,
   },
   icon: {
     position: "absolute",
-    right: 20,
-    top: 65,
+    right: 12,
+    top: 63,
   },
 });
 

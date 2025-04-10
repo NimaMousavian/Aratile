@@ -453,8 +453,8 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
   return (
     <>
       <ScreenHeader title="ثبت فاکتور جدید" />
-      <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
-      <SafeAreaView style={styles.safeAreaTop} />
+ 
+    
       <SafeAreaView style={styles.safeAreaBottom}>
         <View style={styles.container}>
           <ScrollView

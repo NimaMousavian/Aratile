@@ -4,6 +4,7 @@ export interface IProduct {
   quantity: string;
   note: string;
   code: string;
+  Price: number;
   hasColorSpectrum: boolean;
 }
 

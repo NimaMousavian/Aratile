@@ -1,12 +1,13 @@
 {
   "expo": {
-    "name": "aratile",
-    "slug": "aratile",
+    "name": "آراتایل",
+    "slug": "آراتایل",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
+    "jsEngine": "hermes",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -16,26 +17,40 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.aratile",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff",
-        "package": "com.yourcompany.yourapp",
-        "versionCode": 1
+        "backgroundColor": "#ffffff"
       },
       "permissions": [
-        "android.permission.CAMERA"
-      ],
-      "package": "com.aratile"
+        "android.permission.CAMERA",
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-barcode-scanner"
+      "expo-barcode-scanner",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
     ],
     "extra": {
       "eas": {
         "projectId": "3aec5971-75b3-4df4-8596-0d8edf57b3c9"
+      }
+    },
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "exclude": ["expo-barcode-scanner"]
       }
     }
   }

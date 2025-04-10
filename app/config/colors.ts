@@ -23,9 +23,11 @@ export default {
   light: "#f8f4f4",
   gray: "#c8c8c8",
   dark: "#0c0c0c",
-  danger: "#ff5252",
+  danger: "#E74C3C",
   success: "#238B45",
   warning: "#F39C12",
+  darkGray: "#555555",
+  error: "#e53935",
   info: "#2696d9",
   background: "#f5f5f5",
 };

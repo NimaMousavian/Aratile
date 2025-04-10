@@ -1,434 +1,595 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
-  FlatList,
-  Modal,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
+  Platform,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import colors from "../../../config/colors";
-import Button from "../../../components/Button";
-import TextInput from "../../../components/TextInput";
-import { NavigationProp, useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { AppNavigationProp, RootStackParamList } from "../../../StackNavigator";
-import { IProduct } from "../../../config/types";
-import ProductItem from "../../../components/ProductItem";
-import AppButton from "../../../components/Button";
-import ProductPreview from "../../../components/ProductPreview";
+import { useNavigation } from "@react-navigation/native";
+import ProductSearchDrawer from "./ProductSearchDrawer";
+
+// Components
+import ColleagueBottomSheet from "../IssuingNewInvoice/ColleagueSearchModal";
 import ProductCard from "../../../components/ProductCard";
-import { productData } from "../../Cashier/ReceiveNewInvoiceScreen/ReceiveNewInvoiceScreen";
-import ProductProperties from "./ProductProperties";
-import IconButton from "../../../components/IconButton";
 import ScreenHeader from "../../../components/ScreenHeader";
-import SearchInput from "../../../components/SearchInput";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import AppTextInput from "../../../components/TextInput";
+import Toast from "../../../components/Toast";
+import ProductPropertiesDrawer from "./ProductProperties";
+import InvoiceTotalCalculator from "./InvoiceTotalCalculator";
 
-// const sampleProducts: IProduct[] = [
-//   {
-//     id: 1,
-//     name: "محصول اول",
-//     accountableInventory: "1574",
-//     physicalInventory: "1484",
-//     grade: "یک",
-//     price: 3659000,
-//   },
-//   {
-//     id: 2,
-//     name: "محصول دوم",
-//     accountableInventory: "1574",
-//     physicalInventory: "1484",
-//     grade: "یک",
-//     price: 3659000,
-//   },
-//   {
-//     id: 3,
-//     name: "محصول سوم",
-//     accountableInventory: "1574",
-//     physicalInventory: "1484",
-//     grade: "یک",
-//     price: 3659000,
-//   },
-//   {
-//     id: 4,
-//     name: "محصول چهارم",
-//     accountableInventory: "1574",
-//     physicalInventory: "1484",
-//     grade: "یک",
-//     price: 3659000,
-//   },
-// ];
+// Utilities and Configuration
+import colors from "../../../config/colors";
+import { toPersianDigits } from "../../../utils/numberConversions";
+import useProductScanner from "../../../Hooks/useProductScanner";
 
-const IssuingNewInvoice = () => {
-  const [showProductCodeModal, setShowProductCodeModal] =
-    useState<boolean>(false);
-  const [showProductNameModal, setShowProductNameModal] =
-    useState<boolean>(false);
-  const [selectedProducts, setSelectedProducts] = useState<IProduct[]>([]);
-  const [productPropertiesShow, setProductPropertiesShow] =
-    useState<boolean>(false);
-  const [productToShow, setProductToShow] = useState<IProduct | null>(null);
-  // {
-  //   id: 1,
-  //   name: "محصول اول",
-  //   accountableInventory: "1574",
-  //   physicalInventory: "1484",
-  //   grade: "یک",
-  //   price: 3659000,
-  // },
-  // {
-  //   id: 2,
-  //   name: "محصول دوم",
-  //   accountableInventory: "1574",
-  //   physicalInventory: "1484",
-  //   grade: "یک",
-  //   price: 3659000,
-  // },
-  // {
-  //   id: 3,
-  //   name: "محصول سوم",
-  //   accountableInventory: "1574",
-  //   physicalInventory: "1484",
-  //   grade: "یک",
-  //   price: 3659000,
-  // },
-  // {
-  //   id: 4,
-  //   name: "محصول سوم",
-  //   accountableInventory: "1574",
-  //   physicalInventory: "1484",
-  //   grade: "یک",
-  //   price: 3659000,
-  // },
+// At the top of IssuingNewInvoice.tsx, add:
+export interface Product {
+  id: string;
+  title: string;
+  code?: string;
+  quantity: string;
+  price?: number;
+  note?: string;
+  manualCalculation?: boolean;
+  hasColorSpectrum?: boolean;
+}
+
+interface Colleague {
+  id: string;
+  name: string;
+  // Add other properties as needed
+}
+
+interface AppNavigationProp {
+  navigate: (screen: string, params?: any) => void;
+}
+
+const IssuingNewInvoice: React.FC = () => {
+  // Create a ref for the ScrollView
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  // Custom hook for product management
+  const {
+    isLoading,
+    selectedProducts,
+    handleProductSearch,
+    removeProduct,
+    addProduct,
+  } = useProductScanner();
+
+  // UI state
+  const [showProductSearchDrawer, setShowProductSearchDrawer] = useState<boolean>(false);
+  const [showProductProperties, setShowProductProperties] = useState<boolean>(false);
+  const [productToShow, setProductToShow] = useState<Product | null>(null);
+  const [selectedColleague, setSelectedColleague] = useState<Colleague | null>(null);
+  const [showColleagueSheet, setShowColleagueSheet] = useState<boolean>(false);
+  const [invoiceNote, setInvoiceNote] = useState<string>("");
+
+  // Toast state
+  const [toastVisible, setToastVisible] = useState<boolean>(false);
+  const [toastMessage, setToastMessage] = useState<string>("");
+  const [toastType, setToastType] = useState<'success' | 'error' | 'warning' | 'info'>('error');
 
   const navigation = useNavigation<AppNavigationProp>();
+
+  // Display toast notification
+  const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'error') => {
+    setToastMessage(message);
+    setToastType(type);
+    setToastVisible(true);
+  };
+
+  // Handle product selection from search
+  const handleProductSelected = (product: Product) => {
+    // Close the search drawer first
+    setShowProductSearchDrawer(false);
+
+    // Wait for search drawer animation to complete before showing properties drawer
+    setTimeout(() => {
+      // Set product and show properties drawer
+      setProductToShow(product);
+      setShowProductProperties(true);
+    }, 300); // Match the animation duration of the drawer
+  };
+
+  // Add product from properties drawer
+  const handleAddProduct = (product: Product, quantity: string, note: string, manualCalculation: boolean) => {
+    // محاسبه قیمت کل محصول بر اساس مقدار
+    const quantityNum = parseFloat(quantity) || 0;
+    const unitPrice = product.price || 0;
+
+    // ایجاد محصول با ویژگی‌های به‌روزرسانی شده
+    const productWithProps = {
+      ...product,
+      quantity: quantity,
+      note: note,
+      manualCalculation: manualCalculation
+      // قیمت کل در کامپوننت InvoiceTotalCalculator محاسبه می‌شود
+    };
+
+    if (addProduct(productWithProps)) {
+      showToast("محصول با موفقیت اضافه شد", "success");
+
+      // اسکرول به پایین انجام نمی‌شود، چون توضیحات در پایین قرار دارد
+      // و می‌خواهیم کاربر بتواند محصول اضافه شده را ببیند
+
+      return true;
+    } else {
+      showToast("خطا در افزودن محصول", "error");
+      return false;
+    }
+  };
+
+  // متد برای بستن دراور مشخصات محصول
+  const handleCloseProductProperties = () => {
+    // بستن دراور
+    setShowProductProperties(false);
+
+    // پس از مدت کوتاهی، محصول را پاک می‌کنیم
+    setTimeout(() => {
+      setProductToShow(null);
+    }, 500);
+  };
+
+  // Submit invoice
+  const submitInvoice = () => {
+    if (!selectedColleague) {
+      showToast("لطفاً ابتدا مشتری را انتخاب کنید", "warning");
+      return;
+    }
+
+    if (selectedProducts.length === 0) {
+      showToast("لطفاً حداقل یک محصول به فاکتور اضافه کنید", "warning");
+      return;
+    }
+
+    // API call would go here
+    Alert.alert("موفقیت", "فاکتور با موفقیت ثبت شد.");
+  };
+
+  // Ensure the drawers don't open simultaneously
+  useEffect(() => {
+    if (showProductSearchDrawer && showProductProperties) {
+      setShowProductProperties(false);
+    }
+  }, [showProductSearchDrawer]);
+
   return (
     <>
-      <ScreenHeader title="ثبت فاکتور جدید" />
-      <View style={{ flex: 1, padding: 20, paddingTop: 20 }}>
-        {/* <TouchableOpacity
-        style={styles.addNewCustomerBox}
-        onPress={() => setShowCustomerModal(true)}
-      >
-        <MaterialIcons name="add-circle" size={35} color={colors.primary} />
-        <Text style={{ fontSize: 18 }}>افزودن خریدار جدید</Text>
-      </TouchableOpacity> */}
-        <View
-          style={{
-            flexDirection: "row-reverse",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
+      <ScreenHeader title="صدور فاکتور جدید" />
+
+      {/* Toast notifications */}
+      <Toast
+        visible={toastVisible}
+        message={toastMessage}
+        type={toastType}
+        onDismiss={() => setToastVisible(false)}
+      />
+
+      <View style={styles.container}>
+        {/* Customer selection section */}
+        <View style={styles.customerContainer}>
+          <LinearGradient
+            colors={[colors.secondary, colors.primary]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.customerGradient}
+          >
+            <View style={styles.customerRow}>
+              <View style={styles.customerField}>
+                <MaterialIcons name="person" size={24} color="white" style={styles.customerIcon} />
+                <Text style={styles.customerLabel}>مشتری</Text>
+              </View>
+              <View style={styles.customerButtonsContainer}>
+                {selectedColleague && (
+                  <TouchableOpacity
+                    style={[styles.iconCircleSmall, { backgroundColor: "#fef2e0" }]}
+                    onPress={() => navigation.navigate("CustomerInfo", { customer: selectedColleague })}
+                  >
+                    <MaterialIcons name="edit" size={22} color={colors.warning} />
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity
+                  style={[styles.iconCircleSmall, { backgroundColor: "#e5f9ec" }]}
+                  onPress={() => navigation.navigate("CustomerInfo")}
+                >
+                  <MaterialIcons name="add" size={22} color={colors.success} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.iconCircleSmall, { backgroundColor: "#e4edf8" }]}
+                  onPress={() => setShowColleagueSheet(true)}
+                >
+                  <MaterialIcons name="search" size={22} color={colors.primary} />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </LinearGradient>
+
+          <View style={styles.selectedCustomerContainer}>
+            {selectedColleague ? (
+              <Text style={styles.selectedCustomerName}>
+                {toPersianDigits(selectedColleague.name)}
+              </Text>
+            ) : (
+              <Text style={styles.noCustomerText}>مشتری انتخاب نشده است</Text>
+            )}
+          </View>
+        </View>
+
+        {/* Loading indicator */}
+        {isLoading && (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={styles.loadingText}>در حال بارگذاری اطلاعات محصول...</Text>
+          </View>
+        )}
+
+        {/* Products list and Notes input (scrollable content) */}
+        <ScrollView
+          style={styles.scrollableContent}
+          ref={scrollViewRef}
         >
-          {/* <TextInput
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="default"
-            placeholder="جستجوی خریدار"
-            onChangeText={() => {}}
-            width={"75%"}
-            containerStyle={{ marginBottom: 0 }}
-          ></TextInput> */}
-          <SearchInput
-            value=""
-            onChangeText={() => {}}
-            onSearch={() => navigation.navigate("CustomerInfo")}
-          />
-        </View>
+          {/* Products list */}
+          <View style={styles.productsSection}>
+            {selectedProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                title={toPersianDigits(product.title)}
+                fields={[
+                  {
+                    icon: "qr-code",
+                    iconColor: colors.secondary,
+                    label: "کد:",
+                    value: toPersianDigits(product.code || ""),
+                  },
+                  {
+                    icon: "straighten",
+                    iconColor: colors.secondary,
+                    label: "مقدار:",
+                    value: toPersianDigits(product.quantity),
+                  },
+                  {
+                    icon: "attach-money",
+                    iconColor: colors.secondary,
+                    label: "قیمت:",
+                    value: toPersianDigits((product.price || 0).toLocaleString()) + " ریال",
+                  },
+                ]}
+                note={product.note ? toPersianDigits(product.note) : ""}
+                noteConfig={{
+                  show: !!product.note && product.note !== "-",
+                  icon: "notes",
+                  iconColor: colors.secondary,
+                  label: "توضیحات:",
+                }}
+                qrConfig={{
+                  show: true,
+                  icon: "qr-code-2",
+                  iconSize: 36,
+                  iconColor: colors.secondary,
+                }}
+                containerStyle={Platform.OS === "android" ? styles.androidCardAdjustment : {}}
+                onLongPress={() => {
+                  Alert.alert(
+                    "حذف محصول",
+                    "آیا از حذف این محصول اطمینان دارید؟",
+                    [
+                      { text: "خیر", style: "cancel" },
+                      {
+                        text: "بله",
+                        onPress: () => {
+                          removeProduct(product.id);
+                          showToast("محصول با موفقیت حذف شد", "info");
+                        }
+                      }
+                    ]
+                  );
+                }}
+              />
+            ))}
 
-        <FlatList
-          data={selectedProducts}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <ProductPreview title={item.title} orderCount={item.quantity} />
+            {/* Empty state */}
+            {selectedProducts.length === 0 && (
+              <View style={styles.emptyProductsContainer}>
+                <MaterialIcons name="shopping-cart" size={50} color={colors.medium} />
+                <Text style={styles.emptyProductsText}>محصولی به فاکتور اضافه نشده است</Text>
+                <Text style={styles.emptyProductsSubText}>
+                  برای افزودن محصول، از دکمه + یا اسکن بارکد استفاده کنید
+                </Text>
+              </View>
+            )}
+          </View>
+
+          {/* خلاصه فاکتور - قبل از توضیحات */}
+          {selectedProducts.length > 0 && (
+            <View style={styles.invoiceTotalContainer}>
+              <InvoiceTotalCalculator products={selectedProducts} />
+            </View>
           )}
-        />
-        <TextInput
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="default"
-          placeholder="توضیحات فاکتور"
-          onChangeText={() => {}}
-          numberOfLines={4}
-          multiline={true}
-          height={150}
-        ></TextInput>
-        <View>
-          <View style={styles.buttonsBox}>
-            <Button
-              title="دوربین"
-              onPress={() => navigation.navigate("BarCodeScanner")}
-              style={{ width: "30%" }}
-            />
-            <Button
-              title="کد کالا"
-              onPress={() => setShowProductCodeModal(true)}
-              style={{ width: "30%" }}
-            />
-            <Button
-              title=" نام کالا"
-              onPress={() => setShowProductNameModal(true)}
-              style={{ width: "30%" }}
+
+          {/* Notes input - در انتهای ScrollView قرار گرفته */}
+          <View style={styles.notesInputContainer}>
+            <AppTextInput
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="default"
+              icon="text-snippet"
+              placeholder="توضیحات"
+              onChangeText={(text) => setInvoiceNote(text)}
+              value={invoiceNote}
+              multiline
+              numberOfLines={5}
+              height={150}
+              textAlign="right"
+              isLargeInput={true}
             />
           </View>
-          <View style={styles.buttonsBox}>
-            <IconButton
-              text="ثبت"
-              iconName="done"
-              onPress={() => {}}
-              backgroundColor={colors.success}
-              flex={1}
-            />
-            {/* <Button
-            title="ثبت"
-            onPress={() => {}}
-            style={{ width: "100%" }}
-            color="success"
-          /> */}
-            {/* <Button
-            title="انصراف"
-            onPress={() => {}}
-            style={{ width: "30%" }}
-            color="info"
-          />
-          <Button
-            title="خروج"
-            onPress={() => navigation.goBack()}
-            style={{ width: "30%" }}
-            color="danger"
-          /> */}
+        </ScrollView>
+
+        {/* Bottom section */}
+        <View style={styles.fixedBottomSection}>
+
+          {/* Add buttons - moved after the notes */}
+          <View style={styles.iconButtonsContainer}>
+            <TouchableOpacity style={styles.iconButton} onPress={() => {
+              // Ensure the properties drawer is closed before opening search
+              if (showProductProperties) {
+                setShowProductProperties(false);
+                setTimeout(() => {
+                  setShowProductSearchDrawer(true);
+                }, 300);
+              } else {
+                setShowProductSearchDrawer(true);
+              }
+            }}>
+              <View style={[styles.iconCircle, { backgroundColor: "#FFFFFF", borderColor: `${colors.success}40` }]}>
+                <MaterialIcons name="add" size={30} color={colors.success} />
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("BarCodeScanner")}>
+              <View style={[styles.iconCircle, { backgroundColor: "#FFFFFF", borderColor: `${colors.secondary}40` }]}>
+                <MaterialIcons name="camera-alt" size={30} color={colors.secondary} />
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          {/* Submit button */}
+          <View style={styles.submitButtonContainer}>
+            <TouchableOpacity
+              style={styles.submitButton}
+              onPress={submitInvoice}
+            >
+              <MaterialIcons name="done" size={28} color="#FFFFFF" />
+              <Text style={styles.submitButtonText}>ثبت</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
-        <Modal visible={showProductCodeModal} animationType="slide">
-          <View style={{ padding: 20 }}>
-            <TouchableOpacity
-              onPress={() => setShowProductCodeModal(false)}
-              style={{ flexDirection: "row-reverse", marginBottom: 10 }}
-            >
-              <MaterialCommunityIcons
-                name="close-circle"
-                size={40}
-                color={colors.danger}
-              />
-            </TouchableOpacity>
-            {/* <Button
-              title="بستن"
-              onPress={() => setShowProductCodeModal(false)}
-              color="danger"
-            /> */}
-            {/* <View
-              style={{
-                flexDirection: "row-reverse",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <TextInput
-                autoCapitalize="none"
-                autoCorrect={false}
-                keyboardType="default"
-                placeholder="کد کالا را وارد کنید"
-                onChangeText={() => {}}
-                width={"75%"}
-                containerStyle={{ marginBottom: 0 }}
-              ></TextInput>
-              <AppButton
-                title="جستجو"
-                onPress={() => {}}
-                color="primaryLight"
-              />
-            </View> */}
-            <SearchInput value="" onChangeText={() => {}} onSearch={() => {}} />
-            {/* <FlatList
-            data={sampleProducts}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => <ProductItem product={item} />}
-          /> */}
-            <FlatList
-              data={productData}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item: product }) => (
-                <ProductCard
-                  key={product.id}
-                  title={product.title}
-                  // titleIcon={{
-                  //   name: "inventory",
-                  //   color: colors.primary,
-                  // }}
-                  fields={[
-                    {
-                      icon: "qr-code",
-                      iconColor: colors.secondary,
-                      label: "کد محصول:",
-                      value: product.code,
-                    },
-                    {
-                      icon: "straighten",
-                      iconColor: colors.secondary,
-                      label: "مقدار:",
-                      value: product.quantity,
-                    },
-                    {
-                      icon: "palette",
-                      iconColor: colors.secondary,
-                      label: "طیف رنگی:",
-                      value: product.hasColorSpectrum ? "دارد" : "ندارد",
-                      valueColor: product.hasColorSpectrum
-                        ? colors.success
-                        : colors.danger,
-                    },
-                  ]}
-                  note={product.note}
-                  noteConfig={{
-                    show: !!product.note && product.note !== "-",
-                    icon: "notes",
-                    iconColor: colors.secondary,
-                    label: "توضیحات:",
-                  }}
-                  qrConfig={{
-                    show: true,
-                    icon: "qr-code-2",
-                    iconSize: 36,
-                    iconColor: colors.secondary,
-                  }}
-                />
-              )}
-            />
-          </View>
-        </Modal>
-        <Modal visible={showProductNameModal} animationType="slide">
-          <View style={{ padding: 20, flex: 1 }}>
-            <TouchableOpacity
-              onPress={() => setShowProductNameModal(false)}
-              style={{ flexDirection: "row-reverse", marginBottom: 10 }}
-            >
-              <MaterialCommunityIcons
-                name="close-circle"
-                size={40}
-                color={colors.danger}
-              />
-            </TouchableOpacity>
-            <SearchInput value="" onChangeText={() => {}} onSearch={() => {}} />
-            {/* <Button
-              title="بستن"
-              onPress={() => setShowProductNameModal(false)}
-              color="danger"
-            />
-            <View
-              style={{
-                flexDirection: "row-reverse",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <TextInput
-                autoCapitalize="none"
-                autoCorrect={false}
-                keyboardType="default"
-                placeholder="نام کالا را وارد کنید"
-                onChangeText={() => {}}
-                containerStyle={{ marginBottom: 0 }}
-                width={"75%"}
-              ></TextInput>
-              <AppButton
-                title="جستجو"
-                onPress={() => {}}
-                color="primaryLight"
-              />
-            </View> */}
-            {/* <FlatList
-            data={sampleProducts}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => <ProductItem product={item} />}
-          /> */}
-            <FlatList
-              data={productData}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item: product }) => (
-                <ProductCard
-                  key={product.id}
-                  title={product.title}
-                  onPress={() => {
-                    setProductToShow(product);
-                    setProductPropertiesShow(true);
-                  }}
-                  // titleIcon={{
-                  //   name: "inventory",
-                  //   color: colors.primary,
-                  // }}
-                  fields={[
-                    {
-                      icon: "qr-code",
-                      iconColor: colors.secondary,
-                      label: "کد محصول:",
-                      value: product.code,
-                    },
-                    {
-                      icon: "straighten",
-                      iconColor: colors.secondary,
-                      label: "مقدار:",
-                      value: product.quantity,
-                    },
-                    {
-                      icon: "palette",
-                      iconColor: colors.secondary,
-                      label: "طیف رنگی:",
-                      value: product.hasColorSpectrum ? "دارد" : "ندارد",
-                      valueColor: product.hasColorSpectrum
-                        ? colors.success
-                        : colors.danger,
-                    },
-                  ]}
-                  note={product.note}
-                  noteConfig={{
-                    show: !!product.note && product.note !== "-",
-                    icon: "notes",
-                    iconColor: colors.secondary,
-                    label: "توضیحات:",
-                  }}
-                  qrConfig={{
-                    show: true,
-                    icon: "qr-code-2",
-                    iconSize: 36,
-                    iconColor: colors.secondary,
-                  }}
-                />
-              )}
-            />
-            <Modal visible={productPropertiesShow} animationType="slide">
-              {productToShow && (
-                <ProductProperties
-                  product={productToShow}
-                  onClose={() => setProductPropertiesShow(false)}
-                />
-              )}
-            </Modal>
-          </View>
-        </Modal>
+        {/* Product search drawer */}
+        <ProductSearchDrawer
+          visible={showProductSearchDrawer}
+          onClose={() => setShowProductSearchDrawer(false)}
+          onProductSelect={handleProductSelected}
+          searchProduct={handleProductSearch}
+          onError={showToast}
+        />
+
+        {/* Product properties drawer - using Modal for both platforms */}
+        {productToShow && (
+          <ProductPropertiesDrawer
+            visible={showProductProperties}
+            onClose={handleCloseProductProperties}
+            product={productToShow}
+            onSave={handleAddProduct}
+            onError={showToast}
+          />
+        )}
       </View>
+
+      {/* Customer selection bottom sheet */}
+      <ColleagueBottomSheet
+        title="انتخاب مشتری"
+        visible={showColleagueSheet}
+        onClose={() => setShowColleagueSheet(false)}
+        onSelectColleague={(colleague) => {
+          setSelectedColleague(colleague);
+          setShowColleagueSheet(false);
+          showToast(`مشتری ${colleague.name} انتخاب شد`, "success");
+        }}
+      />
     </>
   );
 };
 
 const styles = StyleSheet.create({
-  addNewCustomerBox: {
+  container: {
+    flex: 1,
+    paddingHorizontal: 15,
+    paddingBottom: 15,
+    paddingTop: 5,
+    backgroundColor: colors.background,
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  customerContainer: {
+    flexDirection: "column",
+    marginBottom: 15,
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    overflow: "hidden",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 1,
+    borderWidth: 2,
+    borderColor: colors.gray,
+  },
+  customerGradient: {
+    padding: 12,
+  },
+  customerRow: {
+    flexDirection: "row-reverse",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  customerField: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+  },
+  customerLabel: {
+    fontSize: 16,
+    marginRight: 4,
+    fontFamily: "Yekan_Bakh_Bold",
+    color: "white",
+  },
+  customerIcon: {},
+  customerButtonsContainer: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+  },
+  iconCircleSmall: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+    marginHorizontal: 5,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+  },
+  selectedCustomerContainer: {
+    padding: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.gray,
+    backgroundColor: colors.light,
+  },
+  selectedCustomerName: {
+    fontSize: 16,
+    color: colors.dark,
+    fontFamily: "Yekan_Bakh_Bold",
+    textAlign: "center",
+  },
+  noCustomerText: {
+    fontSize: 14,
+    color: colors.medium,
+    fontFamily: "Yekan_Bakh_Regular",
+    fontStyle: "italic",
+    textAlign: "center",
+  },
+  scrollableContent: {
+    flex: 1,
+  },
+  notesInputContainer: {
+    marginBottom: 20,
+    paddingTop: 20,
+    paddingHorizontal: 2,
+  },
+  invoiceTotalContainer: {
+    marginTop: 10,
+    marginBottom: 15,
+    paddingHorizontal: 2,
+  },
+  loadingContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    zIndex: 1000,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    fontFamily: "Yekan_Bakh_Regular",
+    color: colors.medium,
+  },
+  productsSection: {
+    marginBottom: 10,
+  },
+  androidCardAdjustment: {
+    borderWidth: 3,
+    borderColor: "#e0e0e0",
+    marginVertical: 8,
+  },
+  emptyProductsContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 40,
+  },
+  emptyProductsText: {
+    fontSize: 18,
+    fontFamily: "Yekan_Bakh_Bold",
+    color: colors.medium,
+    marginTop: 10,
+  },
+  emptyProductsSubText: {
+    fontSize: 14,
+    fontFamily: "Yekan_Bakh_Regular",
+    color: colors.medium,
+    marginTop: 5,
+    textAlign: 'center',
+  },
+  fixedBottomSection: {
+    backgroundColor: colors.light,
+    width: '100%',
+  },
+  iconButtonsContainer: {
+    flexDirection: "row-reverse",
+    justifyContent: "center",
+    marginVertical: 15,
+  },
+  iconButton: {
+    marginHorizontal: 20,
+  },
+  iconCircle: {
+    width: 55,
+    height: 55,
+    borderRadius: 30,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 1,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 1,
+  },
+  submitButtonContainer: {
+    marginTop: 4,
+    marginBottom: 10,
+  },
+  submitButton: {
+    backgroundColor: colors.primary,
     flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
-    gap: 10,
-    borderWidth: 2,
-    borderColor: colors.primary,
-    borderRadius: 15,
+    borderRadius: 9,
     padding: 10,
-    marginHorizontal: 80,
-    marginVertical: 20,
+    height: 56,
+    elevation: 1,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 1,
   },
-  buttonsBox: {
-    flexDirection: "row-reverse",
-    justifyContent: "space-between",
+  submitButtonText: {
+    color: "#FFFFFF",
+    fontSize: 20,
+    marginRight: 8,
+    marginTop: 5,
+    fontFamily: "Yekan_Bakh_Bold",
   },
 });
 

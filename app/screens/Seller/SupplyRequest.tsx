@@ -46,7 +46,7 @@ const SupplyRequest = () => {
                 {
                   icon: "qr-code",
                   iconColor: colors.secondary,
-                  label: "کد محصول:",
+                  label: "کد:",
                   value: product.code,
                 },
                 {

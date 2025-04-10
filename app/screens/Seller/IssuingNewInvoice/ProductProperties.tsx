@@ -1,115 +1,506 @@
-import { RouteProp, useRoute } from "@react-navigation/native";
-import React from "react";
-import { StyleSheet, View } from "react-native";
-import { IProduct } from "../../../config/types";
-import AppText from "../../../components/Text";
-import { toPersianDigits } from "../../../utils/converters";
+import React, { useState, useEffect, useRef } from "react";
+import {
+  StyleSheet,
+  TouchableOpacity,
+  View,
+  Text,
+  Animated,
+  Dimensions,
+  Keyboard,
+  Modal,
+  Easing,
+  Platform,
+  Alert,
+  Clipboard,
+  KeyboardAvoidingView,
+  ScrollView,
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import colors from "../../../config/colors";
+import { toPersianDigits, toEnglishDigits } from "../../../utils/numberConversions";
+import AppText from "../../../components/Text";
 import AppButton from "../../../components/Button";
 import AppTextInput from "../../../components/TextInput";
 import Checkbox from "../../../components/CheckBox";
+import Toast from "../../../components/Toast";
+import { Product } from "./IssuingNewInvoice";
 
-type ProductPropertiesRouteProp = RouteProp<
-  { ProductProperties: { product: IProduct } },
-  "ProductProperties"
->;
+const { height, width } = Dimensions.get("window");
 
-interface IProps {
-  product: IProduct;
+interface ProductPropertiesDrawerProps {
+  visible: boolean;
   onClose: () => void;
+  product: Product | null;
+  onSave: (product: Product, quantity: string, note: string, manualCalculation: boolean) => boolean;
+  onError?: (message: string, type: 'success' | 'error' | 'warning' | 'info') => void;
 }
 
-const ProductProperties: React.FC<IProps> = ({ product, onClose }) => {
+const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
+  visible,
+  onClose,
+  product,
+  onSave,
+  onError,
+}) => {
+  const [quantity, setQuantity] = useState<string>("1");
+  const [displayQuantity, setDisplayQuantity] = useState<string>("۱");
+  const [note, setNote] = useState<string>("");
+  const [manualCalculation, setManualCalculation] = useState<boolean>(false);
+  const [keyboardHeight, setKeyboardHeight] = useState<number>(0);
+  const [isCalculating, setIsCalculating] = useState<boolean>(false);
+
+  const [toastVisible, setToastVisible] = useState<boolean>(false);
+  const [toastMessage, setToastMessage] = useState<string>("");
+  const [toastType, setToastType] = useState<'success' | 'error' | 'warning' | 'info'>('error');
+
+  const slideAnimation = useRef(new Animated.Value(0)).current;
+  const backdropOpacity = useRef(new Animated.Value(0)).current;
+
+  // مقدار ثابت موجودی
+  const defaultQuantity = "10000";
+
+  // تنظیم مقادیر اولیه
+  useEffect(() => {
+    if (product && visible) {
+      setQuantity(defaultQuantity);
+      setDisplayQuantity(toPersianDigits(defaultQuantity));
+      setNote(product.note || "");
+      setManualCalculation(product.manualCalculation || false);
+    }
+  }, [product, visible]);
+
+  // شنونده‌های رویداد صفحه کلید - غیرفعال شده برای جلوگیری از حرکت محتوا
+  useEffect(() => {
+    // کیبورد لیسنرها غیرفعال شدند تا محتوا ثابت بماند
+    // اگر می‌خواهید که کیبورد محتوا را بالا نبرد، این قسمت باید غیرفعال باشد
+
+    return () => {
+      // پاکسازی لیسنرها در صورت فعال بودن
+    };
+  }, []);
+
+  // انیمیشن نمایش دراور
+  useEffect(() => {
+    if (visible) {
+      slideAnimation.setValue(0);
+      backdropOpacity.setValue(0);
+
+      Animated.parallel([
+        Animated.timing(slideAnimation, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+          easing: Easing.out(Easing.ease),
+        }),
+        Animated.timing(backdropOpacity, {
+          toValue: 1,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [visible, slideAnimation, backdropOpacity]);
+
+  // نمایش پیام toast
+  const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'error') => {
+    if (onError) {
+      onError(message, type);
+    } else {
+      setToastMessage(message);
+      setToastType(type);
+      setToastVisible(true);
+
+      setTimeout(() => {
+        setToastVisible(false);
+      }, 3000);
+    }
+  };
+
+  // بستن دراور
+  const closeDrawer = () => {
+    if (product && (quantity !== product.quantity || note !== product.note ||
+      manualCalculation !== (product.manualCalculation || false))) {
+      Alert.alert(
+        "تغییرات ذخیره نشده",
+        "آیا مطمئن هستید که می‌خواهید بدون ذخیره تغییرات خارج شوید؟",
+        [
+          { text: "خیر", style: "cancel" },
+          {
+            text: "بله",
+            onPress: () => performClose()
+          }
+        ]
+      );
+    } else {
+      performClose();
+    }
+  };
+
+  // اجرای انیمیشن بستن دراور
+  const performClose = () => {
+    Animated.parallel([
+      Animated.timing(slideAnimation, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+        easing: Easing.in(Easing.ease),
+      }),
+      Animated.timing(backdropOpacity, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      onClose();
+    });
+  };
+
+  // اعتبارسنجی ورودی
+  const validateInput = (): boolean => {
+    if (!quantity || quantity.trim() === "") {
+      showToast("لطفاً مقدار را وارد کنید", "warning");
+      return false;
+    }
+
+    const qtyNum = parseFloat(quantity);
+    if (isNaN(qtyNum) || qtyNum <= 0) {
+      showToast("لطفاً مقدار معتبر وارد کنید", "error");
+      return false;
+    }
+
+    return true;
+  };
+
+  // محاسبه پارامترهای محصول
+  const handleCalculate = () => {
+    if (!product) return;
+
+    if (!validateInput()) {
+      return;
+    }
+
+    setIsCalculating(true);
+
+    setTimeout(() => {
+      setIsCalculating(false);
+      showToast("محاسبه با موفقیت انجام شد", "success");
+    }, 1000);
+  };
+
+  // ذخیره محصول با ویژگی‌های به‌روزرسانی شده
+  const handleSave = () => {
+    if (!product) return;
+
+    if (!validateInput()) {
+      return;
+    }
+
+    const saveSuccessful = onSave(product, quantity, note, manualCalculation);
+
+    if (saveSuccessful) {
+      performClose();
+    }
+  };
+
+  // تغییر مقدار با اعتبارسنجی
+  const handleQuantityChange = (text: string) => {
+    const cleanedText = text.replace(/[^0-9.]/g, '');
+    setDisplayQuantity(toPersianDigits(cleanedText));
+    setQuantity(toEnglishDigits(cleanedText));
+  };
+
+  // کپی کردن کد محصول
+  const copyProductCode = () => {
+    if (product && product.code) {
+      Clipboard.setString(product.code);
+      showToast("کد محصول کپی شد", "success");
+    }
+  };
+
+  // استایل‌های انیمیشن
+  const animatedStyle = {
+    transform: [
+      {
+        translateY: slideAnimation.interpolate({
+          inputRange: [0, 1],
+          outputRange: [height, 0],
+        }),
+      },
+    ],
+  };
+
+  const backdropStyle = {
+    opacity: backdropOpacity,
+  };
+
+  if (!product || !visible) return null;
+
+  // مقدار موجودی قابل تعهد همیشه 10000
+  const displayStockQuantity = toPersianDigits(defaultQuantity);
+
+  // محاسبه ارتفاع منطقه اسکرول‌پذیر و فضای دکمه‌ها
+  const buttonAreaHeight = 100; // ارتفاع تقریبی برای دکمه‌ها + فاصله
+
+  // استفاده از Modal برای هر دو پلتفرم Android و iOS
   return (
-    <View style={styles.container}>
-      <View style={styles.prductContainer}>
-        <AppText style={{ fontSize: 18, fontFamily: "Yekan_Bakh_Bold" }}>
-          {product.title}
-        </AppText>
-        <View style={styles.devider}></View>
-        {/* <View style={styles.properties}>
-          <AppText style={{ fontFamily: "Yekan_Bakh_Bold" }}>
-            موجودی فیزیکی:
-          </AppText>
-          <AppText>{toPersianDigits(product.physicalInventory)}</AppText>
-        </View> */}
-        <View style={styles.properties}>
-          <AppText style={{ fontFamily: "Yekan_Bakh_Bold" }}>
-            موجودی قابل تعهد:
-          </AppText>
-          <AppText>{toPersianDigits(product.quantity)}</AppText>
-        </View>
-        <View style={styles.properties}>
-          <AppText style={{ fontFamily: "Yekan_Bakh_Bold" }}>طیف:</AppText>
-          <AppText>ندارد</AppText>
-        </View>
-        {/* <View style={styles.properties}>
-          <AppText style={{ fontFamily: "Yekan_Bakh_Bold" }}>قیمت:</AppText>
-          <AppText>{toPersianDigits(product.price.toString())}</AppText>
-        </View> */}
+    <Modal
+      visible={visible}
+      transparent={true}
+      animationType="none"
+      onRequestClose={closeDrawer}
+      statusBarTranslucent={true}
+    >
+      <Toast
+        visible={toastVisible}
+        message={toastMessage}
+        type={toastType}
+        onDismiss={() => setToastVisible(false)}
+      />
+
+      <View style={styles.modalContainer}>
+        <Animated.View
+          style={[styles.backdrop, backdropStyle]}
+        >
+          <TouchableOpacity
+            style={styles.backdropTouchable}
+            activeOpacity={1}
+            onPress={closeDrawer}
+          />
+        </Animated.View>
+
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'position' : undefined}
+          style={styles.keyboardAvoidingContainer}
+          pointerEvents="box-none"
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
+          enabled={false}
+        >
+          <Animated.View
+            style={[
+              styles.drawerContainer,
+              animatedStyle,
+              {
+                height: Platform.OS === 'ios' ? height * 0.8 : "80%",
+                width: Platform.OS === 'ios' ? width : "100%",
+              }
+            ]}
+          >
+            <LinearGradient
+              colors={[colors.secondary, colors.primary]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.header}
+            >
+              <View style={styles.headerContent}>
+                <MaterialIcons
+                  name="shopping-cart"
+                  size={24}
+                  color="white"
+                />
+                <Text style={styles.headerTitle}>مشخصات محصول</Text>
+              </View>
+              <TouchableOpacity onPress={closeDrawer} style={styles.closeButton}>
+                <MaterialIcons
+                  name="close"
+                  size={32}
+                  color="white"
+                  style={{ marginLeft: -4 }}
+                />
+              </TouchableOpacity>
+            </LinearGradient>
+
+            <View style={styles.contentContainer}>
+              <ScrollView
+                style={styles.scrollView}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.scrollViewContent}
+              >
+                <View style={styles.productContainer}>
+                  <AppText style={styles.productTitle}>
+                    {product.title}
+                  </AppText>
+                  <View style={styles.divider}></View>
+
+                  <View style={styles.properties}>
+                    <AppText style={styles.propertyLabel}>
+                      موجودی قابل تعهد:
+                    </AppText>
+                    <AppText>{displayStockQuantity}</AppText>
+                  </View>
+
+                  <View style={styles.properties}>
+                    <AppText style={styles.propertyLabel}>طیف:</AppText>
+                    <AppText>{product.hasColorSpectrum ? "دارد" : "ندارد"}</AppText>
+                  </View>
+
+                  {product.price ? (
+                    <View style={styles.properties}>
+                      <AppText style={styles.propertyLabel}>قیمت:</AppText>
+                      <AppText>{toPersianDigits(product.price.toLocaleString())} ریال</AppText>
+                    </View>
+                  ) : null}
+
+                  {product.code ? (
+                    <TouchableOpacity onPress={copyProductCode} style={styles.copyableProperty}>
+                      <View style={styles.properties}>
+                        <AppText style={styles.propertyLabel}>کد محصول:</AppText>
+                        <View style={styles.codeContainer}>
+                          <AppText>{toPersianDigits(product.code)}</AppText>
+                          <MaterialIcons name="content-copy" size={18} color={colors.medium} style={{ marginRight: 5 }} />
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
+
+                <View style={styles.inputsContainer}>
+                  <AppTextInput
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    keyboardType="number-pad"
+                    icon="straighten"
+                    placeholder="تعداد سفارش خریدار (متر مربع)"
+                    value={displayQuantity}
+                    onChangeText={handleQuantityChange}
+                  />
+
+                  <Checkbox
+                    label="محاسبه به صورت دستی انجام شود"
+                    checked={manualCalculation}
+                    onPress={() => setManualCalculation(!manualCalculation)}
+                  />
+
+                  <AppButton
+                    title={isCalculating ? "در حال محاسبه..." : "محاسبه کن"}
+                    onPress={handleCalculate}
+                    color="secondary"
+                    disabled={isCalculating}
+                  />
+                </View>
+
+                <AppTextInput
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="default"
+                  icon="notes"
+                  placeholder="توضیحات"
+                  value={note}
+                  onChangeText={setNote}
+                  multiline
+                  numberOfLines={5}
+                  height={120}
+                />
+
+                {/* اضافه کردن فضای خالی برای نمایش کامل محتوا بالای دکمه‌ها */}
+                <View style={{ height: buttonAreaHeight }} />
+              </ScrollView>
+
+              <View style={styles.buttonContainer}>
+                <AppButton
+                  title="ثبت کالا"
+                  onPress={handleSave}
+                  color="success"
+                  style={styles.actionButton}
+                />
+                <AppButton
+                  title="انصراف"
+                  onPress={closeDrawer}
+                  color="danger"
+                  style={styles.actionButton}
+                />
+              </View>
+            </View>
+          </Animated.View>
+        </KeyboardAvoidingView>
       </View>
-      <View style={styles.prductContainer}>
-        <AppTextInput
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="number-pad"
-          placeholder="تعداد سفارش خریدار (متر مربع)"
-          onChangeText={() => {}}
-        ></AppTextInput>
-        <Checkbox label="محاسبه به صورت دستی انجام شود" />
-        <AppButton title="محاسبه کن" onPress={() => {}} />
-      </View>
-      <AppTextInput
-        autoCapitalize="none"
-        autoCorrect={false}
-        keyboardType="default"
-        placeholder="توضیحات"
-        onChangeText={() => {}}
-        multiline
-        numberOfLines={5}
-        height={150}
-      ></AppTextInput>
-      <View
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          padding: 10,
-          flexDirection: "row-reverse",
-          justifyContent: "space-between",
-          gap: 15,
-        }}
-      >
-        <AppButton
-          title="ثبت کالا"
-          onPress={() => {
-            onClose();
-          }}
-          color="success"
-          style={{ width: "48%" }}
-        />
-        <AppButton
-          title="انصراف"
-          onPress={onClose}
-          color="danger"
-          style={{ width: "48%" }}
-        />
-      </View>
-    </View>
+    </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
-  prductContainer: {
+  modalContainer: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "flex-end",
+    zIndex: 9999, // Increased z-index to ensure it appears above other modals
+  },
+  keyboardAvoidingContainer: {
+    flex: 1,
+    justifyContent: "flex-end",
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  backdropTouchable: {
+    flex: 1,
+  },
+  drawerContainer: {
+    backgroundColor: colors.background,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 16,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+      }
+    })
+  },
+  header: {
+    flexDirection: "row-reverse",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    height: 65,
+  },
+  headerContent: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+  },
+  headerTitle: {
+    fontSize: 18,
+    color: colors.white,
+    marginRight: 8,
+    fontFamily: "Yekan_Bakh_Bold",
+  },
+  closeButton: {
+    padding: 4,
+  },
+  contentContainer: {
+    flex: 1,
+    position: 'relative',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollViewContent: {
+    padding: 16,
+    paddingBottom: 0, // کاهش فاصله از پایین زیرا ما خودمان یک view با ارتفاع buttonAreaHeight اضافه کرده‌ایم
+  },
+  productContainer: {
     borderWidth: 1,
     borderRadius: 15,
     borderColor: colors.primary,
     padding: 15,
-    marginVertical: 15,
+    marginBottom: 15,
+    backgroundColor: colors.white,
   },
-  devider: {
+  productTitle: {
+    fontSize: 18,
+    fontFamily: "Yekan_Bakh_Bold",
+    color: colors.dark,
+    textAlign: "center",
+  },
+  divider: {
     width: "100%",
     height: 1,
     backgroundColor: colors.dark,
@@ -120,6 +511,41 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginVertical: 5,
   },
+  propertyLabel: {
+    fontFamily: "Yekan_Bakh_Bold",
+    color: colors.secondary,
+  },
+  copyableProperty: {
+    marginVertical: 5,
+  },
+  codeContainer: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+  },
+  inputsContainer: {
+    borderWidth: 1,
+    borderRadius: 15,
+    borderColor: colors.primary,
+    padding: 15,
+    marginBottom: 15,
+    backgroundColor: colors.white,
+  },
+  buttonContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 10,
+    flexDirection: "row-reverse",
+    justifyContent: "space-between",
+    gap: 15,
+    backgroundColor: colors.background,
+    borderTopWidth: 1,
+    borderTopColor: colors.gray,
+  },
+  actionButton: {
+    flex: 1,
+  },
 });
 
-export default ProductProperties;
+export default ProductPropertiesDrawer;

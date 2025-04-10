@@ -104,8 +104,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.primary,
     flexDirection: "row-reverse",
-    padding: 20,
-    marginVertical: 10,
+    paddingHorizontal: 15, marginVertical: 10,
   },
   icon: {
     marginLeft: 10,

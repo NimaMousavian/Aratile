@@ -49,8 +49,9 @@ export type RootStackParamList = {
   ChangePassword: undefined;
 
   Home: undefined;
-  IssuingNewInvoic: undefined;
-  BarCodeScanner: undefined;
+
+  IssuingNewInvoic: { scannedCode?: string };
+  BarCodeScanner: undefined; 
   CustomerInfo: undefined;
   ProductProperties: undefined;
   SupplyRequest: undefined;
@@ -116,34 +117,9 @@ const StackNavigator: React.FC = () => {
         options={{ headerShown: false }}
       />
       <Stack.Screen
-        name="IssuingNewInvoic"
+        name="IssuingNewInvoice"  // This is correct
         component={IssuingNewInvoice}
-        options={{
-          headerTitleAlign: "center",
-          headerTitleStyle: styles.headerTitleStyle,
-          headerStyle: styles.headerStyle,
-          title: "ثبت فاکتور جدید",
-          headerLeft: ({ canGoBack }) =>
-            canGoBack ? (
-              <Ionicons
-                name="arrow-back"
-                size={24}
-                color={colors.white}
-                style={{ marginRight: 15 }}
-                onPress={() => navigation.goBack()}
-              />
-            ) : null,
-          headerRight: ({ canGoBack }) =>
-            canGoBack ? (
-              <Ionicons
-                name="arrow-forward"
-                size={24}
-                color={colors.primary}
-                style={{ marginRight: 15 }}
-                onPress={() => navigation.goBack()}
-              />
-            ) : null,
-        }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="BarCodeScanner"

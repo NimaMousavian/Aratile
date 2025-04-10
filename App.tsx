@@ -14,13 +14,13 @@ import StackNavigator from "./app/StackNavigator";
 import { PaperProvider } from "react-native-paper";
 import navigationTheme from "./app/config/navigationTheme";
 
-I18nManager.forceRTL(true);
+// I18nManager.forceRTL(false);
 
 SplashScreen.preventAutoHideAsync();
 
 type RootStackParamList = {
   Home: undefined;
-  IssuingNewInvoic: undefined;
+  IssuingNewInvoice: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -34,6 +34,7 @@ export default function App(): JSX.Element {
         await Font.loadAsync({
           Yekan_Bakh_Regular: require("./assets/fonts/Yekan_Bakh_EN_Regular.ttf"),
           Yekan_Bakh_Bold: require("./assets/fonts/Yekan_Bakh_EN_Bold.ttf"),
+          Yekan_Bakh_Fat: require("./assets/fonts/YekanBakhFaNum-ExtraBold.ttf"),
         });
         setAppIsReady(true);
       } catch (error) {
