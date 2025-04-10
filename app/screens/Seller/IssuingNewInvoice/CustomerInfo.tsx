@@ -23,7 +23,7 @@ interface Province {
 }
 
 const CustomerInfo = () => {
-  // State for form fields
+
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [mobile, setMobile] = useState("");
@@ -32,7 +32,6 @@ const CustomerInfo = () => {
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // State for selections
   const [selectedCustomerTypes, setSelectedCustomerTypes] = useState<string[]>([]);
   const [selectedCustomerTypesString, setSelectedCustomerTypesString] = useState("");
   const [selectedColleague, setSelectedColleague] = useState<Colleague>({
@@ -153,7 +152,6 @@ const CustomerInfo = () => {
   };
 
   const validateForm = (): boolean => {
-    // بررسی اعتبار فیلدهای ضروری
     if (!firstName.trim()) {
       showToast("لطفاً نام را وارد کنید", "error");
       return false;
@@ -169,7 +167,6 @@ const CustomerInfo = () => {
       return false;
     }
 
-    // بررسی صحت فرمت موبایل
     const mobileRegex = /^09\d{9}$/;
     if (!mobileRegex.test(mobile)) {
       showToast("شماره موبایل باید ۱۱ رقم و با ۰۹ شروع شود", "error");
@@ -197,7 +194,6 @@ const CustomerInfo = () => {
     setIsSubmitting(true);
 
     try {
-      // دریافت شناسه استان
       const provinceId = await LocationService.getProvinceIdByName(selectedProvince);
       if (!provinceId) {
         showToast("خطا در دریافت شناسه استان", "error");
@@ -205,7 +201,6 @@ const CustomerInfo = () => {
         return;
       }
 
-      // دریافت شناسه شهر
       const cityId = await PersonManagementService.getCityIdByName(selectedCity, selectedProvince);
       if (!cityId) {
         showToast("خطا در دریافت شناسه شهر", "error");
@@ -213,36 +208,30 @@ const CustomerInfo = () => {
         return;
       }
 
-      // دریافت شناسه‌های گروه مشتری
       let personGroupIds: number[] = [];
       if (selectedCustomerTypes.length > 0) {
         personGroupIds = await PersonManagementService.getPersonGroupIdsByNames(selectedCustomerTypes);
         if (personGroupIds.length === 0 && selectedCustomerTypes.length > 0) {
           showToast("خطا در دریافت شناسه‌های گروه مشتری", "warning");
-          // اما عملیات را ادامه می‌دهیم
         }
       }
 
-      // آماده‌سازی داده‌ها برای ارسال
       const personData: CreatePersonDTO = {
-        PersonId: 0, // برای ایجاد شخص جدید
+        PersonId: 0,
         FirstName: firstName,
         LastName: lastName,
         Mobile: mobile,
         ProvinceId: provinceId,
         CityId: cityId,
-        MarketingChannelId: null, // مقدار پیش‌فرض
+        MarketingChannelId: null, 
         Address: address,
         PersonGroupIdList: personGroupIds
       };
 
-      // ارسال درخواست ایجاد شخص
       const newPersonId = await PersonManagementService.createPerson(personData);
 
-      // نمایش پیام موفقیت
       showToast(`مشتری با موفقیت ثبت شد.`, "success");
 
-      // پاک‌سازی فرم
       setFirstName("");
       setLastName("");
       setMobile("");
@@ -300,6 +289,15 @@ const CustomerInfo = () => {
             <AppTextInput
               autoCapitalize="none"
               autoCorrect={false}
+              keyboardType="default"
+              icon="person-4"
+              placeholder="نام مستعار/ جایگزین"
+              value={alias}
+              onChangeText={setAlias}
+            />
+            <AppTextInput
+              autoCapitalize="none"
+              autoCorrect={false}
               keyboardType="number-pad"
               icon="phone-android"
               placeholder="شماره موبایل "
@@ -321,15 +319,7 @@ const CustomerInfo = () => {
               loading={loadingCustomerTypes}
             />
 
-            <AppTextInput
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="default"
-              icon="person-4"
-              placeholder="نام مستعار/ جایگزین/ معرف"
-              value={alias}
-              onChangeText={setAlias}
-            />
+          
 
             <TouchableOpacity
               activeOpacity={0.7}

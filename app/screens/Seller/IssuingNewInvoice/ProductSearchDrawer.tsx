@@ -14,6 +14,7 @@ import {
   Platform,
   TextInput,
   ListRenderItemInfo,
+  KeyboardAvoidingView,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -56,7 +57,7 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
   const [searchResults, setSearchResults] = useState<APIProduct[]>([]);
   const [hasSearched, setHasSearched] = useState<boolean>(false);
   const [searching, setSearching] = useState<boolean>(false);
-  const [keyboardHeight, setKeyboardHeight] = useState<number>(0);
+  const [keyboardOpen, setKeyboardOpen] = useState<boolean>(false);
 
   const [toastVisible, setToastVisible] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string>("");
@@ -88,19 +89,24 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
     }
   }, [visible]);
 
+  // Monitor keyboard visibility
   useEffect(() => {
-    const keyboardWillShowListener = Keyboard.addListener(
+    const keyboardDidShowListener = Keyboard.addListener(
       Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
-      e => setKeyboardHeight(e.endCoordinates.height)
+      () => {
+        setKeyboardOpen(true);
+      }
     );
-    const keyboardWillHideListener = Keyboard.addListener(
+    const keyboardDidHideListener = Keyboard.addListener(
       Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
-      () => setKeyboardHeight(0)
+      () => {
+        setKeyboardOpen(false);
+      }
     );
 
     return () => {
-      keyboardWillShowListener.remove();
-      keyboardWillHideListener.remove();
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
     };
   }, []);
 
@@ -124,6 +130,7 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
   }, [visible, slideAnimation, backdropOpacity]);
 
   const closeDrawer = () => {
+    Keyboard.dismiss();
     Animated.parallel([
       Animated.timing(slideAnimation, {
         toValue: 0,
@@ -280,10 +287,6 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
           style={[
             styles.drawerContainer,
             animatedStyle,
-            {
-              paddingBottom: keyboardHeight > 0 ? keyboardHeight : 20,
-              height: "80%",
-            }
           ]}
         >
           <LinearGradient
@@ -313,11 +316,11 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
 
           <View style={styles.body}>
             <View style={styles.searchContainer}>
-              <View style={styles.searchInputWrapper}>
+              <View style={[styles.searchInputWrapper, Platform.OS === "android" && keyboardOpen && { height: 56 }]}>
                 <View style={styles.textInputContainer}>
                   <TextInput
                     autoFocus={true}
-                    style={styles.searchInput}
+                    style={[styles.searchInput, Platform.OS === "android" && keyboardOpen && { height: 40 }]}
                     placeholder="جستجوی نام یا کد محصول"
                     placeholderTextColor="#999"
                     value={displaySearchQuery}
@@ -360,6 +363,7 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
                 renderItem={renderProductItem}
                 contentContainerStyle={styles.listContainer}
                 showsVerticalScrollIndicator={true}
+                keyboardShouldPersistTaps="handled"
               />
             ) : (
               <View style={styles.centerContainer}>
@@ -409,6 +413,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 16,
+    height: "80%",
+    paddingBottom: Platform.OS === "android" ? 20 : 0,
   },
   header: {
     flexDirection: "row-reverse",
@@ -454,6 +460,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 1,
+    height: 56,
   },
   textInputContainer: {
     flex: 1,
@@ -465,8 +472,9 @@ const styles = StyleSheet.create({
     fontFamily: "Yekan_Bakh_Regular",
     fontSize: 14,
     padding: 8,
-    height: 40,
+    height: Platform.OS === "android" ? 40 : 44,
     textAlign: "right",
+    minHeight: 40,
   },
   clearButton: {
     padding: 5,

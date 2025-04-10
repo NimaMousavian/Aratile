@@ -18,8 +18,8 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import colors from "../../../config/colors";
 import PersonService from "./api/PersonService";
 import { toPersianDigits, toEnglishDigits, NumberConverterInput } from "../../../utils/numberConversions";
+import SearchInput from "../../../components/SearchInput";
 
-// تعریف تایپ‌های مورد نیاز
 export interface Colleague {
   id: string;
   name: string;
@@ -32,19 +32,22 @@ interface ColleagueBottomSheetProps {
   visible: boolean;
   onClose: () => void;
   onSelectColleague: (colleague: Colleague) => void;
-  title?: string; // افزودن prop جدید برای تغییر عنوان
+  onAddNewPerson?: (searchQuery: string) => void;
+  title?: string;
+  pageSize?: number;
 }
 
 const { height } = Dimensions.get("window");
 
-/**
- * کامپوننت دراپ داون باتم شیت برای انتخاب همکار
- */
+const DEFAULT_PAGE_SIZE = 20;
+
 const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
   visible,
   onClose,
   onSelectColleague,
-  title = "انتخاب شخص معرف" // مقدار پیش‌فرض برای عنوان
+  onAddNewPerson,
+  title = "انتخاب شخص معرف",
+  pageSize = DEFAULT_PAGE_SIZE
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [colleagues, setColleagues] = useState<Colleague[]>([]);
@@ -55,14 +58,13 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
   const [totalPages, setTotalPages] = useState(1);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [searchPerformed, setSearchPerformed] = useState(false);
   const flatListRef = useRef<FlatList>(null);
   const loadingAnimation = useRef(new Animated.Value(0)).current;
 
-  // انیمیشن باتم شیت
   const translateY = useRef(new Animated.Value(height)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
 
-  // مدیریت نمایش و مخفی کردن باتم شیت
   useEffect(() => {
     if (visible) {
       Animated.parallel([
@@ -78,8 +80,14 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
         }),
       ]).start();
 
-      // بارگیری داده‌ها زمانی که باتم شیت باز می‌شود
-      resetAndFetch();
+      setSearchQuery("");
+
+      setColleagues([]);
+      setFilteredColleagues([]);
+      setCurrentPage(1);
+      setHasMore(true);
+      setLoading(false);
+      setSearchPerformed(false);
     } else {
       Animated.parallel([
         Animated.timing(translateY, {
@@ -96,7 +104,6 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
     }
   }, [visible]);
 
-  // انیمیشن لودینگ
   useEffect(() => {
     if (loading) {
       Animated.loop(
@@ -120,7 +127,6 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
     }
   }, [loading, loadingAnimation]);
 
-  // مدیریت کیبورد در iOS
   useEffect(() => {
     const keyboardWillShowListener = Keyboard.addListener(
       Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
@@ -137,16 +143,24 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
     };
   }, []);
 
-  // ریست کردن داده‌ها و شروع مجدد
-  const resetAndFetch = () => {
-    setColleagues([]);
-    setFilteredColleagues([]);
-    setCurrentPage(1);
-    setHasMore(true);
-    fetchColleagues("", 1, true);
+  const convertToEnglishNumbers = (text: string) => {
+    return toEnglishDigits(text);
   };
 
-  // دریافت اطلاعات همکاران از API
+  const handleSearch = () => {
+    const trimmedQuery = searchQuery.trim();
+    const englishQuery = convertToEnglishNumbers(trimmedQuery);
+
+    setCurrentPage(1);
+    setHasMore(true);
+    setSearchPerformed(true);
+    fetchColleagues(englishQuery, 1, true);
+
+    if (flatListRef.current) {
+      flatListRef.current.scrollToOffset({ offset: 0, animated: true });
+    }
+  };
+
   const fetchColleagues = async (searchTerm = "", page = 1, isReset = false) => {
     if (page === 1) {
       setLoading(true);
@@ -155,36 +169,32 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
     }
 
     try {
-      const response = await PersonService.searchPersonByMobileOrFullName(searchTerm, page);
+      const response = await PersonService.searchPersonByMobileOrFullName(searchTerm, page, pageSize);
 
       const { Items, TotalPages, TotalCount } = response;
       setTotalPages(TotalPages);
       setHasMore(page < TotalPages);
 
-      console.log(`تعداد کل آیتم‌ها: ${toPersianDigits(TotalCount)}, صفحه: ${toPersianDigits(page)}/${toPersianDigits(TotalPages)}`);
+      console.log(`تعداد کل آیتم‌ها: ${toPersianDigits(TotalCount)}, صفحه: ${toPersianDigits(page)}/${toPersianDigits(TotalPages)}, تعداد در هر صفحه: ${toPersianDigits(pageSize)}`);
 
-      // تبدیل داده‌های دریافتی به فرمت مورد نیاز
       const transformedData: Colleague[] = Items.map(item => ({
         id: item.PersonId.toString(),
-        name: toPersianDigits(item.FullName), // Convert any numbers in names to Persian
+        name: toPersianDigits(item.FullName),
         phone: toPersianDigits(item.Mobile) || "",
         groups: item.PersonGroupsStr ? item.PersonGroupsStr.split("، ") : [],
         introducingCode: item.IntroducingCode ? toPersianDigits(item.IntroducingCode) : ""
       }));
 
-      // حذف آیتم‌های تکراری با استفاده از Map
       const uniqueItems = Array.from(
         new Map(transformedData.map(item => [item.id, item])).values()
       );
 
       console.log(`تعداد آیتم‌های یکتا: ${toPersianDigits(uniqueItems.length)}`);
 
-      // اگر صفحه اول است یا ریست شده، جایگزین شود. در غیر این صورت به اطلاعات موجود اضافه شود
       if (page === 1 || isReset) {
         setColleagues(uniqueItems);
         setFilteredColleagues(uniqueItems);
       } else {
-        // اضافه کردن آیتم‌های جدید و حذف تکراری‌ها
         const newItems = [...colleagues, ...uniqueItems];
         const uniqueNewItems = Array.from(
           new Map(newItems.map(item => [item.id, item])).values()
@@ -207,29 +217,15 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
     }
   };
 
-  // جستجو بر اساس عبارت وارد شده
-  const handleSearch = () => {
-    const trimmedQuery = searchQuery.trim();
-    setCurrentPage(1);
-    setHasMore(true);
-    fetchColleagues(trimmedQuery, 1, true);
-
-    // اسکرول به بالای لیست
-    if (flatListRef.current) {
-      flatListRef.current.scrollToOffset({ offset: 0, animated: true });
-    }
-  };
-
-  // بارگذاری صفحات بیشتر در هنگام اسکرول
   const handleLoadMore = () => {
     if (!loading && !isLoadingMore && hasMore) {
       const nextPage = currentPage + 1;
       console.log(`بارگذاری صفحه بعدی: ${toPersianDigits(nextPage)}`);
-      fetchColleagues(searchQuery.trim(), nextPage);
+      const englishQuery = convertToEnglishNumbers(searchQuery.trim());
+      fetchColleagues(englishQuery, nextPage);
     }
   };
 
-  // انتخاب همکار از لیست
   const handleSelectColleague = (colleague: Colleague): void => {
     onSelectColleague({
       ...colleague,
@@ -239,18 +235,25 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
     onClose();
   };
 
-  // پاک کردن عبارت جستجو
-  const handleClearSearch = () => {
-    setSearchQuery("");
-    resetAndFetch();
+  const handleAddNewPerson = () => {
+    if (onAddNewPerson) {
+      const englishQuery = convertToEnglishNumbers(searchQuery.trim());
+      onAddNewPerson(englishQuery);
+      onClose();
+    }
   };
 
-  // نمایش فوتر لیست با وضعیت بارگذاری
+  const handleChangeText = (text: string) => {
+    const persianText = toPersianDigits(text);
+    setSearchQuery(persianText);
+  };
+
   const renderFooter = () => {
     if (isLoadingMore) {
       return (
         <View style={styles.loaderContainer}>
           <ActivityIndicator size="small" color={colors.primary} />
+          <Text style={styles.loadingMoreText}>در حال بارگذاری موارد بیشتر...</Text>
         </View>
       );
     }
@@ -258,7 +261,6 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
     return null;
   };
 
-  // انیمیشن پالس برای لودینگ
   const pulseAnimation = {
     opacity: loadingAnimation,
     transform: [
@@ -294,7 +296,7 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
           {
             transform: [{ translateY }],
             paddingBottom: keyboardHeight > 0 ? keyboardHeight : 20,
-            height: filteredColleagues.length > 4 ? "80%" : "auto",
+            height: "80%",
           }
         ]}
       >
@@ -318,29 +320,14 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
         </LinearGradient>
 
         <View style={styles.body}>
-          <View style={styles.searchContainer}>
-            <NumberConverterInput
-              style={styles.searchInput}
-              placeholder="نام یا شماره تماس را وارد کنید"
-              value={searchQuery}
-              onChangeText={(value) => setSearchQuery(value)}
-              convertTo="persian"
-              onSubmitEditing={handleSearch}
-              textAlign="right"
-              placeholderTextColor={colors.medium}
-              returnKeyType="search"
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={handleClearSearch} style={styles.clearButton}>
-                <MaterialIcons name="close" size={20} color={colors.medium} />
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity onPress={handleSearch} style={styles.searchButton}>
-              <MaterialIcons name="search" size={20} color={colors.medium} />
-            </TouchableOpacity>
-          </View>
+          <SearchInput
+            placeholder="نام یا شماره تماس را وارد کنید"
+            value={searchQuery}
+            onChangeText={handleChangeText}
+            onSearch={handleSearch}
+            containerStyle={styles.searchContainer}
+          />
 
-          {/* لیست نتایج */}
           {loading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator
@@ -348,6 +335,7 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
                 color={colors.secondary}
                 style={styles.spinner}
               />
+              <Text style={styles.loadingText}>در حال بارگذاری...</Text>
             </View>
           ) : filteredColleagues.length > 0 ? (
             <FlatList
@@ -367,7 +355,6 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
                       <View style={styles.groupContainer}>
                         <MaterialIcons name="person" size={18} color="#bfbfbf" style={styles.personIcon} />
                         {item.groups && item.groups.length > 0
-                          // && item.groups[0] !== "-"
                           && (
                             <Text style={styles.resultGroups}>
                               {toPersianDigits(item.groups[0])}
@@ -385,14 +372,28 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
               onEndReached={handleLoadMore}
               onEndReachedThreshold={0.5}
               ListFooterComponent={renderFooter}
-              initialNumToRender={10}
-              maxToRenderPerBatch={10}
+              initialNumToRender={pageSize}
+              maxToRenderPerBatch={pageSize / 2}
               windowSize={10}
             />
-          ) : (
+          ) : searchPerformed ? (
             <View style={styles.noResultsContainer}>
               <MaterialIcons name="search-off" size={48} color={colors.medium} />
               <Text style={styles.noResultsText}>نتیجه‌ای یافت نشد</Text>
+
+              {onAddNewPerson && (
+                <TouchableOpacity
+                  style={styles.addPersonButton}
+                  onPress={handleAddNewPerson}
+                >
+                  <MaterialIcons name="person-add" size={20} color={colors.white} />
+                  <Text style={styles.addPersonButtonText}>افزودن فرد جدید</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          ) : (
+            <View style={styles.initialStateContainer}>
+              <Text style={styles.initialStateText}>برای جستجو، عبارت مورد نظر را وارد کنید و دکمه جستجو را بزنید</Text>
             </View>
           )}
         </View>
@@ -415,7 +416,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bottomSheet: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.background,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     height: "auto",
@@ -457,34 +458,8 @@ const styles = StyleSheet.create({
     minHeight: 300,
   },
   searchContainer: {
-    flexDirection: "row-reverse",
-    backgroundColor: "#f8f9fa",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
     marginBottom: 16,
-    alignItems: "center",
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-    color: colors.dark,
-    fontFamily: "Yekan_Bakh_Regular",
-    textAlign: "right",
-    paddingVertical: 4,
-    borderWidth: 0,
-  },
-  searchIcon: {
-    marginLeft: 8,
-  },
-  searchButton: {
-    marginLeft: 8,
-    padding: 4,
-  },
-  clearButton: {
-    padding: 4,
+    width: "100%",
   },
   resultList: {
     flex: 1,
@@ -549,7 +524,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.medium,
     marginTop: 12,
+    marginBottom: 20,
     fontFamily: "Yekan_Bakh_Regular",
+  },
+  initialStateContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 40,
+    flex: 1,
+  },
+  initialStateText: {
+    fontSize: 16,
+    color: colors.medium,
+    fontFamily: "Yekan_Bakh_Regular",
+    textAlign: "center",
+    paddingHorizontal: 20,
   },
   loaderContainer: {
     paddingVertical: 20,
@@ -560,8 +549,9 @@ const styles = StyleSheet.create({
   loadingMoreText: {
     fontSize: 14,
     color: colors.medium,
-    marginLeft: 8,
+    marginRight: 8,
     fontFamily: "Yekan_Bakh_Regular",
+    textAlign: "center",
   },
   loadingContainer: {
     alignItems: "center",
@@ -582,6 +572,21 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontFamily: "Yekan_Bakh_Regular",
     textAlign: "center",
+  },
+  addPersonButton: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    backgroundColor: colors.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginTop: 16,
+  },
+  addPersonButtonText: {
+    color: colors.white,
+    fontFamily: "Yekan_Bakh_Bold",
+    fontSize: 16,
+    marginRight: 8,
   },
 });
 

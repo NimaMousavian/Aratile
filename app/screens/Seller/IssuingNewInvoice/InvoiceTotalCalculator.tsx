@@ -72,10 +72,10 @@ const InvoiceTotalCalculator: React.FC<InvoiceTotalProps> = ({
             <Text style={styles.summaryValue}>{toPersianDigits(products.length.toString())}</Text>
           </View>
 
-          <View style={styles.summaryRow}>
+          {/* <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>مجموع مقدار:</Text>
             <Text style={styles.summaryValue}>{toPersianDigits(totalQuantity.toFixed(2))} متر مربع</Text>
-          </View>
+          </View> */}
 
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>جمع کل:</Text>
