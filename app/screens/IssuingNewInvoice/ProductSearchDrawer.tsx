@@ -38,7 +38,7 @@ interface APIProduct {
   Active: boolean;
   ActiveStr: string;
   Quantity?: string;
-  ProductImageFileName?: string;
+  ProductMeasurementUnitName?: string;
 }
 
 interface ProductSearchDrawerProps {
@@ -211,6 +211,7 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
       price: item.Price !== null ? item.Price : 0,
       hasColorSpectrum: false,
       note: "",
+      ProductMeasurementUnitName: item.ProductMeasurementUnitName,
     };
 
     onProductSelect(product);

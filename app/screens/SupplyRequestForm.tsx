@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Animated,
   Modal,
@@ -21,6 +21,7 @@ import * as Yup from "yup";
 import { Formik } from "formik";
 import axios from "axios";
 import appConfig from "../../config";
+import Toast from "../components/Toast";
 
 interface ISupplyRequestToPost {
   ProductSupplyRequestId: number;
@@ -48,14 +49,34 @@ interface IProps {
   visible: boolean;
   closeDrawer: () => void;
   product: Product;
+  getAllSupplyRequest: () => void;
 }
 
 const SupplyRequestForm: React.FC<IProps> = ({
   visible,
   closeDrawer,
   product,
+  getAllSupplyRequest,
 }) => {
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const [toastVisible, setToastVisible] = useState<boolean>(false);
+  const [toastMessage, setToastMessage] = useState<string>("");
+  const [toastType, setToastType] = useState<
+    "success" | "error" | "warning" | "info"
+  >("error");
+
+  const showToast = (
+    message: string,
+    type: "success" | "error" | "warning" | "info" = "error"
+  ) => {
+    setToastMessage(message);
+    setToastType(type);
+    setToastVisible(true);
+  };
+
   const postSupplyRequest = async (reqValu: string, desc: string) => {
+    setIsLoading(true);
     try {
       const supReqToPost: ISupplyRequestToPost = {
         ProductSupplyRequestId: 0,
@@ -78,8 +99,17 @@ const SupplyRequestForm: React.FC<IProps> = ({
         `${appConfig.mobileApi}ProductSupplyRequest/Add`,
         supReqToPost
       );
+
+      if (response.status === 200) {
+        showToast("درخواست با موفقیت ثبت شد", "success");
+        getAllSupplyRequest();
+        closeDrawer();
+      }
     } catch (error) {
       console.log(error);
+      showToast("خطا در ثبت درخواست", "error");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -91,6 +121,12 @@ const SupplyRequestForm: React.FC<IProps> = ({
       onRequestClose={closeDrawer}
       statusBarTranslucent={true}
     >
+      <Toast
+        visible={toastVisible}
+        message={toastMessage}
+        type={toastType}
+        onDismiss={() => setToastVisible(false)}
+      />
       <View style={styles.modalContainer}>
         <Animated.View style={[styles.backdrop]}>
           <TouchableOpacity
@@ -191,7 +227,7 @@ const SupplyRequestForm: React.FC<IProps> = ({
                     </ScrollView>
                     <View style={styles.buttonContainer}>
                       <AppButton
-                        title="ثبت درخواست"
+                        title={isLoading ? "در حال ارسال" : "ثبت درخواست"}
                         onPress={handleSubmit}
                         color="success"
                         style={styles.actionButton}

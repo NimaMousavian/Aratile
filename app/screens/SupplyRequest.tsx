@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Modal,
   Platform,
   StyleSheet,
@@ -30,6 +31,16 @@ import { getFontFamily } from "./IssuedInvoices";
 import SupplyRequestCard from "../components/SupplyRequestCard";
 import axios from "axios";
 import appConfig from "../../config";
+import SelectionBottomSheet from "../components/SelectionDialog";
+
+const statusStr = [
+  "بررسی نشده",
+  "در حال تامین",
+  "درخواست تولید",
+  "تامین شده",
+  "عدم تولید",
+  "لغو شده",
+];
 
 const SupplyRequest = () => {
   const [supplyRequests, setSupplyRequests] = useState<ISupplyRequest[]>([]);
@@ -48,6 +59,9 @@ const SupplyRequest = () => {
   const [toastType, setToastType] = useState<
     "success" | "error" | "warning" | "info"
   >("error");
+
+  const [screenLoading, setScreenLoading] = useState<boolean>(false);
+  const [filterParams, setFilterParams] = useState<any>();
 
   const showToast = (
     message: string,
@@ -72,6 +86,7 @@ const SupplyRequest = () => {
   };
 
   const getSupplyRequest = async () => {
+    setScreenLoading(true);
     try {
       const response = await axios.get(
         `${appConfig.mobileApi}ProductSupplyRequest/GetAll?page=1&pageSize=1000`
@@ -82,12 +97,64 @@ const SupplyRequest = () => {
       console.log("datas", data);
     } catch (error) {
       console.log(error);
+    } finally {
+      setScreenLoading(false);
+    }
+  };
+  const getSupplyRequestWithFilter = async () => {
+    setScreenLoading(true);
+    try {
+      console.log("filterParams:", filterParams);
+
+      // Initialize query string with required parameters
+      let queryString = "page=1&pageSize=1000";
+
+      // Add filterParams if they exist
+      if (filterParams) {
+        if (filterParams.filterProductName) {
+          queryString += `&filterProductName=${encodeURIComponent(
+            filterParams.filterProductName
+          )}`;
+        }
+        if (filterParams.filterRequestState) {
+          if (filterParams.filterRequestState !== 0)
+            queryString += `&filterRequestState=${filterParams.filterRequestState}`;
+        }
+        if (filterParams.filterInsertDateFrom) {
+          queryString += `&filterInsertDateFrom=${encodeURIComponent(
+            filterParams.filterInsertDateFrom
+          )}`;
+        }
+        if (filterParams.filterInsertDateTo) {
+          queryString += `&filterInsertDateTo=${encodeURIComponent(
+            filterParams.filterInsertDateTo
+          )}`;
+        }
+      }
+
+      console.log("Query String:", queryString);
+
+      const response = await axios.get(
+        `${appConfig.mobileApi}ProductSupplyRequest/GetAll?${queryString}`
+      );
+
+      const data = response.data.Items;
+      setSupplyRequests(data);
+      console.log("datas", data);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setScreenLoading(false);
     }
   };
 
   useEffect(() => {
     getSupplyRequest();
   }, []);
+
+  const handleSupplyRequestPress = (srID: number) => {
+    console.log(srID);
+  };
 
   return (
     <>
@@ -127,9 +194,22 @@ const SupplyRequest = () => {
             label="تا تاریخ"
             onDateChange={(value) => setToDate(value)}
           />
+          <SelectionBottomSheet
+            onSelect={(values) =>
+              setFilterParams((prev: any) => {
+                return {
+                  ...prev,
+                  filterRequestState: statusStr.indexOf(values[0]) + 1,
+                };
+              })
+            }
+            options={["همه", ...statusStr]}
+            placeholderText="وضعیت"
+            iconName="question-mark"
+          />
           <AppButton
             title="فیلتر"
-            onPress={() => {}}
+            onPress={() => getSupplyRequestWithFilter()}
             color="primary"
             // style={{ width: "49%" }}
           />
@@ -260,12 +340,28 @@ const SupplyRequest = () => {
                       </Text>
                     </TouchableOpacity>
                   </View> */}
+        {screenLoading ? (
+          <View style={styles.centerContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <AppText
+              style={{ marginTop: 15, fontSize: 20, color: colors.primary }}
+            >
+              در حال بارگزاری اطلاعات
+            </AppText>
+          </View>
+        ) : (
+          <FlatList
+            data={supplyRequests}
+            keyExtractor={(item) => item.ProductSupplyRequestId.toString()}
+            renderItem={({ item }) => (
+              <SupplyRequestCard
+                supplyRequest={item}
+                onPress={handleSupplyRequestPress}
+              />
+            )}
+          />
+        )}
 
-        <FlatList
-          data={supplyRequests}
-          keyExtractor={(item) => item.ProductSupplyRequestId.toString()}
-          renderItem={({ item }) => <SupplyRequestCard supplyRequest={item} />}
-        />
         <View style={styles.iconButtonsContainer}>
           <TouchableOpacity
             style={{ marginHorizontal: 20 }}
@@ -289,6 +385,7 @@ const SupplyRequest = () => {
           visible={showSupplyRequestForm}
           closeDrawer={() => setShowSupplyRequestForm(false)}
           product={selectedProduct}
+          getAllSupplyRequest={() => getSupplyRequest()}
         />
       </View>
     </>
@@ -417,6 +514,12 @@ const styles = StyleSheet.create({
   },
   activeCountText: {
     color: "#1F2937",
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 40,
   },
 });
 

@@ -14,6 +14,7 @@ import { ISupplyRequest } from "../config/types";
 import { toPersianDigits } from "../utils/converters";
 import { LinearGradient } from "expo-linear-gradient";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import AppButton from "./Button";
 type StatusType =
   | "بررسی نشده"
   | "در حال تامین"
@@ -42,7 +43,7 @@ interface PurchaseInfoCardProps {
   gradientColors?: string[];
   containerStyle?: ViewStyle;
   status?: number;
-  onPress?: () => void;
+  onPress?: (srID: number) => void;
 }
 
 const SupplyRequestCard: React.FC<PurchaseInfoCardProps> = ({
@@ -96,7 +97,10 @@ const SupplyRequestCard: React.FC<PurchaseInfoCardProps> = ({
   };
 
   return (
-    <TouchableOpacity activeOpacity={0.8} onPress={onPress}>
+    <TouchableOpacity
+      activeOpacity={0.8}
+      onPress={() => onPress?.(supplyRequest.ProductSupplyRequestId)}
+    >
       <View
         style={[
           styles.purchaseCard,
@@ -210,6 +214,20 @@ const SupplyRequestCard: React.FC<PurchaseInfoCardProps> = ({
             </View>
           </View>
         </View>
+        {/* <View style={styles.buttonsContainter}>
+          <AppButton
+            title="فیلتر"
+            onPress={() => {}}
+            color="warning"
+            style={{ width: "49%" }}
+          />
+          <AppButton
+            title="فیلتر"
+            onPress={() => {}}
+            color="primary"
+            style={{ width: "49%" }}
+          />
+        </View> */}
       </View>
     </TouchableOpacity>
   );
@@ -466,6 +484,12 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: 12,
     fontFamily: getFontFamily("Yekan_Bakh_Bold", "500"),
+  },
+  buttonsContainter: {
+    flexDirection: "row-reverse",
+    padding: 10,
+    justifyContent: "center",
+    gap: 10,
   },
 });
 
