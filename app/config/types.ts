@@ -39,3 +39,18 @@ export interface IPackagingRule {
   ExtraAmountApplyType: 1;
   Active: true;
 }
+
+export interface ISupplyRequest {
+  ProductSupplyRequestId: number;
+  ApplicationUserId: number;
+  ApplicationUserName: string;
+  ProductId: number;
+  ProductName: string;
+  ProductVariationId: number;
+  ProductVariationName: string;
+  RequestedValue: number;
+  RequestState: number;
+  RequestStateStr: string;
+  ShamsiInsertDate: string;
+  Description: string;
+}

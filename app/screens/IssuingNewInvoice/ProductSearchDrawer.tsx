@@ -38,6 +38,7 @@ interface APIProduct {
   Active: boolean;
   ActiveStr: string;
   Quantity?: string;
+  ProductImageFileName?: string;
 }
 
 interface ProductSearchDrawerProps {

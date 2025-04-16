@@ -36,6 +36,7 @@ export interface Product {
   note?: string;
   manualCalculation?: boolean;
   hasColorSpectrum?: boolean;
+  ProductMeasurementUnitName?: string;
 }
 
 interface Colleague {

@@ -284,7 +284,7 @@ const CustomerInfo = () => {
         Mobile: mobile,
         ProvinceId: provinceId,
         CityId: cityId,
-        MarketingChannelId: "",
+        MarketingChannelId: null,
         Address: address,
         PersonGroupIdList: personGroupIds,
       };
@@ -489,6 +489,7 @@ const CustomerInfo = () => {
         visible={isColleagueBottomSheetVisible}
         onClose={() => setIsColleagueBottomSheetVisible(false)}
         onSelectColleague={handleSelectColleague}
+        isCustomer={false}
       />
     </>
   );

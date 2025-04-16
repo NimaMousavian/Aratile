@@ -43,6 +43,7 @@ interface ColleagueBottomSheetProps {
   onAddNewPerson?: (searchQuery: string) => void;
   title?: string;
   pageSize?: number;
+  isCustomer?: boolean;
 }
 
 const { height } = Dimensions.get("window");
@@ -56,6 +57,7 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
   onAddNewPerson,
   title = "انتخاب شخص معرف",
   pageSize = DEFAULT_PAGE_SIZE,
+  isCustomer = true,
 }) => {
   const navigation = useNavigation<AppNavigationProp>();
 
@@ -421,7 +423,7 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
               />
               <Text style={styles.noResultsText}>نتیجه‌ای یافت نشد</Text>
               <AppButton
-                title={"افزودن معرف جدید"}
+                title={isCustomer ? "افزودن خریدار جدید" : "افزودن معرف جدید"}
                 onPress={() => navigation.navigate("AddNewColleague")}
                 style={{ width: "100%" }}
                 color="success"

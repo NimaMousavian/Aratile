@@ -36,7 +36,7 @@ interface InspectionItem {
   status?: StatusType;
 }
 
-const getFontFamily = (baseFont: string, weight: FontWeight): string => {
+export const getFontFamily = (baseFont: string, weight: FontWeight): string => {
   if (Platform.OS === "android") {
     switch (weight) {
       case "700":
