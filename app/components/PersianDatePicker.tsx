@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from "../config/colors";
+import { toPersianDigits } from "../utils/converters";
 
 const getFontFamily = (baseFont: string, weight: string): string => {
   if (Platform.OS === "android") {
@@ -379,7 +380,7 @@ export const DatePickerField: React.FC<DatePickerFieldProps> = ({
       flex: 1,
       borderRadius: 8,
       borderWidth: 1,
-      borderColor: colors.dark,
+      borderColor: colors.gray,
       flexDirection: "row-reverse",
       alignItems: "center",
       marginBottom: 16,
@@ -421,7 +422,9 @@ export const DatePickerField: React.FC<DatePickerFieldProps> = ({
       onPress={() => setPickerVisible(true)}
     >
       <MaterialIcons name="calendar-month" size={20} color="#6B7280" />
-      <Text style={styles.infoLabel}>{label}</Text>
+      <Text style={styles.infoLabel}>
+        {date ? toPersianDigits(date) : label}
+      </Text>
       <View style={styles.valueContainer}>
         {/* <TouchableOpacity
           onPress={() => setPickerVisible(true)}
@@ -434,7 +437,7 @@ export const DatePickerField: React.FC<DatePickerFieldProps> = ({
         isVisible={isPickerVisible}
         onClose={() => setPickerVisible(false)}
         onConfirm={handleConfirm}
-        initialDate={dateArray}
+        // initialDate={dateArray}
         {...datePickerProps}
       />
     </TouchableOpacity>

@@ -13,7 +13,7 @@ export interface CreatePersonDTO {
   Mobile: string;
   ProvinceId: number;
   CityId: number;
-  MarketingChannelId: string;
+  MarketingChannelId: string | null;
   Address: string;
   PersonGroupIdList: number[];
 }

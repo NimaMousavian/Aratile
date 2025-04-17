@@ -39,3 +39,39 @@ export interface IPackagingRule {
   ExtraAmountApplyType: 1;
   Active: true;
 }
+
+export interface ISupplyRequest {
+  ProductSupplyRequestId: number;
+  ApplicationUserId: number;
+  ApplicationUserName: string;
+  ProductId: number;
+  ProductName: string;
+  ProductVariationId: number;
+  ProductVariationName: string;
+  RequestedValue: number;
+  RequestState: number;
+  RequestStateStr: string;
+  ShamsiInsertDate: string;
+  Description: string;
+}
+
+export interface IPerson {
+  PersonId: number;
+  FirstName: string;
+  LastName: string;
+  NickName: string;
+  Mobile: string;
+  ProvinceId: string;
+  CityId: number;
+  MarketingChannelId: number;
+  PersonJobId: number;
+  PersonJobName: string;
+  Address: string;
+  Description: string;
+  Person_PersonGroup_List: {
+    PersonId: number;
+    PersonGroupId: number;
+    PersonGroupName: string;
+    InsertDate: string;
+  }[];
+}

@@ -20,7 +20,7 @@
       "package": "com.aratile",
       "versionCode": 1,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/logo-aratile.png",
+        "foregroundImage": "./assets/logo-aratile-1.png",
         "backgroundColor": "#ffffff"
       },
       "permissions": [

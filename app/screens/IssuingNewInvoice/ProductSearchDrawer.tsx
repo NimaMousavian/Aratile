@@ -42,6 +42,7 @@ interface APIProduct {
   ActiveStr: string;
   Quantity?: string;
   ProductMeasurementUnitName?: string;
+  ProductMeasurementUnitName?: string;
 }
 
 interface ProductSearchDrawerProps {
