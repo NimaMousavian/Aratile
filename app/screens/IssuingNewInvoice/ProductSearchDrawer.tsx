@@ -27,7 +27,10 @@ import {
   toEnglishDigits,
 } from "../../utils/numberConversions";
 import { Product } from "./IssuingNewInvoice";
+import axios from "axios";
+import appConfig from "../../../config";
 
+const API_BASE_URL = appConfig.mobileApi;
 const { height } = Dimensions.get("window");
 
 interface APIProduct {
@@ -38,6 +41,7 @@ interface APIProduct {
   Active: boolean;
   ActiveStr: string;
   Quantity?: string;
+  ProductMeasurementUnitName?: string;
 }
 
 interface ProductSearchDrawerProps {
@@ -202,18 +206,87 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
   };
 
   const handleProductSelect = (item: APIProduct) => {
-    const product: Product = {
-      id: item.ProductId,
-      title: item.ProductName,
-      code: item.SKU,
-      quantity: item.Quantity || "1",
-      price: item.Price !== null ? item.Price : 0,
-      hasColorSpectrum: false,
-      note: "",
+    // برای جستجو، نیاز داریم درخواست کامل را برای دریافت Product_ProductPropertyValue_List و موجودی ارسال کنیم
+    const fetchCompleteProductData = async () => {
+      try {
+        const response = await axios.get(
+          `${API_BASE_URL}Product/Get?id=${item.ProductId}`
+        );
+
+        let propertyValue = null;
+        let rectifiedValue = null;
+        let inventory = null;
+
+        // دریافت مقدار رکتیفای از پاسخ API
+        if (response.data && response.data.Product_ProductPropertyValue_List &&
+          response.data.Product_ProductPropertyValue_List.length > 0) {
+
+          // جستجو برای یافتن ویژگی رکتیفای
+          const rectifiedProperty = response.data.Product_ProductPropertyValue_List.find(
+            prop => prop.ProductPropertyName === "رکتیفای"
+          );
+
+          if (rectifiedProperty) {
+            rectifiedValue = rectifiedProperty.Value;
+            console.log("مقدار رکتیفای یافت شد:", rectifiedValue);
+          } else {
+            console.log("ویژگی رکتیفای یافت نشد. استفاده از مقدار پیش‌فرض 1.44");
+            rectifiedValue = "1.44"; // مقدار پیش‌فرض اگر ویژگی رکتیفای یافت نشد
+          }
+
+          // برای سازگاری با کد قبلی، مقدار اولین ویژگی را هم ذخیره می‌کنیم
+          propertyValue = response.data.Product_ProductPropertyValue_List[0].Value;
+        } else {
+          console.log("هیچ ویژگی برای محصول یافت نشد. استفاده از مقدار پیش‌فرض 1.44");
+          rectifiedValue = "1.44"; // مقدار پیش‌فرض اگر هیچ ویژگی یافت نشد
+        }
+
+        // دریافت موجودی از پاسخ API
+        if (response.data && response.data.Inventory !== undefined) {
+          inventory = response.data.Inventory.toString();
+          console.log("موجودی قابل تعهد یافت شد:", inventory);
+        } else {
+          console.log("موجودی قابل تعهد یافت نشد");
+        }
+
+        const product: Product = {
+          id: item.ProductId,
+          title: item.ProductName,
+          code: item.SKU,
+          quantity: item.Quantity || "1",
+          price: item.Price !== null ? item.Price : 0,
+          hasColorSpectrum: false,
+          note: "",
+          measurementUnitName: item.ProductMeasurementUnitName || response.data?.MeasurementUnit?.MeasurementUnitName,
+          propertyValue: inventory, // موجودی به عنوان مقدار اصلی
+          rectifiedValue: rectifiedValue // مقدار رکتیفای برای محاسبه تعداد کارتن
+        };
+
+        console.log("محصول ارسال شده به ProductPropertiesDrawer:", product);
+
+        onProductSelect(product);
+        closeDrawer();
+      } catch (error) {
+        console.error("Error fetching complete product data:", error);
+        // در صورت خطا، بدون propertyValue ادامه می‌دهیم
+        const product: Product = {
+          id: item.ProductId,
+          title: item.ProductName,
+          code: item.SKU,
+          quantity: item.Quantity || "1",
+          price: item.Price !== null ? item.Price : 0,
+          hasColorSpectrum: false,
+          note: "",
+          measurementUnitName: item.ProductMeasurementUnitName,
+          rectifiedValue: "1.44" // مقدار پیش‌فرض در صورت خطا
+        };
+
+        onProductSelect(product);
+        closeDrawer();
+      }
     };
 
-    onProductSelect(product);
-    closeDrawer();
+    fetchCompleteProductData();
   };
 
   const renderProductItem = ({ item }: ListRenderItemInfo<APIProduct>) => (
@@ -332,7 +405,7 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
                     style={[
                       styles.searchInput,
                       Platform.OS === "android" &&
-                        keyboardOpen && { height: 40 },
+                      keyboardOpen && { height: 40 },
                     ]}
                     placeholder="جستجوی نام یا کد محصول"
                     placeholderTextColor="#999"

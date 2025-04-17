@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import appConfig from "../../config";
 import {
   StyleSheet,
   View,
@@ -8,8 +9,8 @@ import {
   Platform,
   ViewStyle,
   Linking,
-  SafeAreaView,
-  StatusBar,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { Feather, MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -20,9 +21,55 @@ import SearchInput from "../components/SearchInput";
 type FontWeight = "700" | "600" | "500" | "bold" | "semi-bold" | string;
 type StatusType =
   | "صادر شده"
-  | "ارجاع شده از صندوق"
+  | "ارجاع از صندوق"
   | "پیش فاکتور"
-  | "درحال ویرایش";
+  | "لغو شده";
+
+// API response interface based on the JSON file
+interface InvoiceApiResponse {
+  Items: InvoiceItem[];
+  Page: number;
+  PageSize: number;
+  TotalCount: number;
+  TotalPages: number;
+}
+
+interface InvoiceItem {
+  InvoiceId: number;
+  PersonId: number;
+  PersonFullName: string;
+  PersonMobile: string;
+  ApplicationUserId: number;
+  ApplicationUserName: string;
+  InvoiceDate: string;
+  ShamsiInvoiceDate: string;
+  PaymentType: number;
+  State: number;
+  TotalAmount: number;
+  Description: string;
+  InsertDate: string;
+}
+
+// New interface for the count API response
+interface InvoiceCountItem {
+  State: number;
+  StateName: string;
+  InvoiceCount: number;
+}
+
+// Mapping payment types and states to human-readable values
+const paymentTypeMap: Record<number, string> = {
+  1: "نقدی",
+  2: "اعتباری",
+  3: "چک",
+};
+
+const stateMap: Record<number, StatusType> = {
+  1: "پیش فاکتور",
+  2: "صادر شده",
+  3: "ارجاع از صندوق",
+  4: "لغو شده",
+};
 
 interface InspectionItem {
   id: string;
@@ -34,6 +81,7 @@ interface InspectionItem {
   sellerPhone: string;
   description?: string;
   status?: StatusType;
+  amount?: number;
 }
 
 const getFontFamily = (baseFont: string, weight: FontWeight): string => {
@@ -54,11 +102,18 @@ const getFontFamily = (baseFont: string, weight: FontWeight): string => {
 };
 
 const convertToPersianNumbers = (text: string | number): string => {
-  if (!text) return "";
+  if (!text && text !== 0) return "";
   const persianDigits = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
   return String(text).replace(
     /[0-9]/g,
     (digit) => persianDigits[parseInt(digit)]
+  );
+};
+
+// Format currency in Toman with Persian digits
+const formatCurrency = (amount: number): string => {
+  return convertToPersianNumbers(
+    amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
   );
 };
 
@@ -76,6 +131,7 @@ interface PurchaseInfoCardProps {
   date?: string;
   address?: string;
   note?: string;
+  amount?: number;
   gradientColors?: string[];
   containerStyle?: ViewStyle;
   status?: StatusType;
@@ -91,6 +147,7 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
   date = "",
   address = "",
   note = "",
+  amount = 0,
   gradientColors = [colors.secondary, colors.primary],
   containerStyle,
   status,
@@ -106,11 +163,11 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
     switch (status) {
       case "صادر شده":
         return colors.success || "#4CAF50";
-      case "ارجاع شده از صندوق":
+      case "ارجاع از صندوق":
         return colors.warning || "#FFA500";
       case "پیش فاکتور":
         return colors.info || "#3498db";
-      case "درحال ویرایش":
+      case "لغو شده":
         return colors.danger || "#FF0000";
       default:
         return colors.medium || "#9e9e9e";
@@ -159,22 +216,41 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
         </LinearGradient>
 
         <View style={styles.purchaseContent}>
-          {date && (
+          {/* Invoice Number Section */}
+          {/* {invoiceNumber && (
             <View style={styles.purchaseRow}>
               <View style={styles.purchaseItem}>
                 <MaterialIcons
-                  name="event"
+                  name="receipt"
                   size={18}
                   color={colors.secondary || "#6c5ce7"}
                 />
                 <View style={styles.purchaseTextContainer}>
-                  <Text style={styles.secondaryLabel}>تاریخ:</Text>
-                  <Text style={styles.secondaryValue}>
-                    {convertToPersianNumbers(date)}
-                  </Text>
+                  <Text style={styles.secondaryLabel}>شماره:</Text>
+                  <Text style={styles.secondaryValue}>{convertToPersianNumbers(invoiceNumber)}</Text>
                 </View>
               </View>
             </View>
+          )} */}
+
+          {/* Date Section on a separate row */}
+          {date && (
+            <>
+              <View style={styles.divider} />
+              <View style={styles.purchaseRow}>
+                <View style={styles.purchaseItem}>
+                  <MaterialIcons
+                    name="event"
+                    size={18}
+                    color={colors.secondary || "#6c5ce7"}
+                  />
+                  <View style={styles.purchaseTextContainer}>
+                    <Text style={styles.secondaryLabel}>تاریخ:</Text>
+                    <Text style={styles.secondaryValue}>{convertToPersianNumbers(date)}</Text>
+                  </View>
+                </View>
+              </View>
+            </>
           )}
 
           <View style={styles.divider} />
@@ -188,7 +264,9 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
               />
               <View style={styles.purchaseTextContainer}>
                 <Text style={styles.secondaryLabel}>خریدار:</Text>
-                <Text style={styles.secondaryValue}>{buyer.name}</Text>
+                <Text style={styles.secondaryValue}>
+                  {buyer.name || "نامشخص"}
+                </Text>
               </View>
             </View>
             {buyer.phone && (
@@ -232,6 +310,27 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
             )}
           </View>
 
+          {amount > 0 && (
+            <>
+              <View style={styles.divider} />
+              <View style={styles.purchaseRow}>
+                <View style={styles.purchaseItem}>
+                  <MaterialIcons
+                    name="attach-money"
+                    size={18}
+                    color={colors.secondary || "#6c5ce7"}
+                  />
+                  <View style={styles.purchaseTextContainer}>
+                    <Text style={styles.secondaryLabel}>مبلغ کل:</Text>
+                    <Text style={styles.secondaryValue}>
+                      {formatCurrency(amount)} ریال
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </>
+          )}
+
           {address && (
             <>
               <View style={styles.divider} />
@@ -249,7 +348,7 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
             </>
           )}
 
-          {note && (
+          {note && note.trim() !== "" && (
             <>
               <View style={styles.divider} />
               <View style={styles.noteContainer}>
@@ -272,59 +371,108 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
 };
 
 const IssuedInvoices: React.FC = () => {
-  const [items, setItems] = useState<InspectionItem[]>([
-    {
-      id: "1",
-      buyerName: "جناب آقای سهرابی",
-      buyerPhone: "09171274963",
-      invoiceNumber: "25758",
-      date: "1403/8/22",
-      sellerName: "مهدی رزاق پور",
-      sellerPhone: "09123583467",
-      status: "صادر شده",
-      description: "فاکتور به درخواست مشتری لغو شده است",
-    },
-    {
-      id: "2",
-      buyerName: "آقای اصغر باقری",
-      buyerPhone: "09123165352",
-      invoiceNumber: "76609",
-      date: "1403/8/22",
-      sellerName: "دنیا ناصری",
-      sellerPhone: "09139386498",
-      description:
-        "توضیحات: سفارش از پکیج کارا ۱۴ بابت ۱۱۲۸/۶۴ بابت اعتباری خواهه متری ۳۵۲ سفارش از کارخانه استیل ۳۵ بابت با مولد (شش ماهه متری ۲۵۰ اسفارش از کارخانه اترانزیت درجه دو بابت با مقدار ۲۲۷/۵۶ متری ۱۵۰ اترانزیت نرده کامفیل متری ۳۰۰ بابت سه پایل ۱۹۴/۹۲",
-      status: "ارجاع شده از صندوق",
-    },
-    {
-      id: "3",
-      buyerName: "آقای محمد حیدری",
-      buyerPhone: "09198045870",
-      invoiceNumber: "78317",
-      date: "1403/8/19",
-      sellerName: "محمدرضا نکونام",
-      sellerPhone: "09304052520",
-      status: "پیش فاکتور",
-      description: "فاکتور به درخواست مشتری لغو شده است",
-    },
-    {
-      id: "4",
-      buyerName: "خانم زهرا محمدی",
-      buyerPhone: "09122348765",
-      invoiceNumber: "89725",
-      date: "1403/8/25",
-      sellerName: "علی حسینی",
-      sellerPhone: "09361237890",
-      description: "فاکتور به درخواست مشتری لغو شده است",
-      status: "درحال ویرایش",
-    },
-  ]);
-
+  const [items, setItems] = useState<InspectionItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [searchText, setSearchText] = useState<string>("");
   const [activeTab, setActiveTab] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+  // New state for storing tab counts
+  const [statusCounts, setStatusCounts] = useState<Record<number, number>>({
+    1: 0, // پیش فاکتور
+    2: 0, // صادر شده
+    3: 0, // ارجاع از صندوق
+    4: 0, // لغو شده
+  });
+
+  useEffect(() => {
+    fetchInvoices();
+    fetchInvoiceCounts();
+  }, [currentPage]);
+
+  // New function to fetch invoice counts
+  const fetchInvoiceCounts = async () => {
+    try {
+      const response = await fetch(
+        `${appConfig.mobileApi}Invoice/GetCount`
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data: InvoiceCountItem[] = await response.json();
+
+      // Convert the array to a record for easier access
+      const countsRecord: Record<number, number> = {};
+      data.forEach(item => {
+        countsRecord[item.State] = item.InvoiceCount;
+      });
+
+      setStatusCounts(countsRecord);
+    } catch (error) {
+      console.error("Error fetching invoice counts:", error);
+    }
+  };
+
+  const fetchInvoices = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `${appConfig.mobileApi}Invoice/GetAll?page=${currentPage}&pageSize=20`
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data: InvoiceApiResponse = await response.json();
+
+      // Map API data to our component's format
+      const mappedItems: InspectionItem[] = data.Items.map((item) => ({
+        id: item.InvoiceId.toString(),
+        buyerName: item.PersonFullName.trim() || "مشتری",
+        buyerPhone: item.PersonMobile,
+        invoiceNumber: item.InvoiceId.toString(),
+        date: item.ShamsiInvoiceDate,
+        sellerName: item.ApplicationUserName,
+        sellerPhone: "", // API doesn't provide seller phone
+        description: item.Description,
+        status: stateMap[item.State] || "صادر شده",
+        amount: item.TotalAmount,
+      }));
+
+      setItems(mappedItems);
+      setTotalPages(data.TotalPages);
+
+    } catch (error) {
+      console.error("Error fetching invoices:", error);
+      Alert.alert(
+        "خطا",
+        "مشکلی در دریافت اطلاعات فاکتورها رخ داده است. لطفا دوباره تلاش کنید."
+      );
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    setCurrentPage(1);
+    fetchInvoices();
+    fetchInvoiceCounts();
+  };
+
+  const handleLoadMore = () => {
+    if (currentPage < totalPages && !loading) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
 
   const handleSearch = () => {
-    console.log("Search button pressed with text:", searchText);
+    fetchInvoices();
   };
 
   const getFilteredItems = () => {
@@ -333,41 +481,49 @@ const IssuedInvoices: React.FC = () => {
     if (activeTab === "issued") {
       filtered = items.filter((item) => item.status === "صادر شده");
     } else if (activeTab === "referred") {
-      filtered = items.filter((item) => item.status === "ارجاع شده از صندوق");
+      filtered = items.filter((item) => item.status === "ارجاع از صندوق");
     } else if (activeTab === "quote") {
       filtered = items.filter((item) => item.status === "پیش فاکتور");
-    } else if (activeTab === "editing") {
-      filtered = items.filter((item) => item.status === "درحال ویرایش");
+    } else if (activeTab === "canceled") {
+      filtered = items.filter((item) => item.status === "لغو شده");
     }
 
     if (searchText) {
       filtered = filtered.filter(
         (item) =>
-          item.buyerName.includes(searchText) ||
-          item.sellerName.includes(searchText) ||
-          item.invoiceNumber.includes(searchText)
+          (item.buyerName && item.buyerName.includes(searchText)) ||
+          (item.sellerName && item.sellerName.includes(searchText)) ||
+          (item.invoiceNumber && item.invoiceNumber.includes(searchText))
       );
     }
 
     return filtered;
   };
 
+  // Modified function to get count by status using the API data
   const getCountByStatus = (status: StatusType | null) => {
     if (status === null) {
-      return items.length;
+      // Sum all counts for "all" tab
+      return Object.values(statusCounts).reduce((sum, count) => sum + count, 0);
     }
-    return items.filter((item) => item.status === status).length;
+
+    // Find the state number for this status name
+    const stateNumber = Object.entries(stateMap).find(
+      ([_, stateName]) => stateName === status
+    )?.[0];
+
+    return stateNumber ? statusCounts[Number(stateNumber)] || 0 : 0;
   };
 
   const getColorsByStatus = (status?: StatusType): string[] => {
     switch (status) {
       case "صادر شده":
         return ["#4CAF50", "#2E7D32"];
-      case "ارجاع شده از صندوق":
+      case "ارجاع از صندوق":
         return ["#FFA726", "#EF6C00"];
       case "پیش فاکتور":
         return ["#42A5F5", "#1565C0"];
-      case "درحال ویرایش":
+      case "لغو شده":
         return ["#EF5350", "#C62828"];
       default:
         return ["#9E9E9E", "#616161"];
@@ -385,9 +541,19 @@ const IssuedInvoices: React.FC = () => {
         date={item.date}
         note={item.description}
         status={item.status}
+        amount={item.amount}
         gradientColors={getColorsByStatus(item.status)}
         onPress={() => console.log(`Card ${item.id} pressed`)}
       />
+    );
+  };
+
+  const renderFooter = () => {
+    if (!loading) return null;
+    return (
+      <View style={styles.footer}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
     );
   };
 
@@ -406,29 +572,30 @@ const IssuedInvoices: React.FC = () => {
         </View>
 
         <View style={styles.tabContainer}>
+          {/* Updated tab for "لغو شده" (Canceled) instead of "درحال ویرایش" (Editing) */}
           <TouchableOpacity
             style={[
               styles.tab,
-              activeTab === "editing" && styles.editingActiveTab,
+              activeTab === "canceled" && styles.canceledActiveTab,
             ]}
-            onPress={() => setActiveTab("editing")}
+            onPress={() => setActiveTab("canceled")}
           >
             <Text
               style={[
                 styles.tabText,
-                activeTab === "editing" && styles.activeTabText,
+                activeTab === "canceled" && styles.activeTabText,
               ]}
             >
-              درحال ویرایش
+              لغو شده
             </Text>
             <Text
               style={[
                 styles.countText,
-                activeTab === "editing" && styles.activeCountText,
+                activeTab === "canceled" && styles.activeCountText,
                 { color: "#EF5350" },
               ]}
             >
-              {convertToPersianNumbers(getCountByStatus("درحال ویرایش"))}
+              {convertToPersianNumbers(getCountByStatus("لغو شده"))}
             </Text>
           </TouchableOpacity>
 
@@ -454,7 +621,7 @@ const IssuedInvoices: React.FC = () => {
                 { color: "#FFA500" },
               ]}
             >
-              {convertToPersianNumbers(getCountByStatus("ارجاع شده از صندوق"))}
+              {convertToPersianNumbers(getCountByStatus("ارجاع از صندوق"))}
             </Text>
           </TouchableOpacity>
 
@@ -532,13 +699,23 @@ const IssuedInvoices: React.FC = () => {
         </View>
 
         <View style={styles.listContainer}>
-          {getFilteredItems().length > 0 ? (
+          {loading && items.length === 0 ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text style={styles.loadingText}>در حال دریافت فاکتورها...</Text>
+            </View>
+          ) : getFilteredItems().length > 0 ? (
             <FlatList
               data={getFilteredItems()}
               renderItem={renderItem}
               keyExtractor={(item) => item.id}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{ padding: 10 }}
+              onRefresh={handleRefresh}
+              refreshing={refreshing}
+              onEndReached={handleLoadMore}
+              onEndReachedThreshold={0.5}
+              ListFooterComponent={renderFooter}
             />
           ) : (
             <View style={styles.emptyContainer}>
@@ -609,7 +786,7 @@ const styles = StyleSheet.create({
   quoteActiveTab: {
     backgroundColor: "#E3F2FD",
   },
-  editingActiveTab: {
+  canceledActiveTab: {
     backgroundColor: "#FFEBEE",
   },
   allActiveTab: {
@@ -638,6 +815,17 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingBottom: 10,
   },
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  loadingText: {
+    fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
+    fontSize: 16,
+    color: "#6B7280",
+    marginTop: 12,
+  },
   emptyContainer: {
     flex: 1,
     alignItems: "center",
@@ -650,6 +838,11 @@ const styles = StyleSheet.create({
     color: "#6B7280",
     marginTop: 12,
     textAlign: "center",
+  },
+  footer: {
+    padding: 10,
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   purchaseCard: {

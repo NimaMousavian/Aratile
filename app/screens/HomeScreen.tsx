@@ -44,6 +44,58 @@ const getFontFamily = (baseFont: string, weight: FontWeight): string => {
   return baseFont;
 };
 
+// تابع کمکی برای اصلاح نام صفحات و ناوبری امن
+const safeNavigate = (navigation: any, screenName: string, params?: any) => {
+  console.log(`Attempting to navigate to: ${screenName}`);
+
+  // بررسی و اصلاح نام صفحات در صورت وجود خطای تایپی
+  let correctedName = screenName;
+
+  // اصلاح نام‌های رایج که ممکن است اشتباه تایپ شوند
+  if (screenName === "IssuingNewInvoic") {
+    correctedName = "IssuingNewInvoice";
+    console.log(`Corrected screen name from ${screenName} to ${correctedName}`);
+  }
+
+  // چک کردن سایر ناوبری‌های رایج
+  const commonScreens: { [key: string]: string } = {
+    "IssuedInvoic": "IssuedInvoices",
+    "SupplyReques": "SupplyRequest",
+    "SupplyRequestLis": "SupplyRequestList",
+    "ReceiveNewInvoic": "ReceiveNewInvoice",
+    "StatusFilterScree": "StatusFilterScreen",
+    "B2BFieldMarkete": "B2BFieldMarketer",
+    "B2CFieldMarkete": "B2CFieldMarketer"
+  };
+
+  // بررسی و اصلاح موارد شناخته شده
+  if (commonScreens[screenName]) {
+    correctedName = commonScreens[screenName];
+    console.log(`Corrected screen name from ${screenName} to ${correctedName}`);
+  }
+
+  try {
+    // کد جلوگیری از خطا با چک کردن نام دقیق
+    if (correctedName === "IssuingNewInvoice") {
+      console.log("Navigating to IssuingNewInvoice with explicit parameters");
+      navigation.navigate(correctedName, { scannedCode: undefined });
+    } else {
+      // سایر صفحات
+      navigation.navigate(correctedName, params);
+    }
+  } catch (error) {
+    console.error(`Navigation error: ${error}`);
+
+    // تلاش برای ناوبری به صفحه اصلی در صورت خطا
+    try {
+      console.log("Fallback to Home navigation");
+      navigation.navigate("Home");
+    } catch (fallbackError) {
+      console.error(`Even fallback navigation failed: ${fallbackError}`);
+    }
+  }
+};
+
 const initialItems: MenuItem[] = [
   {
     id: 1,
@@ -241,7 +293,7 @@ const HomeScreen: React.FC = () => {
       }
     }
 
-    return () => {};
+    return () => { };
   }, [isDragging]);
 
   useEffect(() => {
@@ -440,7 +492,7 @@ const HomeScreen: React.FC = () => {
 
       const distance = Math.sqrt(
         Math.pow(position.x - currentPosition.x, 2) +
-          Math.pow(position.y - currentPosition.y, 2)
+        Math.pow(position.y - currentPosition.y, 2)
       );
 
       if (distance < minDistance) {
@@ -746,21 +798,12 @@ const HomeScreen: React.FC = () => {
             onLongPress={onLongPress}
             delayLongPress={200}
             activeOpacity={0.7}
-            // In the renderItem function of HomeScreen.js
             onPress={() => {
               if (!isDragging && item.screenName) {
                 console.log("Navigating to:", item.screenName);
 
-                // Add this check to correct any typos
-                if (item.screenName === "IssuingNewInvoice") {
-                  navigation.navigate(
-                    "IssuingNewInvoice" as keyof RootStackParamList
-                  );
-                } else {
-                  navigation.navigate(
-                    item.screenName as keyof RootStackParamList
-                  );
-                }
+                // استفاده از تابع کمکی safeNavigate
+                safeNavigate(navigation, item.screenName);
               }
             }}
           >
@@ -794,7 +837,7 @@ const HomeScreen: React.FC = () => {
       <View style={styles.headerBox}>
         <TouchableOpacity
           style={styles.infoBox}
-          onPress={() => navigation.navigate("Profile")}
+          onPress={() => safeNavigate(navigation, "Profile")}
         >
           <View style={styles.avatarCircle}>
             <MaterialIcons name="person" size={26} color="#666666" />
@@ -944,6 +987,7 @@ const styles = StyleSheet.create({
     flexDirection: "row-reverse",
     justifyContent: "center",
   },
+
   dragInstructionContainer: {
     backgroundColor: colors.light,
     paddingVertical: 12,

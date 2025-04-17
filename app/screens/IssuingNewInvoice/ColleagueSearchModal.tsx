@@ -423,7 +423,7 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
               <AppButton
                 title={"افزودن معرف جدید"}
                 onPress={() => navigation.navigate("AddNewColleague")}
-                style={{ width: "100%" }}
+                style={{ width: "50%" }}
                 color="success"
               />
 

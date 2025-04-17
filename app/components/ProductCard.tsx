@@ -39,6 +39,11 @@ interface IconConfig {
   color?: string;
 }
 
+interface ActionIconConfig extends IconConfig {
+  onPress?: () => void;
+  containerStyle?: StyleProp<ViewStyle>;
+}
+
 interface FieldItem {
   icon?: React.ComponentProps<typeof MaterialIcons>["name"];
   iconSize?: number;
@@ -49,6 +54,9 @@ interface FieldItem {
   valueColor?: string;
   valueStyle?: StyleProp<TextStyle>;
   containerStyle?: StyleProp<ViewStyle>;
+  divider?: boolean;
+  customStyle?: StyleProp<ViewStyle>;
+  isPriceField?: boolean; // Add a new property to identify the final price field
 }
 
 interface NoteConfig {
@@ -71,7 +79,6 @@ interface QrConfig {
 }
 
 interface ProductCardProps {
-
   title?: string;
   titleIcon?: IconConfig;
   fields: FieldItem[];
@@ -80,26 +87,26 @@ interface ProductCardProps {
   noteConfig?: NoteConfig;
   qrConfig?: QrConfig;
 
+  // New action icons configuration
+  editIcon?: ActionIconConfig;
+  deleteIcon?: ActionIconConfig;
 
   containerStyle?: StyleProp<ViewStyle>;
   titleContainerStyle?: StyleProp<ViewStyle>;
   titleStyle?: StyleProp<TextStyle>;
 
-
   onPress?: () => void;
-
+  onLongPress?: () => void;
 
   showTitle?: boolean;
 }
 
 
 const ProductCard: React.FC<ProductCardProps> = ({
-
   title,
   titleIcon,
   fields = [],
   note,
-
 
   noteConfig = {
     show: true,
@@ -116,55 +123,116 @@ const ProductCard: React.FC<ProductCardProps> = ({
     iconColor: colors.secondary
   },
 
+  // New action icons with default values
+  editIcon,
+  deleteIcon,
+
   containerStyle,
   titleContainerStyle,
   titleStyle,
 
-
   onPress,
-
+  onLongPress,
 
   showTitle = true,
 }) => {
+  // Separate fields into regular fields and dividers
+  const regularFields = fields.filter(field => !field.divider);
+
+  // Find the index of the price field (if marked with isPriceField)
+  const priceFieldIndex = regularFields.findIndex(field => field.isPriceField);
+
+  // Organize fields into sections for rendering
+  const fieldsBeforePrice = priceFieldIndex > 0
+    ? regularFields.slice(0, priceFieldIndex)
+    : regularFields;
+
+  const priceField = priceFieldIndex >= 0 ? regularFields[priceFieldIndex] : null;
+  const fieldsAfterPrice = priceFieldIndex >= 0 && priceFieldIndex < regularFields.length - 1
+    ? regularFields.slice(priceFieldIndex + 1)
+    : [];
+
   return (
     <TouchableOpacity
       activeOpacity={onPress ? 0.7 : 1}
       onPress={onPress}
+      onLongPress={onLongPress}
       style={[
         styles.productCard,
         Platform.OS === 'android' && styles.androidCardAdjustment,
         containerStyle
       ]}
     >
-
       {showTitle && title && (
         <View style={[styles.productTitleContainer, titleContainerStyle]}>
           <View style={styles.productTitleRow}>
-            {titleIcon && (
-              <MaterialIcons
-                name={titleIcon.name}
-                size={titleIcon.size || 20}
-                color={titleIcon.color || colors.primary}
-                style={{ marginLeft: 8 }}
-              />
-            )}
-            <Text style={[styles.productTitle, titleStyle]}>{title}</Text>
+            <View style={styles.actionIconsContainer}>
+              {/* Edit Icon */}
+              {editIcon && (
+                <TouchableOpacity
+                  onPress={editIcon.onPress}
+                  style={[styles.iconCircle, { backgroundColor: "#fef2e0" }, editIcon.containerStyle]}
+                >
+                  <MaterialIcons
+                    name={editIcon.name || "edit"}
+                    size={editIcon.size || 22}
+                    color={editIcon.color || colors.warning}
+                  />
+                </TouchableOpacity>
+              )}
+
+              {/* Delete Icon */}
+              {deleteIcon && (
+                <TouchableOpacity
+                  onPress={deleteIcon.onPress}
+                  style={[styles.iconCircle, { backgroundColor: "#fee2e0" }, deleteIcon.containerStyle]}
+                >
+                  <MaterialIcons
+                    name={deleteIcon.name || "delete"}
+                    size={deleteIcon.size || 22}
+                    color={deleteIcon.color || colors.danger}
+                  />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            <View style={styles.titleWithIconContainer}>
+              {titleIcon && (
+                <MaterialIcons
+                  name={titleIcon.name}
+                  size={titleIcon.size || 20}
+                  color={titleIcon.color || colors.primary}
+                  style={{ marginLeft: 8 }}
+                />
+              )}
+              <Text style={[styles.productTitle, titleStyle]}>{title}</Text>
+            </View>
           </View>
         </View>
       )}
 
-
       <View style={styles.productDetailsContainer}>
         <View style={styles.infoWithImageContainer}>
-          <View style={styles.infoSection}>
+          {/* QR code positioned next to product details */}
+          {qrConfig.show && (
+            <View style={[styles.productImagePlaceholder, qrConfig.containerStyle]}>
+              <MaterialIcons
+                name={qrConfig.icon || "qr-code-2"}
+                size={qrConfig.iconSize}
+                color={qrConfig.iconColor}
+              />
+            </View>
+          )}
 
-            {fields.map((field, index) => (
+          <View style={styles.infoSection}>
+            {/* Render fields before price field */}
+            {fieldsBeforePrice.map((field, index) => (
               <View
-                key={index}
+                key={`field-before-${index}`}
                 style={[
                   styles.fieldContainer,
                   field.containerStyle,
-                  index < fields.length - 1 && styles.fieldMarginBottom
+                  index < fieldsBeforePrice.length - 1 && styles.fieldMarginBottom
                 ]}
               >
                 {field.icon && (
@@ -195,18 +263,114 @@ const ProductCard: React.FC<ProductCardProps> = ({
               </View>
             ))}
           </View>
-
-
-          {qrConfig.show && (
-            <View style={[styles.productImagePlaceholder, qrConfig.containerStyle]}>
-              <MaterialIcons
-                name={qrConfig.icon || "qr-code-2"}
-                size={qrConfig.iconSize}
-                color={qrConfig.iconColor}
-              />
-            </View>
-          )}
         </View>
+
+        {/* Divider before price field - full width outside of infoWithImageContainer */}
+        {priceField && (
+          <View style={styles.fullWidthDivider} />
+        )}
+
+        {/* Price field - rendered separately to ensure it's after the divider */}
+        {priceField && (
+          <View style={styles.infoWithImageContainer}>
+            {/* Empty space to align with other fields */}
+            {qrConfig.show && <View style={{ width: 80, marginRight: 12 }} />}
+
+            <View style={styles.infoSection}>
+              <View
+                style={[
+                  styles.fieldContainer,
+                  priceField.containerStyle,
+                  fieldsAfterPrice.length > 0 && styles.fieldMarginBottom
+                ]}
+              >
+                {priceField.icon && (
+                  <MaterialIcons
+                    name={priceField.icon}
+                    size={priceField.iconSize || 18}
+                    color={priceField.iconColor || colors.secondary}
+                  />
+                )}
+
+                {priceField.label && (
+                  <Text style={[
+                    styles.secondaryLabel,
+                    styles.iconTextSpacing,
+                    priceField.labelStyle
+                  ]}>
+                    {priceField.label}
+                  </Text>
+                )}
+
+                <Text style={[
+                  styles.fieldValue,
+                  { color: priceField.valueColor || colors.dark },
+                  priceField.valueStyle
+                ]}>
+                  {priceField.value}
+                </Text>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* Render fields after price field */}
+        {fieldsAfterPrice.length > 0 && (
+          <View style={styles.infoWithImageContainer}>
+            {/* Empty space to align with other fields */}
+            {qrConfig.show && <View style={{ width: 80, marginRight: 12 }} />}
+
+            <View style={styles.infoSection}>
+              {fieldsAfterPrice.map((field, index) => (
+                <View
+                  key={`field-after-${index}`}
+                  style={[
+                    styles.fieldContainer,
+                    field.containerStyle,
+                    index < fieldsAfterPrice.length - 1 && styles.fieldMarginBottom
+                  ]}
+                >
+                  {field.icon && (
+                    <MaterialIcons
+                      name={field.icon}
+                      size={field.iconSize || 18}
+                      color={field.iconColor || colors.secondary}
+                    />
+                  )}
+
+                  {field.label && (
+                    <Text style={[
+                      styles.secondaryLabel,
+                      styles.iconTextSpacing,
+                      field.labelStyle
+                    ]}>
+                      {field.label}
+                    </Text>
+                  )}
+
+                  <Text style={[
+                    styles.fieldValue,
+                    { color: field.valueColor || colors.dark },
+                    field.valueStyle
+                  ]}>
+                    {field.value}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Render divider fields that are explicitly added */}
+        {fields.filter(field => field.divider).map((field, index) => (
+          <View
+            key={`explicit-divider-${index}`}
+            style={[
+              styles.fullWidthDivider,
+              field.customStyle
+            ]}
+          />
+        ))}
 
         {noteConfig.show && note && (
           <View style={[styles.productCodeContainer, noteConfig.containerStyle]}>
@@ -268,9 +432,14 @@ const styles = StyleSheet.create({
     borderBottomColor: "#e1e1e1",
   },
   productTitleRow: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+  },
+  titleWithIconContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
   },
   productTitle: {
     fontSize: 18,
@@ -279,16 +448,39 @@ const styles = StyleSheet.create({
     textAlign: "right",
     flex: 1,
   },
+  actionIconsContainer: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+  },
+  iconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+    marginHorizontal: 5,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+  },
   productDetailsContainer: {
     padding: 12,
   },
   infoWithImageContainer: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
+    alignItems: "flex-start",
     justifyContent: "space-between",
-    alignItems: "center",
   },
   infoSection: {
     flex: 1,
+  },
+  productImagePlaceholder: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    backgroundColor: "#f8f8f8",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
   },
   fieldContainer: {
     flexDirection: "row-reverse",
@@ -310,14 +502,18 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: getFontFamily("Yekan_Bakh_Bold", "500"),
   },
-  productImagePlaceholder: {
-    width: 80,
-    height: 80,
-    backgroundColor: colors.light,
-    borderRadius: 6,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
+  divider: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.gray,
+    marginVertical: 10,
+    width: '100%',
+    alignSelf: 'stretch'
+  },
+  fullWidthDivider: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.gray,
+    marginVertical: 10,
+    width: '100%',
   },
   productCodeContainer: {
     flexDirection: "column",
@@ -344,5 +540,6 @@ const styles = StyleSheet.create({
     paddingRight: 22,
   },
 });
+
 
 export default ProductCard;

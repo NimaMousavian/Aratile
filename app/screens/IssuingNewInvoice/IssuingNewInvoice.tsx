@@ -7,11 +7,10 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
-  Alert,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import ProductSearchDrawer from "./ProductSearchDrawer";
 
 import ColleagueBottomSheet from "../IssuingNewInvoice/ColleagueSearchModal";
@@ -21,8 +20,8 @@ import AppTextInput from "../../components/TextInput";
 import Toast from "../../components/Toast";
 import ProductPropertiesDrawer from "./ProductProperties";
 import InvoiceTotalCalculator from "./InvoiceTotalCalculator";
+import InvoiceService from "./api/InvoiceService";
 
-// Utilities and Configuration
 import colors from "../../config/colors";
 import { toPersianDigits } from "../../utils/numberConversions";
 import useProductScanner from "../../Hooks/useProductScanner";
@@ -36,6 +35,15 @@ export interface Product {
   note?: string;
   manualCalculation?: boolean;
   hasColorSpectrum?: boolean;
+  measurementUnitName?: string;
+  propertyValue?: string;
+  rectifiedValue?: string;
+  boxCount?: number;
+  totalArea?: number;
+  selectedVariation?: {
+    id: number;
+    [key: string]: any;
+  };
 }
 
 interface Colleague {
@@ -45,37 +53,55 @@ interface Colleague {
 
 interface AppNavigationProp {
   navigate: (screen: string, params?: any) => void;
+  setParams: (params: any) => void;
 }
+
+const getFontFamily = (baseFont: string, weight: string): string => {
+  if (Platform.OS === "android") {
+    switch (weight) {
+      case "700":
+      case "bold":
+        return "Yekan_Bakh_Bold";
+      case "500":
+      case "600":
+      case "semi-bold":
+        return "Yekan_Bakh_Bold";
+      default:
+        return "Yekan_Bakh_Regular";
+    }
+  }
+  return baseFont;
+};
 
 const IssuingNewInvoice: React.FC = () => {
   const scrollViewRef = useRef<ScrollView>(null);
+  const route = useRoute();
+  const navigation = useNavigation<AppNavigationProp>();
 
   const {
     isLoading,
     selectedProducts,
-    handleProductSearch,
+    searchProduct,
     removeProduct,
     addProduct,
+    renderModal,
+    showModal,
+    showRemoveConfirmation,
+    editProduct
   } = useProductScanner();
 
-  const [showProductSearchDrawer, setShowProductSearchDrawer] =
-    useState<boolean>(false);
-  const [showProductProperties, setShowProductProperties] =
-    useState<boolean>(false);
+  const [showProductSearchDrawer, setShowProductSearchDrawer] = useState<boolean>(false);
+  const [showProductProperties, setShowProductProperties] = useState<boolean>(false);
   const [productToShow, setProductToShow] = useState<Product | null>(null);
-  const [selectedColleague, setSelectedColleague] = useState<Colleague | null>(
-    null
-  );
+  const [selectedColleague, setSelectedColleague] = useState<Colleague | null>(null);
   const [showColleagueSheet, setShowColleagueSheet] = useState<boolean>(false);
   const [invoiceNote, setInvoiceNote] = useState<string>("");
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const [toastVisible, setToastVisible] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string>("");
-  const [toastType, setToastType] = useState<
-    "success" | "error" | "warning" | "info"
-  >("error");
-
-  const navigation = useNavigation<AppNavigationProp>();
+  const [toastType, setToastType] = useState<"success" | "error" | "warning" | "info">("error");
 
   const showToast = (
     message: string,
@@ -91,31 +117,49 @@ const IssuingNewInvoice: React.FC = () => {
 
     setTimeout(() => {
       setProductToShow(product);
+      setIsEditing(false);
       setShowProductProperties(true);
     }, 300);
+  };
+
+  const handleEditProduct = (productId: number) => {
+    const productToEdit = selectedProducts.find(prod => prod.id === productId);
+    if (productToEdit) {
+      editProduct(productId);
+      setProductToShow(productToEdit);
+      setIsEditing(true);
+      setShowProductProperties(true);
+    }
   };
 
   const handleAddProduct = (
     product: Product,
     quantity: string,
     note: string,
-    manualCalculation: boolean
+    manualCalculation: boolean,
+    boxCount?: number
   ) => {
-    const quantityNum = parseFloat(quantity) || 0;
-    const unitPrice = product.price || 0;
+    let totalArea = product.totalArea;
+    if (boxCount && !totalArea && product.rectifiedValue) {
+      const rectifiedValue = parseFloat(product.rectifiedValue);
+      if (!isNaN(rectifiedValue)) {
+        totalArea = boxCount * rectifiedValue;
+      }
+    }
 
     const productWithProps = {
       ...product,
       quantity: quantity,
       note: note,
       manualCalculation: manualCalculation,
+      boxCount: boxCount,
+      totalArea: totalArea
     };
 
     if (addProduct(productWithProps)) {
-      showToast("محصول با موفقیت اضافه شد", "success");
+      showToast(isEditing ? "محصول با موفقیت ویرایش شد" : "محصول با موفقیت اضافه شد", "success");
       return true;
     } else {
-      showToast("خطا در افزودن محصول", "error");
       return false;
     }
   };
@@ -125,10 +169,11 @@ const IssuingNewInvoice: React.FC = () => {
 
     setTimeout(() => {
       setProductToShow(null);
+      setIsEditing(false);
     }, 500);
   };
 
-  const submitInvoice = () => {
+  const submitInvoice = async () => {
     if (!selectedColleague) {
       showToast("لطفاً ابتدا مشتری را انتخاب کنید", "warning");
       return;
@@ -139,7 +184,52 @@ const IssuingNewInvoice: React.FC = () => {
       return;
     }
 
-    Alert.alert("موفقیت", "فاکتور با موفقیت ثبت شد.");
+    // شروع فرآیند ارسال
+    setIsSubmitting(true);
+
+    try {
+      // آماده‌سازی داده‌های فاکتور
+      const invoiceData = {
+        personId: parseInt(selectedColleague.id),
+        discount: 0, // در صورت نیاز، تخفیف را از کامپوننت InvoiceTotalCalculator دریافت کنید
+        extra: 0, // در صورت نیاز، هزینه اضافی را از کامپوننت InvoiceTotalCalculator دریافت کنید
+        description: invoiceNote,
+        items: selectedProducts.map(product => ({
+          id: product.id,
+          variationId: product.hasColorSpectrum ? product.selectedVariation?.id : 0,
+          quantity: product.quantity,
+          note: product.note,
+          discount: 0,
+          extra: 0
+        }))
+      };
+
+      // ارسال فاکتور به سرور
+      const result = await InvoiceService.submitInvoice(invoiceData);
+
+      setIsSubmitting(false);
+
+      if (result.success) {
+        // نمایش پیام موفقیت با مدال اصلی
+        showModal(
+          "موفقیت",
+          "فاکتور با موفقیت ثبت شد.",
+          "check-circle"
+        );
+
+        // بازگشت به صفحه قبل پس از چند ثانیه
+        setTimeout(() => {
+          navigation.navigate('IssuedInvoices', { refresh: true });
+        }, 2000);
+      } else {
+        // نمایش پیام خطا
+        showToast(`خطا در ثبت فاکتور: ${result.error}`, "error");
+      }
+    } catch (error) {
+      setIsSubmitting(false);
+      showToast("خطایی در فرآیند ثبت فاکتور رخ داد. لطفاً دوباره تلاش کنید.", "error");
+      console.error("خطا در ارسال فاکتور:", error);
+    }
   };
 
   useEffect(() => {
@@ -147,6 +237,72 @@ const IssuingNewInvoice: React.FC = () => {
       setShowProductProperties(false);
     }
   }, [showProductSearchDrawer]);
+
+  const getProductFields = (product: Product) => {
+    const fields = [
+      {
+        icon: "qr-code",
+        iconColor: colors.secondary,
+        label: "کد:",
+        value: toPersianDigits(product.code || ""),
+      },
+      {
+        icon: "straighten",
+        iconColor: colors.secondary,
+        label: "مقدار:",
+        value: toPersianDigits(product.quantity) + (product.measurementUnitName ? ` ${product.measurementUnitName}` : ""),
+      },
+      {
+        icon: "attach-money",
+        iconColor: colors.secondary,
+        label: "قیمت هر واحد:",
+        value:
+          toPersianDigits((product.price || 0).toLocaleString()) +
+          " ریال",
+      },
+    ];
+
+    if (product.boxCount !== undefined && product.boxCount > 0) {
+      let totalAreaText = "";
+      if (product.rectifiedValue) {
+        const rectifiedValue = parseFloat(product.rectifiedValue);
+        if (!isNaN(rectifiedValue) && rectifiedValue > 0) {
+          const totalArea = product.totalArea || (product.boxCount * rectifiedValue);
+          totalAreaText = ` (${toPersianDigits(totalArea.toFixed(2))}${product.measurementUnitName ? ` ${product.measurementUnitName}` : ""})`;
+        }
+      }
+
+      fields.push({
+        icon: "shopping-bag",
+        iconColor: colors.secondary,
+        label: "تعداد کارتن:",
+        value: toPersianDigits(product.boxCount.toString()) + " عدد" + totalAreaText,
+      });
+
+      // اصلاح محاسبه قیمت نهایی
+      let finalPrice = 0;
+      if (product.totalArea && product.price) {
+        finalPrice = product.price * product.totalArea;
+      } else {
+        finalPrice = (product.price || 0) * parseFloat(product.quantity || "0");
+      }
+
+      fields.push({
+        icon: "monetization-on",
+        iconColor: colors.secondary,
+        label: "قیمت نهایی:",
+        value: toPersianDigits(finalPrice.toLocaleString()) + " ریال",
+        valueStyle: {
+          fontFamily: getFontFamily("Yekan_Bakh_Bold", "600"),
+          fontSize: 18,
+          color: colors.primary,
+        },
+        isPriceField: true
+      });
+    }
+
+    return fields;
+  };
 
   return (
     <>
@@ -158,6 +314,8 @@ const IssuingNewInvoice: React.FC = () => {
         type={toastType}
         onDismiss={() => setToastVisible(false)}
       />
+
+      {renderModal()}
 
       <View style={styles.container}>
         <View style={styles.customerContainer}>
@@ -249,28 +407,7 @@ const IssuingNewInvoice: React.FC = () => {
               <ProductCard
                 key={product.id}
                 title={toPersianDigits(product.title)}
-                fields={[
-                  {
-                    icon: "qr-code",
-                    iconColor: colors.secondary,
-                    label: "کد:",
-                    value: toPersianDigits(product.code || ""),
-                  },
-                  {
-                    icon: "straighten",
-                    iconColor: colors.secondary,
-                    label: "مقدار:",
-                    value: toPersianDigits(product.quantity),
-                  },
-                  {
-                    icon: "attach-money",
-                    iconColor: colors.secondary,
-                    label: "قیمت هر واحد:",
-                    value:
-                      toPersianDigits((product.price || 0).toLocaleString()) +
-                      " ریال",
-                  },
-                ]}
+                fields={getProductFields(product)}
                 note={product.note ? toPersianDigits(product.note) : ""}
                 noteConfig={{
                   show: !!product.note && product.note !== "-",
@@ -280,28 +417,35 @@ const IssuingNewInvoice: React.FC = () => {
                 }}
                 qrConfig={{
                   show: true,
-                  icon: "qr-code-2",
+                  icon: "camera", // تغییر آیکون به دوربین/عکس
                   iconSize: 36,
                   iconColor: colors.secondary,
+                }}
+                editIcon={{
+                  name: "edit",
+                  size: 22,
+                  color: colors.warning,
+                  onPress: () => handleEditProduct(product.id),
+                  containerStyle: styles.iconCircleSmall, // اضافه کردن استایل دایره
+                }}
+                deleteIcon={{
+                  name: "delete",
+                  size: 22,
+                  color: colors.danger,
+                  onPress: () => {
+                    showRemoveConfirmation(product.id, () => {
+                      showToast("محصول با موفقیت حذف شد", "info");
+                    });
+                  },
+                  containerStyle: styles.iconCircleSmall, // اضافه کردن استایل دایره
                 }}
                 containerStyle={
                   Platform.OS === "android" ? styles.androidCardAdjustment : {}
                 }
                 onLongPress={() => {
-                  Alert.alert(
-                    "حذف محصول",
-                    "آیا از حذف این محصول اطمینان دارید؟",
-                    [
-                      { text: "خیر", style: "cancel" },
-                      {
-                        text: "بله",
-                        onPress: () => {
-                          removeProduct(product.id);
-                          showToast("محصول با موفقیت حذف شد", "info");
-                        },
-                      },
-                    ]
-                  );
+                  showRemoveConfirmation(product.id, () => {
+                    showToast("محصول با موفقیت حذف شد", "info");
+                  });
                 }}
               />
             ))}
@@ -325,11 +469,14 @@ const IssuingNewInvoice: React.FC = () => {
 
           {selectedProducts.length > 0 && (
             <View style={styles.invoiceTotalContainer}>
-              <InvoiceTotalCalculator products={selectedProducts} />
+              <InvoiceTotalCalculator
+                products={selectedProducts}
+                showOnlyTotal={true} // فقط قیمت نهایی را نشان بده
+                includeTax={false} // مالیات را در جمع لحاظ نکن
+              />
             </View>
           )}
 
-          {/* Description input inside ScrollView, appears after adding products */}
           {selectedProducts.length > 0 && (
             <View style={styles.notesInputContainer}>
               <AppTextInput
@@ -381,7 +528,26 @@ const IssuingNewInvoice: React.FC = () => {
 
               <TouchableOpacity
                 style={styles.iconButton}
-                onPress={() => navigation.navigate("BarCodeScanner")}
+                onPress={() => {
+                  navigation.navigate("BarCodeScanner", {
+                    onReturn: (scannedProduct: Product) => {
+                      if (scannedProduct) {
+                        // افزودن محصول اسکن شده به لیست محصولات
+                        const success = addProduct(scannedProduct);
+                        if (success) {
+                          showToast(`محصول "${scannedProduct.title}" با موفقیت به فاکتور اضافه شد`, "success");
+
+                          // اسکرول به پایین برای نمایش محصول جدید
+                          setTimeout(() => {
+                            if (scrollViewRef.current) {
+                              scrollViewRef.current.scrollToEnd({ animated: true });
+                            }
+                          }, 500);
+                        }
+                      }
+                    }
+                  });
+                }}
               >
                 <View
                   style={[
@@ -405,9 +571,16 @@ const IssuingNewInvoice: React.FC = () => {
               <TouchableOpacity
                 style={styles.submitButton}
                 onPress={submitInvoice}
+                disabled={isSubmitting}
               >
-                <MaterialIcons name="done" size={28} color="#FFFFFF" />
-                <Text style={styles.submitButtonText}>ثبت</Text>
+                {isSubmitting ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <>
+                    <MaterialIcons name="done" size={28} color="#FFFFFF" />
+                    <Text style={styles.submitButtonText}>ثبت</Text>
+                  </>
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -417,7 +590,7 @@ const IssuingNewInvoice: React.FC = () => {
           visible={showProductSearchDrawer}
           onClose={() => setShowProductSearchDrawer(false)}
           onProductSelect={handleProductSelected}
-          searchProduct={handleProductSearch}
+          searchProduct={searchProduct}
           onError={showToast}
         />
 
@@ -428,6 +601,7 @@ const IssuingNewInvoice: React.FC = () => {
             product={productToShow}
             onSave={handleAddProduct}
             onError={showToast}
+            isEditing={isEditing}
           />
         )}
       </View>
@@ -502,6 +676,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
     borderWidth: 1,
     borderColor: "#e0e0e0",
+    backgroundColor: "white",
   },
   selectedCustomerContainer: {
     padding: 12,
@@ -519,7 +694,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.medium,
     fontFamily: "Yekan_Bakh_Bold",
-
     textAlign: "center",
   },
   scrollableContent: {
@@ -579,7 +753,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0,
     paddingVertical: 10,
     marginTop: 5,
-    // height: 200,
     marginBottom: 10,
   },
   invoiceTotalContainer: {

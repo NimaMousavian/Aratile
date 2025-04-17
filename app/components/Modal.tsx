@@ -109,113 +109,138 @@ const ReusableModal: React.FC<ReusableModalProps> = ({
       transparent={true}
       animationType="fade"
       onRequestClose={handleClose}
+      statusBarTranslucent={true}
+      presentationStyle={Platform.OS === "ios" ? "overFullScreen" : undefined}
+      supportedOrientations={['portrait', 'landscape']}
     >
-      <TouchableOpacity
-        style={styles.overlay}
-        activeOpacity={1}
-        onPress={handleClose}
-      >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.keyboardAvoid}
+      <View style={styles.rootContainer}>
+        <TouchableOpacity
+          style={styles.overlay}
+          activeOpacity={1}
+          onPress={handleClose}
         >
-          <TouchableOpacity activeOpacity={1} style={styles.modalContainer}>
-            {/* هدر مدال */}
-            <LinearGradient
-              colors={headerConfig.colors}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.modalHeader}
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={styles.keyboardAvoid}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
+          >
+            <TouchableOpacity
+              activeOpacity={1}
+              style={styles.modalContainer}
+              onPress={(e) => e.stopPropagation()} // جلوگیری از انتشار لمس به لایه زیرین
             >
-              <View style={styles.headerContent}>
-                <MaterialIcons
-                  name={headerConfig.icon}
-                  size={24}
-                  color="white"
-                />
-                <Text style={styles.headerTitle}>{headerConfig.title}</Text>
-              </View>
-              <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                <MaterialIcons name="close" size={24} color="white" />
-              </TouchableOpacity>
-            </LinearGradient>
-
-            <ScrollView style={styles.modalBody}>
-              {/* پیام‌ها */}
-              {messages.map((message, index) => (
-                <View key={index} style={styles.messageContainer}>
-                  {message.icon && (
-                    <MaterialIcons
-                      name={message.icon}
-                      size={20}
-                      color={message.iconColor || colors.medium}
-                      style={styles.messageIcon}
-                    />
-                  )}
-                  <Text style={styles.messageText}>{message.text}</Text>
-                </View>
-              ))}
-
-              {/* ورودی‌ها */}
-              {inputs.filter(input => input.show).map((input) => (
-                <View key={input.id} style={styles.inputContainer}>
-                  <Text style={styles.inputLabel}>{input.label}</Text>
-                  <TextInput
-                    style={[
-                      styles.input,
-                      input.multiline && { height: input.numberOfLines ? input.numberOfLines * 24 : 100 }
-                    ]}
-                    placeholder={input.placeholder}
-                    value={inputValues[input.id] || ""}
-                    onChangeText={(text) => handleInputChange(input.id, text)}
-                    secureTextEntry={input.secureTextEntry}
-                    multiline={input.multiline}
-                    numberOfLines={input.numberOfLines}
-                    textAlign="right"
-                    placeholderTextColor={colors.medium}
+              {/* هدر مدال */}
+              <LinearGradient
+                colors={headerConfig.colors}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.modalHeader}
+              >
+                <View style={styles.headerContent}>
+                  <MaterialIcons
+                    name={headerConfig.icon}
+                    size={24}
+                    color="white"
                   />
+                  <Text style={styles.headerTitle}>{headerConfig.title}</Text>
                 </View>
-              ))}
-            </ScrollView>
-
-            {/* دکمه‌ها */}
-            <View style={styles.buttonContainer}>
-              {buttons.map((button) => (
-                <TouchableOpacity
-                  key={button.id}
-                  style={[styles.button, { backgroundColor: button.color }]}
-                  onPress={() => handleButtonPress(button)}
-                >
-                  {button.icon && (
-                    <MaterialIcons
-                      name={button.icon}
-                      size={20}
-                      color="white"
-                      style={styles.buttonIcon}
-                    />
-                  )}
-                  <Text style={styles.buttonText}>{button.text}</Text>
+                <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
+                  <MaterialIcons name="close" size={24} color="white" />
                 </TouchableOpacity>
-              ))}
-            </View>
-          </TouchableOpacity>
-        </KeyboardAvoidingView>
-      </TouchableOpacity>
+              </LinearGradient>
+
+              <ScrollView style={styles.modalBody}>
+                {/* پیام‌ها */}
+                {messages.map((message, index) => (
+                  <View key={index} style={styles.messageContainer}>
+                    {message.icon && (
+                      <MaterialIcons
+                        name={message.icon}
+                        size={20}
+                        color={message.iconColor || colors.medium}
+                        style={styles.messageIcon}
+                      />
+                    )}
+                    <Text style={styles.messageText}>{message.text}</Text>
+                  </View>
+                ))}
+
+                {/* ورودی‌ها */}
+                {inputs.filter(input => input.show).map((input) => (
+                  <View key={input.id} style={styles.inputContainer}>
+                    <Text style={styles.inputLabel}>{input.label}</Text>
+                    <TextInput
+                      style={[
+                        styles.input,
+                        input.multiline && { height: input.numberOfLines ? input.numberOfLines * 24 : 100 }
+                      ]}
+                      placeholder={input.placeholder}
+                      value={inputValues[input.id] || ""}
+                      onChangeText={(text) => handleInputChange(input.id, text)}
+                      secureTextEntry={input.secureTextEntry}
+                      multiline={input.multiline}
+                      numberOfLines={input.numberOfLines}
+                      textAlign="right"
+                      placeholderTextColor={colors.medium}
+                    />
+                  </View>
+                ))}
+              </ScrollView>
+
+              {/* دکمه‌ها */}
+              <View style={styles.buttonContainer}>
+                {buttons.map((button) => (
+                  <TouchableOpacity
+                    key={button.id}
+                    style={[styles.button, { backgroundColor: button.color }]}
+                    onPress={() => handleButtonPress(button)}
+                  >
+                    {button.icon && (
+                      <MaterialIcons
+                        name={button.icon}
+                        size={20}
+                        color="white"
+                        style={styles.buttonIcon}
+                      />
+                    )}
+                    <Text style={styles.buttonText}>{button.text}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </TouchableOpacity>
+          </KeyboardAvoidingView>
+        </TouchableOpacity>
+      </View>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
+  rootContainer: {
+    flex: 1,
+    ...Platform.select({
+      ios: {
+        position: 'absolute',
+        top: 0,
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 9999,
+      }
+    })
+  },
   overlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
     alignItems: "center",
+    zIndex: 1000,
   },
   keyboardAvoid: {
     width: "100%",
     alignItems: "center",
     justifyContent: "center",
+    zIndex: 1001,
   },
   modalContainer: {
     width: "90%",
@@ -223,7 +248,19 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: 16,
     overflow: "hidden",
-    maxHeight: "80%",
+    maxHeight: "90%",
+    zIndex: 1002,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+      },
+      android: {
+        elevation: 5,
+      },
+    }),
   },
   modalHeader: {
     flexDirection: "row-reverse",
@@ -231,6 +268,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 12,
+    zIndex: 1003,
   },
   headerContent: {
     flexDirection: "row-reverse",
@@ -247,7 +285,6 @@ const styles = StyleSheet.create({
   },
   modalBody: {
     padding: 16,
-    maxHeight: 400,
   },
   messageContainer: {
     flexDirection: "row-reverse",

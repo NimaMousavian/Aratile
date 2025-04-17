@@ -1,94 +1,160 @@
 import { useState, useEffect } from "react";
-import { Alert } from "react-native";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { AppNavigationProp } from "../StackNavigator";
-import { IProduct } from "../../app/config/types";
+import { Product } from "../screens/IssuingNewInvoice/IssuingNewInvoice";
 import axios from "axios";
+import ReusableModal from "../components/Modal";
+import colors from "../config/colors";
 
-// آدرس API برنامه
 import appConfig from "../../config";
 const API_BASE_URL = appConfig.mobileApi;
 
-// تعریف نوع برای params مسیر
 type RouteParams = {
-  scannedCode?: string;
+  scannedProduct?: Product;
 };
 
-// این هوک سفارشی برای مدیریت محصولات در صفحه صدور فاکتور استفاده می‌شود
 const useProductScanner = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedProducts, setSelectedProducts] = useState<IProduct[]>([]);
+  const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingProductId, setEditingProductId] = useState<number | null>(null);
+
   const route = useRoute<RouteProp<Record<string, RouteParams>, string>>();
   const navigation = useNavigation<AppNavigationProp>();
 
-  // Handle data from QR scanner
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalConfig, setModalConfig] = useState({
+    title: "",
+    message: "",
+    icon: "info" as React.ComponentProps<typeof ReusableModal>["headerConfig"]["icon"],
+  });
+  const [modalButtons, setModalButtons] = useState<React.ComponentProps<typeof ReusableModal>["buttons"]>([
+    {
+      id: "ok",
+      text: "متوجه شدم",
+      color: colors.success,
+      icon: "check",
+      onPress: () => setModalVisible(false)
+    }
+  ]);
+
   useEffect(() => {
     if (route.params?.scannedCode) {
       fetchProductByCode(route.params.scannedCode);
     }
   }, [route.params?.scannedCode]);
 
-  // Function to fetch product by SKU code from API
+  const showModal = (title: string, message: string, icon: React.ComponentProps<typeof ReusableModal>["headerConfig"]["icon"] = "info") => {
+    setModalConfig({
+      title,
+      message,
+      icon,
+    });
+    setModalVisible(true);
+  };
+
   const fetchProductByCode = async (sku: string) => {
     setIsLoading(true);
     try {
-      const response = await axios.get(
-        `${API_BASE_URL}Product/SearchBySKUOrName?query=${sku}&page=1&pageSize=20`
-      );
+      const response = await axios.get(`${API_BASE_URL}Product/GetBySKU?sku=${sku}`);
 
-      if (
-        response.data &&
-        response.data.Items &&
-        response.data.Items.length > 0
-      ) {
-        const productData = response.data.Items[0];
+      if (response.data && response.data.ProductId) {
+        const detailResponse = await axios.get(`${API_BASE_URL}Product/Get?id=${response.data.ProductId}`);
 
-        console.log("product data: ", productData);
+        let rectifiedValue = "1.44";
+        let inventory = null;
 
-        // Convert API product to IProduct format
-        const newProduct: IProduct = {
-          id: productData.ProductId,
-          title: productData.ProductName,
-          code: productData.SKU,
-          quantity: "1", // Default quantity as string
-          hasColorSpectrum: false, // Default value
-          note: "", // Default empty note
+        if (detailResponse.data && detailResponse.data.Product_ProductPropertyValue_List &&
+          detailResponse.data.Product_ProductPropertyValue_List.length > 0) {
+
+          const rectifiedProperty = detailResponse.data.Product_ProductPropertyValue_List.find(
+            (prop: any) => prop.ProductPropertyName === "رکتیفای"
+          );
+
+          if (rectifiedProperty) {
+            rectifiedValue = rectifiedProperty.Value;
+          }
+        }
+
+        if (detailResponse.data && detailResponse.data.Inventory !== undefined) {
+          inventory = detailResponse.data.Inventory.toString();
+        }
+
+        const newProduct: Product = {
+          id: response.data.ProductId,
+          title: response.data.ProductName,
+          code: response.data.SKU,
+          quantity: "1",
+          price: response.data.Price !== null ? response.data.Price : 0,
+          hasColorSpectrum: false,
+          note: "",
+          measurementUnitName: response.data.ProductMeasurementUnitName ||
+            (detailResponse.data?.MeasurementUnit?.MeasurementUnitName || ""),
+          propertyValue: inventory,
+          rectifiedValue: rectifiedValue
         };
 
-        // Check if the product is already in the list
-        const productExists = selectedProducts.some(
-          (p) => p.code === newProduct.code
-        );
+        if (isEditMode && editingProductId) {
+          const duplicateProduct = selectedProducts.find(p =>
+            p.code === newProduct.code && p.id !== editingProductId
+          );
 
-        if (productExists) {
-          Alert.alert(
-            "محصول تکراری",
-            "این محصول قبلاً به فاکتور اضافه شده است.",
-            [{ text: "متوجه شدم" }]
+          if (duplicateProduct) {
+            showModal(
+              "محصول تکراری",
+              "این محصول قبلاً به فاکتور اضافه شده است.",
+              "error"
+            );
+            return;
+          }
+
+          setSelectedProducts(
+            selectedProducts.map(p => p.id === editingProductId ? newProduct : p)
+          );
+          setIsEditMode(false);
+          setEditingProductId(null);
+
+          showModal(
+            "به‌روزرسانی موفق",
+            "محصول با موفقیت به‌روزرسانی شد.",
+            "check"
           );
         } else {
-          // Add the new product to selected products
-          setSelectedProducts([...selectedProducts, newProduct]);
+          const productExists = selectedProducts.some(
+            (p) => p.code === newProduct.code
+          );
+
+          if (productExists) {
+            showModal(
+              "محصول تکراری",
+              "این محصول قبلاً به فاکتور اضافه شده است.",
+              "error"
+            );
+          } else {
+            // Keep existing products and add the new one
+            setSelectedProducts(prevProducts => [...prevProducts, newProduct]);
+          }
         }
       } else {
-        Alert.alert("محصول یافت نشد", "محصولی با این کد یافت نشد.", [
-          { text: "متوجه شدم" },
-        ]);
+        showModal(
+          "محصول یافت نشد",
+          "محصولی با این کد یافت نشد.",
+          "search-off"
+        );
       }
     } catch (error) {
       console.error("Error fetching product:", error);
-      Alert.alert(
+      showModal(
         "خطا",
         "خطا در دریافت اطلاعات محصول. لطفاً دوباره تلاش کنید.",
-        [{ text: "متوجه شدم" }]
+        "error"
       );
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Function to handle manual product search
-  const handleProductSearch = async (query: string) => {
+  const searchProduct = async (query: string) => {
     if (!query.trim()) return [];
 
     setIsLoading(true);
@@ -97,62 +163,152 @@ const useProductScanner = () => {
         `${API_BASE_URL}Product/SearchBySKUOrName?query=${query}&page=1&pageSize=20`
       );
 
-      return response.data.Items;
+      return response.data?.Items || [];
     } catch (error) {
       console.error("Error searching products:", error);
-      Alert.alert("خطا", "خطا در جستجوی محصولات. لطفاً دوباره تلاش کنید.", [
-        { text: "متوجه شدم" },
-      ]);
+      showModal(
+        "خطا",
+        "خطا در جستجوی محصولات. لطفاً دوباره تلاش کنید.",
+        "error"
+      );
       return [];
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Function to remove product from selected products
   const removeProduct = (productId: number) => {
     setSelectedProducts(
       selectedProducts.filter((product) => product.id !== productId)
     );
   };
 
-  // Function to add product from search
-  const addProduct = (product: IProduct) => {
-    // Check if the product is already in the list
-    const productExists = selectedProducts.some((p) => p.code === product.code);
+  const showRemoveConfirmation = (productId: number, callback?: () => void) => {
+    setModalConfig({
+      title: "حذف محصول",
+      message: "آیا از حذف این محصول اطمینان دارید؟",
+      icon: "delete",
+    });
 
-    if (productExists) {
-      Alert.alert("محصول تکراری", "این محصول قبلاً به فاکتور اضافه شده است.", [
-        { text: "متوجه شدم" },
-      ]);
-      return false;
+    setModalButtons([
+      {
+        id: "cancel",
+        text: "خیر",
+        color: colors.danger,
+        icon: "close",
+        onPress: () => setModalVisible(false)
+      },
+      {
+        id: "confirm",
+        text: "بله",
+        color: colors.success,
+        icon: "delete",
+        onPress: () => {
+          removeProduct(productId);
+          setModalVisible(false);
+          if (callback) callback();
+        }
+      }
+    ]);
+
+    setModalVisible(true);
+  };
+
+  const editProduct = (productId: number) => {
+    setIsEditMode(true);
+    setEditingProductId(productId);
+  };
+
+  const addProduct = (product: Product) => {
+    console.log("تلاش برای افزودن محصول جدید:", product.title);
+    console.log("تعداد محصولات قبل از افزودن:", selectedProducts.length);
+
+    if (isEditMode && editingProductId) {
+      const duplicateProduct = selectedProducts.find(p =>
+        p.code === product.code && p.id !== editingProductId
+      );
+
+      if (duplicateProduct) {
+        showModal(
+          "محصول تکراری",
+          "این محصول قبلاً به فاکتور اضافه شده است.",
+          "error"
+        );
+        return false;
+      }
+
+      // بروزرسانی محصول موجود
+      const updatedProducts = selectedProducts.map(p =>
+        p.id === editingProductId ? product : p
+      );
+      setSelectedProducts(updatedProducts);
+      setIsEditMode(false);
+      setEditingProductId(null);
+      console.log("محصول با موفقیت ویرایش شد، تعداد محصولات:", updatedProducts.length);
+      return true;
+    }
+
+    // بررسی تکراری بودن محصول
+    const existingProductIndex = selectedProducts.findIndex(p => p.id === product.id);
+
+    if (existingProductIndex !== -1) {
+      // اگر محصول تکراری است، آن را بروزرسانی کن
+      const updatedProducts = [...selectedProducts];
+      updatedProducts[existingProductIndex] = product;
+      setSelectedProducts(updatedProducts);
+      console.log("محصول موجود بروزرسانی شد، تعداد محصولات:", updatedProducts.length);
+      return true;
     } else {
-      setSelectedProducts([...selectedProducts, product]);
+      // اضافه کردن محصول جدید به لیست محصولات موجود
+      setSelectedProducts(prevProducts => {
+        const newProducts = [...prevProducts, product];
+        console.log("محصول جدید اضافه شد، تعداد محصولات قبلی:", prevProducts.length);
+        console.log("تعداد محصولات بعد از افزودن:", newProducts.length);
+        return newProducts;
+      });
       return true;
     }
   };
-
-  // تبدیل داده‌های دریافتی از API به فرمت IProduct
-  const convertApiDataToProduct = (apiProduct: any): IProduct => {
-    return {
-      id: apiProduct.ProductId,
-      title: apiProduct.ProductName,
-      code: apiProduct.SKU,
-      quantity: "1", // مقدار پیش‌فرض
-      hasColorSpectrum: false, // مقدار پیش‌فرض
-      note: "", // پیش‌فرض خالی
-    };
+  const renderModal = () => {
+    return (
+      <ReusableModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        headerConfig={{
+          title: modalConfig.title,
+          icon: modalConfig.icon,
+          colors: ["#ff5252", "#ff7b7b"]
+        }}
+        messages={[
+          {
+            text: modalConfig.message,
+            icon: modalConfig.icon,
+            iconColor: "#ff5252"
+          }
+        ]}
+        buttons={modalButtons}
+        style={{ height: 350 }}
+        contentStyle={{ paddingVertical: 25 }}
+        modalHeight={350}
+      />
+    );
   };
 
   return {
     isLoading,
     selectedProducts,
     fetchProductByCode,
-    handleProductSearch,
+    searchProduct,
     removeProduct,
     addProduct,
     setSelectedProducts,
-    convertApiDataToProduct,
+    modalVisible,
+    renderModal,
+    showRemoveConfirmation,
+    showModal,
+    isEditMode,
+    editingProductId,
+    editProduct
   };
 };
 

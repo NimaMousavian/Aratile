@@ -8,13 +8,13 @@ import {
 import * as Font from "expo-font";
 import { useState, useEffect, useCallback } from "react";
 import * as SplashScreen from "expo-splash-screen";
-import HomeScreen from "./app/screens/Seller/HomeScreen";
-import IssuingNewInvoice from "./app/screens/Seller/IssuingNewInvoice/IssuingNewInvoice";
+import HomeScreen from "./app/screens/HomeScreen";
+import IssuingNewInvoice from "./app/screens/IssuingNewInvoice/IssuingNewInvoice";
 import StackNavigator from "./app/StackNavigator";
 import { PaperProvider } from "react-native-paper";
 import navigationTheme from "./app/config/navigationTheme";
 
-// I18nManager.forceRTL(false);
+
 
 SplashScreen.preventAutoHideAsync();
 

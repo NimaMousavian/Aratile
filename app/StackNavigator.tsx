@@ -29,7 +29,7 @@ import AddNewProject from "./screens/B2CFieldMarketer/AddNewProject";
 import ReceiveNewInvoiceScreen from "./screens/ReceiveNewInvoiceScreen/ReceiveNewInvoiceScreen";
 import StatusFilterScreen from "./screens/ReceiveNewInvoiceScreen/StatusFilterScreen";
 import HomeScreen from "./screens/HomeScreen";
-import IssuingNewInvoice from "./screens/IssuingNewInvoice/IssuingNewInvoice";
+import IssuingNewInvoice, { Product } from "./screens/IssuingNewInvoice/IssuingNewInvoice";
 import BarcodeScanner from "./screens/IssuingNewInvoice/BarcodeScanner";
 import CustomerInfo from "./screens/IssuingNewInvoice/CustomerInfo";
 import SupplyRequest from "./screens/SupplyRequest";
@@ -47,9 +47,18 @@ export type RootStackParamList = {
 
   Home: undefined;
 
-  IssuingNewInvoice: { scannedCode?: string };
-  BarCodeScanner: undefined;
-  CustomerInfo: { customer: Colleague };
+  // اصلاح شده برای صفحه صدور فاکتور 
+  IssuingNewInvoice: {
+    scannedCode?: string;
+    scannedProduct?: Product;
+  };
+
+  // اضافه کردن پارامتر onReturn به صفحه بارکد اسکنر
+  BarCodeScanner: {
+    onReturn?: (product: Product) => void;
+  };
+
+  CustomerInfo: { customer?: Colleague };
   AddNewColleague: undefined;
   ProductProperties: undefined;
   SupplyRequest: undefined;
@@ -115,7 +124,7 @@ const StackNavigator: React.FC = () => {
         options={{ headerShown: false }}
       />
       <Stack.Screen
-        name="IssuingNewInvoice" // This is correct
+        name="IssuingNewInvoice"
         component={IssuingNewInvoice}
         options={{ headerShown: false }}
       />
@@ -152,24 +161,10 @@ const StackNavigator: React.FC = () => {
         component={IssuedInvoices}
         options={{
           headerShown: false,
-          // title: "فاکتور های صادر شده",
-          // headerTitleAlign: "center",
-          // headerTitleStyle: styles.headerTitleStyle,
-          // headerStyle: styles.headerStyle,
         }}
       />
 
       {/* Cashier Screens */}
-
-      {/* <Stack.Screen
-        name="CashierHome"
-        component={CashierHomeScreen}
-        options={{
-          headerShown: false,
-          // title: "صفحه اصلی صندوقدار",
-          // headerTitleAlign: "center",
-        }}
-      /> */}
 
       <Stack.Screen
         name="ReceiveNewInvoice"

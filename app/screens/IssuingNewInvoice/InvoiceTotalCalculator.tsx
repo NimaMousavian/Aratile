@@ -10,11 +10,15 @@ import { Product } from "./IssuingNewInvoice";
 interface InvoiceTotalProps {
   products: Product[];
   containerStyle?: any;
+  showOnlyTotal?: boolean;
+  includeTax?: boolean;
 }
 
 const InvoiceTotalCalculator: React.FC<InvoiceTotalProps> = ({
   products,
   containerStyle,
+  showOnlyTotal = false,
+  includeTax = true,
 }) => {
   const [totalQuantity, setTotalQuantity] = useState<number>(0);
   const [totalPrice, setTotalPrice] = useState<number>(0);
@@ -32,9 +36,14 @@ const InvoiceTotalCalculator: React.FC<InvoiceTotalProps> = ({
 
     // محاسبه مجموع قیمت
     const price = products.reduce((sum, product) => {
-      const qty = parseFloat(product.quantity) || 0;
-      const productPrice = product.price || 0;
-      return sum + qty * productPrice;
+      // اگر محصول دارای مساحت کل باشد از آن برای محاسبه استفاده می‌شود
+      if (product.totalArea && product.price) {
+        return sum + (product.totalArea * product.price);
+      } else {
+        const qty = parseFloat(product.quantity) || 0;
+        const productPrice = product.price || 0;
+        return sum + qty * productPrice;
+      }
     }, 0);
     setTotalPrice(price);
 
@@ -42,9 +51,9 @@ const InvoiceTotalCalculator: React.FC<InvoiceTotalProps> = ({
     const taxAmount = price * 0.09;
     setTax(taxAmount);
 
-    // محاسبه مبلغ نهایی با مالیات
-    setFinalTotal(price + taxAmount);
-  }, [products]);
+    // محاسبه مبلغ نهایی با یا بدون مالیات
+    setFinalTotal(includeTax ? price + taxAmount : price);
+  }, [products, includeTax]);
 
   return (
     <View style={[styles.container, containerStyle]}>
@@ -63,33 +72,34 @@ const InvoiceTotalCalculator: React.FC<InvoiceTotalProps> = ({
       {/* محتوای ثابت بدون اسکرول */}
       <View style={styles.contentContainer}>
         <View style={styles.contentInnerContainer}>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>تعداد اقلام:</Text>
-            <Text style={styles.summaryValue}>
-              {toPersianDigits(products.length.toString())}
-            </Text>
-          </View>
+          {!showOnlyTotal && (
+            <>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>تعداد اقلام:</Text>
+                <Text style={styles.summaryValue}>
+                  {toPersianDigits(products.length.toString())}
+                </Text>
+              </View>
 
-          {/* <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>مجموع مقدار:</Text>
-            <Text style={styles.summaryValue}>{toPersianDigits(totalQuantity.toFixed(2))} متر مربع</Text>
-          </View> */}
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>جمع کل:</Text>
+                <Text style={styles.summaryValue}>
+                  {toPersianDigits(totalPrice.toLocaleString())} ریال
+                </Text>
+              </View>
 
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>جمع کل:</Text>
-            <Text style={styles.summaryValue}>
-              {toPersianDigits(totalPrice.toLocaleString())} ریال
-            </Text>
-          </View>
+              {includeTax && (
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>مالیات (۹٪):</Text>
+                  <Text style={styles.summaryValue}>
+                    {toPersianDigits(tax.toLocaleString())} ریال
+                  </Text>
+                </View>
+              )}
 
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>مالیات (۹٪):</Text>
-            <Text style={styles.summaryValue}>
-              {toPersianDigits(tax.toLocaleString())} ریال
-            </Text>
-          </View>
-
-          <View style={styles.divider} />
+              <View style={styles.divider} />
+            </>
+          )}
 
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>مبلغ نهایی:</Text>

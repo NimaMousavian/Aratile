@@ -1,18 +1,34 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator } from "react-native";
 import { CameraView, Camera } from "expo-camera";
 import { BarCodeScannerResult } from "expo-barcode-scanner";
 import AppButton from "../../components/Button";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { AppNavigationProp } from "../../StackNavigator";
 import colors from "../../config/colors";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { LinearGradient } from "expo-linear-gradient";
+import ProductPropertiesDrawer from "./ProductProperties";
+import axios from "axios";
+import appConfig from "../../../config";
+import Toast from "../../components/Toast";
+import { Product } from "./IssuingNewInvoice";
+
+const API_BASE_URL = appConfig.mobileApi;
 
 const BarcodeScanner = () => {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [scanned, setScanned] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [propertiesDrawerVisible, setPropertiesDrawerVisible] = useState<boolean>(false);
+  const [scannedProduct, setScannedProduct] = useState<Product | null>(null);
+  const [toastVisible, setToastVisible] = useState<boolean>(false);
+  const [toastMessage, setToastMessage] = useState<string>("");
+  const [toastType, setToastType] = useState<"success" | "error" | "warning" | "info">("error");
+
   const navigation = useNavigation<AppNavigationProp>();
+  const route = useRoute();
+  // دریافت callback از params
+  const onReturn = route.params?.onReturn;
 
   useEffect(() => {
     const getCameraPermissions = async () => {
@@ -23,10 +39,138 @@ const BarcodeScanner = () => {
     getCameraPermissions();
   }, []);
 
-  const handleBarcodeScanned = ({ data }: BarCodeScannerResult) => {
+  const showToast = (message: string, type: "success" | "error" | "warning" | "info" = "error") => {
+    setToastMessage(message);
+    setToastType(type);
+    setToastVisible(true);
+
+    setTimeout(() => {
+      setToastVisible(false);
+    }, 3000);
+  };
+
+  const searchProductBySKU = async (sku: string) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}Product/GetBySKU?sku=${sku}`);
+
+      if (response.data && response.data.ProductId) {
+        const detailResponse = await axios.get(`${API_BASE_URL}Product/Get?id=${response.data.ProductId}`);
+
+        let rectifiedValue = "1.44";
+        let inventory = null;
+
+        if (detailResponse.data && detailResponse.data.Product_ProductPropertyValue_List &&
+          detailResponse.data.Product_ProductPropertyValue_List.length > 0) {
+
+          const rectifiedProperty = detailResponse.data.Product_ProductPropertyValue_List.find(
+            (prop: any) => prop.ProductPropertyName === "رکتیفای"
+          );
+
+          if (rectifiedProperty) {
+            rectifiedValue = rectifiedProperty.Value;
+          }
+        }
+
+        if (detailResponse.data && detailResponse.data.Inventory !== undefined) {
+          inventory = detailResponse.data.Inventory.toString();
+        }
+
+        const product: Product = {
+          id: response.data.ProductId,
+          title: response.data.ProductName,
+          code: response.data.SKU,
+          quantity: "1",
+          price: response.data.Price !== null ? response.data.Price : 0,
+          hasColorSpectrum: false,
+          note: "",
+          measurementUnitName: response.data.ProductMeasurementUnitName ||
+            (detailResponse.data?.MeasurementUnit?.MeasurementUnitName || ""),
+          propertyValue: inventory,
+          rectifiedValue: rectifiedValue
+        };
+
+        return product;
+      }
+      return null;
+    } catch (error) {
+      console.error("Error searching product by SKU:", error);
+      throw error;
+    }
+  };
+
+  const handleBarcodeScanned = async ({ data }: BarCodeScannerResult) => {
     setScanned(true);
-    // مستقیماً کد اسکن شده را به صفحه قبلی می‌فرستیم
-    navigation.navigate("IssuingNewInvoice", { scannedCode: data });
+    setLoading(true);
+
+    try {
+      const product = await searchProductBySKU(data);
+
+      if (product) {
+        setScannedProduct(product);
+        setPropertiesDrawerVisible(true);
+        showToast(`محصول "${product.title}" یافت شد`, "success");
+      } else {
+        showToast("محصولی با این بارکد یافت نشد", "warning");
+        setTimeout(() => {
+          setScanned(false);
+        }, 2000);
+      }
+    } catch (error) {
+      console.error("Error handling barcode scan:", error);
+      showToast("خطا در جستجوی محصول", "error");
+      setTimeout(() => {
+        setScanned(false);
+      }, 2000);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveProduct = (
+    product: Product,
+    quantity: string,
+    note: string,
+    manualCalculation: boolean,
+    boxCount?: number
+  ) => {
+    let totalArea = null;
+    if (boxCount && product.rectifiedValue) {
+      const rectifiedValue = parseFloat(product.rectifiedValue);
+      if (!isNaN(rectifiedValue)) {
+        totalArea = boxCount * rectifiedValue;
+      }
+    }
+
+    const finalProduct = {
+      id: product.id,
+      title: product.title,
+      code: product.code,
+      quantity: quantity,
+      price: product.price,
+      note: note,
+      hasColorSpectrum: product.hasColorSpectrum,
+      measurementUnitName: product.measurementUnitName,
+      propertyValue: product.propertyValue,
+      rectifiedValue: product.rectifiedValue,
+      manualCalculation: manualCalculation,
+      boxCount: boxCount,
+      totalArea: totalArea
+    };
+
+    // به جای navigate با پارامتر، از callback استفاده می‌کنیم
+    if (onReturn) {
+      onReturn(finalProduct);
+    }
+
+    navigation.goBack();
+    return true;
+  };
+
+  const handleDrawerClose = () => {
+    setPropertiesDrawerVisible(false);
+    setTimeout(() => {
+      setScanned(false);
+    }, 500);
   };
 
   if (hasPermission === null) {
@@ -58,17 +202,23 @@ const BarcodeScanner = () => {
 
   return (
     <View style={styles.container}>
+      <Toast
+        visible={toastVisible}
+        message={toastMessage}
+        type={toastType}
+        onDismiss={() => setToastVisible(false)}
+      />
+
       <CameraView
         style={styles.cameraView}
         onBarcodeScanned={scanned ? undefined : handleBarcodeScanned}
         barcodeScannerSettings={{
-          barcodeTypes: ["qr"],
+          barcodeTypes: ["qr", "ean13", "ean8", "code128", "code39", "code93", "upc_e"],
         }}
       />
 
       <View style={styles.overlay}>
         <View style={styles.header}>
-          <Text style={styles.headerText}>اسکن بارکد محصول</Text>
         </View>
 
         <View style={styles.scanAreaContainer}>
@@ -78,6 +228,13 @@ const BarcodeScanner = () => {
             <View style={[styles.scanAreaCorner, styles.scanAreaBottomLeft]} />
             <View style={[styles.scanAreaCorner, styles.scanAreaBottomRight]} />
           </View>
+
+          {loading && (
+            <View style={styles.loadingOverlay}>
+              <ActivityIndicator size="large" color={colors.white} />
+              <Text style={styles.loadingText}>در حال جستجو...</Text>
+            </View>
+          )}
         </View>
 
         <View style={styles.footer}>
@@ -93,6 +250,17 @@ const BarcodeScanner = () => {
           />
         </View>
       </View>
+
+      {scannedProduct && (
+        <ProductPropertiesDrawer
+          visible={propertiesDrawerVisible}
+          onClose={handleDrawerClose}
+          product={scannedProduct}
+          onSave={handleSaveProduct}
+          onError={(message, type) => showToast(message, type)}
+          isEditing={false}
+        />
+      )}
     </View>
   );
 };
@@ -132,11 +300,6 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 40,
   },
-  headerText: {
-    color: "white",
-    fontSize: 18,
-    fontFamily: "Yekan_Bakh_Bold",
-  },
   scanAreaContainer: {
     flex: 1,
     justifyContent: "center",
@@ -153,7 +316,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     width: 20,
     height: 20,
-    borderColor: colors.primary,
+    borderColor: "white",
     borderWidth: 4,
     backgroundColor: "transparent",
   },
@@ -184,6 +347,23 @@ const styles = StyleSheet.create({
     borderTopWidth: 0,
     borderLeftWidth: 0,
     borderBottomRightRadius: 16,
+  },
+  loadingOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 16,
+  },
+  loadingText: {
+    color: "white",
+    fontSize: 16,
+    marginTop: 12,
+    fontFamily: "Yekan_Bakh_Regular",
   },
   footer: {
     padding: 20,
