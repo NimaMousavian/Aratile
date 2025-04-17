@@ -54,3 +54,24 @@ export interface ISupplyRequest {
   ShamsiInsertDate: string;
   Description: string;
 }
+
+export interface IPerson {
+  PersonId: number;
+  FirstName: string;
+  LastName: string;
+  NickName: string;
+  Mobile: string;
+  ProvinceId: string;
+  CityId: number;
+  MarketingChannelId: number;
+  PersonJobId: number;
+  PersonJobName: string;
+  Address: string;
+  Description: string;
+  Person_PersonGroup_List: {
+    PersonId: number;
+    PersonGroupId: number;
+    PersonGroupName: string;
+    InsertDate: string;
+  }[];
+}

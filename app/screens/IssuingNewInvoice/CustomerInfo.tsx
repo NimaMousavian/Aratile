@@ -22,6 +22,8 @@ import PersonManagementService, {
 import { InputContainer } from "../B2BFieldMarketer/AddNewShop";
 import axios from "axios";
 import appConfig from "../../../config";
+import { useRoute } from "@react-navigation/native";
+import { IPerson } from "../../config/types";
 
 type ToastType = "success" | "error" | "warning" | "info";
 
@@ -34,6 +36,9 @@ interface Province {
 }
 
 const CustomerInfo = () => {
+  const route = useRoute();
+  const customerID = route.params?.customer.id;
+
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [mobile, setMobile] = useState("");
@@ -73,6 +78,47 @@ const CustomerInfo = () => {
   const [loadingCities, setLoadingCities] = useState(false);
   const [loadingCustomerTypes, setLoadingCustomerTypes] = useState(true);
   const [loadingCustomerJob, setLoadingCustomerJob] = useState(true);
+
+  useEffect(() => {
+    if (customerID) {
+      getCustomer(customerID);
+    }
+  }, []);
+
+  const getCustomer = async (cID: number) => {
+    try {
+      const response = await axios.get<IPerson>(
+        `${appConfig.mobileApi}Person/Get?id=${cID}`
+      );
+      const person = response.data;
+      console.log("customer:", person);
+
+      const provinceName = await LocationService.getProvinceNameByID(
+        Number(person.ProvinceId)
+      );
+
+      const cityName = await LocationService.getCityNamesByProvinceName(
+        provinceName
+      );
+
+      setFirstName(person.FirstName);
+      setLastName(person.LastName);
+      setMobile(person.Mobile);
+      setAlias(person.NickName);
+      setAddress(person.Address);
+      setDescription(person.Description);
+      setAddress(person.Address);
+      // setSelectedColleague({
+      //   id: person.Person_PersonGroup_List[0].PersonGroupId.toString(),
+      //   name: person.Person_PersonGroup_List[0].PersonGroupName,
+      //   phone: "",
+      // });
+      setSelectedProvince(provinceName);
+      setSelectedCustomerTypesString(
+        person.Person_PersonGroup_List[0].PersonGroupName
+      );
+    } catch (error) {}
+  };
 
   useEffect(() => {
     const fetchProvinces = async () => {

@@ -60,6 +60,18 @@ const LocationService = {
       return [];
     }
   },
+  getProvinceNameByID: async (Pid: number): Promise<string> => {
+    try {
+      const provinces = await LocationService.getAllProvinces();
+      return (
+        provinces.find((province) => province.ProvinceId === Pid)
+          ?.ProvinceName || ""
+      );
+    } catch (error) {
+      console.error("خطا در دریافت نام استان‌:", error);
+      return "";
+    }
+  },
 
   getCitiesByProvinceId: async (provinceId: number): Promise<City[]> => {
     try {

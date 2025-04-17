@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Animated,
   Modal,
@@ -22,6 +22,7 @@ import { Formik } from "formik";
 import axios from "axios";
 import appConfig from "../../config";
 import Toast from "../components/Toast";
+import { ISupplyRequest } from "../config/types";
 
 interface ISupplyRequestToPost {
   ProductSupplyRequestId: number;
@@ -48,8 +49,12 @@ const validationSchema = Yup.object().shape({
 interface IProps {
   visible: boolean;
   closeDrawer: () => void;
-  product: Product;
+  product?: Product;
+  productName: string;
+  requestedValue: number;
+  description: string;
   getAllSupplyRequest: () => void;
+  supplyRequestId?: number;
 }
 
 const SupplyRequestForm: React.FC<IProps> = ({
@@ -57,8 +62,16 @@ const SupplyRequestForm: React.FC<IProps> = ({
   closeDrawer,
   product,
   getAllSupplyRequest,
+  supplyRequestId,
 }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [supplyRequest, setSupplyRequest] = useState<ISupplyRequest | null>(
+    null
+  );
+
+  const [productName, setProductName] = useState<string>(product?.title || "");
+  const [requestedValue, setRequestedValue] = useState<number | null>();
+  const [description, setDedcription] = useState<string>("");
 
   const [toastVisible, setToastVisible] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string>("");
@@ -75,6 +88,23 @@ const SupplyRequestForm: React.FC<IProps> = ({
     setToastVisible(true);
   };
 
+  useEffect(() => {
+    if (supplyRequestId) {
+      getSupplyRequest(supplyRequestId);
+    }
+  }, [visible]);
+
+  const getSupplyRequest = async (SId: number) => {
+    try {
+      const response = await axios.get<ISupplyRequest>(
+        `${appConfig.mobileApi}ProductSupplyRequest/Get?id=${SId}`
+      );
+      console.log("supply", response.data);
+
+      setSupplyRequest(response.data);
+    } catch (error) {}
+  };
+
   const postSupplyRequest = async (reqValu: string, desc: string) => {
     setIsLoading(true);
     try {
@@ -82,7 +112,7 @@ const SupplyRequestForm: React.FC<IProps> = ({
         ProductSupplyRequestId: 0,
         ApplicationUserId: 1,
         ApplicationUserName: null,
-        ProductId: product.id,
+        ProductId: product?.id || supplyRequest?.ProductId || 0,
         ProductName: null,
         ProductVariationId: null,
         ProductVariationName: null,
@@ -190,7 +220,7 @@ const SupplyRequestForm: React.FC<IProps> = ({
                       contentContainerStyle={styles.scrollViewContent}
                     >
                       <View style={styles.productContainer}>
-                        <Text style={styles.productTitle}>{product.title}</Text>
+                        <Text style={styles.productTitle}>{productName}</Text>
                       </View>
                       <View style={styles.productContainer}>
                         {/* <AppTextInput
@@ -206,9 +236,10 @@ const SupplyRequestForm: React.FC<IProps> = ({
                           keyboardType="number-pad"
                           icon="10k"
                           placeholder={`مقدار مورد درخواست ${
-                            product.ProductMeasurementUnitName || ""
+                            product?.ProductMeasurementUnitName || ""
                           }`}
                           onChangeText={handleChange("requestedValue")}
+                          value={requestedValue?.toString()}
                         ></AppTextInput>
                         <AppTextInput
                           autoCapitalize="none"
@@ -222,6 +253,7 @@ const SupplyRequestForm: React.FC<IProps> = ({
                           height={150}
                           textAlign="right"
                           isLargeInput={true}
+                          value={description}
                         ></AppTextInput>
                       </View>
                     </ScrollView>

@@ -62,6 +62,9 @@ const SupplyRequest = () => {
 
   const [screenLoading, setScreenLoading] = useState<boolean>(false);
   const [filterParams, setFilterParams] = useState<any>();
+  const [supplyRequestId, setSupplyRequestId] = useState<number | undefined>(
+    undefined
+  );
 
   const showToast = (
     message: string,
@@ -153,7 +156,8 @@ const SupplyRequest = () => {
   }, []);
 
   const handleSupplyRequestPress = (srID: number) => {
-    console.log(srID);
+    setSupplyRequestId(srID);
+    setShowSupplyRequestForm(true);
   };
 
   return (
@@ -386,6 +390,7 @@ const SupplyRequest = () => {
           closeDrawer={() => setShowSupplyRequestForm(false)}
           product={selectedProduct}
           getAllSupplyRequest={() => getSupplyRequest()}
+          supplyRequestId={supplyRequestId}
         />
       </View>
     </>
