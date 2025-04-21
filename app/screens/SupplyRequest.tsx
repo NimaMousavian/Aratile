@@ -350,7 +350,7 @@ const SupplyRequest = () => {
             <AppText
               style={{ marginTop: 15, fontSize: 20, color: colors.primary }}
             >
-              در حال بارگزاری اطلاعات
+              در حال بارگذاری اطلاعات
             </AppText>
           </View>
         ) : (
