@@ -424,7 +424,13 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
               <Text style={styles.noResultsText}>نتیجه‌ای یافت نشد</Text>
               <AppButton
                 title={isCustomer ? "افزودن خریدار جدید" : "افزودن معرف جدید"}
-                onPress={() => navigation.navigate("AddNewColleague")}
+                onPress={() =>
+                  isCustomer
+                    ? navigation.navigate("CustomerInfo", {
+                        customer: undefined,
+                      })
+                    : navigation.navigate("AddNewColleague")
+                }
                 style={{ width: "50%" }}
                 color="success"
               />

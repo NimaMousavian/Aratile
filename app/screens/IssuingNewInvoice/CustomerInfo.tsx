@@ -15,7 +15,7 @@ import ColleagueBottomSheet, { Colleague } from "./ColleagueSearchModal";
 import Toast from "../../components/Toast";
 import colors from "../../config/colors";
 import LocationService from "./api/LocationService";
-import PersonGroupService from "./api/PersonGroupService";
+import PersonGroupService, { PersonGroup } from "./api/PersonGroupService";
 import PersonManagementService, {
   CreatePersonDTO,
 } from "./api/PersonManagementService";
@@ -23,7 +23,7 @@ import { InputContainer } from "../B2BFieldMarketer/AddNewShop";
 import axios from "axios";
 import appConfig from "../../../config";
 import { useRoute } from "@react-navigation/native";
-import { IPerson } from "../../config/types";
+import { IPerson, IPersonToEdit } from "../../config/types";
 
 type ToastType = "success" | "error" | "warning" | "info";
 
@@ -37,8 +37,9 @@ interface Province {
 
 const CustomerInfo = () => {
   const route = useRoute();
-  const customerID = route.params?.customer.id;
+  const customerID = route.params?.customer?.id;
 
+  const [person, setPerson] = useState<IPerson>();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [mobile, setMobile] = useState("");
@@ -71,8 +72,10 @@ const CustomerInfo = () => {
 
   const [provinces, setProvinces] = useState<string[]>([]);
   const [cities, setCities] = useState<string[]>([]);
-  const [customerTypes, setCustomerTypes] = useState<string[]>([]);
-  const [customerJobs, setCustomerJobs] = useState<string[]>([]);
+  const [customerTypes, setCustomerTypes] = useState<PersonGroup[]>([]);
+  const [customerJobs, setCustomerJobs] = useState<
+    { value: number; label: string }[]
+  >([]);
 
   const [loadingProvinces, setLoadingProvinces] = useState(true);
   const [loadingCities, setLoadingCities] = useState(false);
@@ -97,10 +100,7 @@ const CustomerInfo = () => {
         Number(person.ProvinceId)
       );
 
-      const cityName = await LocationService.getCityNamesByProvinceName(
-        provinceName
-      );
-
+      setPerson(person);
       setFirstName(person.FirstName);
       setLastName(person.LastName);
       setMobile(person.Mobile);
@@ -113,10 +113,17 @@ const CustomerInfo = () => {
       //   name: person.Person_PersonGroup_List[0].PersonGroupName,
       //   phone: "",
       // });
-      setSelectedProvince(provinceName);
+      setSelectedProvince(person.ProvinceName);
+      setSelectedCity(person.CityName);
       setSelectedCustomerTypesString(
         person.Person_PersonGroup_List[0].PersonGroupName
       );
+      setSelectedCustomerJobString(person.PersonJobName);
+      setSelectedColleague({
+        id: "1",
+        name: person.IntroducerPersonFullName,
+        phone: person.IntroducerPersonMobile,
+      });
     } catch (error) {}
   };
 
@@ -137,8 +144,8 @@ const CustomerInfo = () => {
     const fetchCustomerTypes = async () => {
       setLoadingCustomerTypes(true);
       try {
-        const personGroupNames = await PersonGroupService.getPersonGroupNames();
-        setCustomerTypes(personGroupNames);
+        const personGroups = await PersonGroupService.getAllActive();
+        setCustomerTypes(personGroups);
       } catch (error) {
         console.error("خطا در دریافت لیست گروه‌های مشتری:", error);
         showToast("خطا در دریافت لیست گروه‌های مشتری", "error");
@@ -152,7 +159,9 @@ const CustomerInfo = () => {
         const response = await axios.get(
           `${appConfig.mobileApi}PersonJob/GetAllActive?page=1&pageSize=1000`
         );
-        const personJobs = response.data.Items.map((job: any) => job.Name);
+        const personJobs = response.data.Items.map((job: any) => {
+          return { value: job.PersonJobId, label: job.Name };
+        });
         setCustomerJobs(personJobs);
       } catch (error) {
         console.error("خطا در دریافت لیست شغل های مشتری:", error);
@@ -287,77 +296,158 @@ const CustomerInfo = () => {
   };
 
   const handleSubmit = async (): Promise<void> => {
-    if (!validateForm()) {
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      const provinceId = await LocationService.getProvinceIdByName(
-        selectedProvince
-      );
-      if (!provinceId) {
-        showToast("خطا در دریافت شناسه استان", "error");
-        setIsSubmitting(false);
-        return;
-      }
-
-      const cityId = await PersonManagementService.getCityIdByName(
-        selectedCity,
-        selectedProvince
-      );
-      if (!cityId) {
-        showToast("خطا در دریافت شناسه شهر", "error");
-        setIsSubmitting(false);
-        return;
-      }
-
-      let personGroupIds: number[] = [];
-      if (selectedCustomerTypes.length > 0) {
-        personGroupIds = await PersonManagementService.getPersonGroupIdsByNames(
-          selectedCustomerTypes
+    if (customerID) {
+      // handle edit mode
+      console.log("in edit mode");
+      setIsSubmitting(true);
+      try {
+        const provinceId = await LocationService.getProvinceIdByName(
+          selectedProvince
         );
-        if (personGroupIds.length === 0 && selectedCustomerTypes.length > 0) {
-          showToast("خطا در دریافت شناسه‌های گروه مشتری", "warning");
+        if (!provinceId) {
+          showToast("خطا در دریافت شناسه استان", "error");
+          setIsSubmitting(false);
+          return;
         }
+
+        const cityId = await PersonManagementService.getCityIdByName(
+          selectedCity,
+          selectedProvince
+        );
+        if (!cityId) {
+          showToast("خطا در دریافت شناسه شهر", "error");
+          setIsSubmitting(false);
+          return;
+        }
+
+        let personGroupIds: number[] = [
+          customerTypes.find(
+            (customertype: PersonGroup) =>
+              customertype.PersonGroupName === selectedCustomerTypesString
+          )?.PersonGroupId || 0,
+        ];
+        // if (selectedCustomerTypes.length > 0) {
+        //   personGroupIds =
+        //     await PersonManagementService.getPersonGroupIdsByNames(
+        //       selectedCustomerTypes
+        //     );
+        //   if (personGroupIds.length === 0 && selectedCustomerTypes.length > 0) {
+        //     showToast("خطا در دریافت شناسه‌های گروه مشتری", "warning");
+        //   }
+        // }
+
+        const personToEdit: IPersonToEdit = {
+          PersonId: customerID,
+          FirstName: firstName,
+          LastName: lastName,
+          NickName: alias,
+          Mobile: mobile,
+          ProvinceId: provinceId,
+          CityId: cityId,
+          PersonJobId:
+            customerJobs.find(
+              (customer: any) => customer.label === selectedCustomerJobString
+            )?.value || 0,
+          MarketingChannelId: null,
+          IntroducerPersonId: Number(selectedColleague.id),
+          Address: address,
+          Description: description,
+          PersonGroupIdList: personGroupIds,
+        };
+
+        console.log("personToEdit", personToEdit);
+
+        const response = await axios.put(
+          `${appConfig.mobileApi}Person/Edit`,
+          personToEdit
+        );
+
+        if (response.status === 200) {
+          showToast(`مشتری با موفقیت ویرایش شد.`, "success");
+        }
+      } catch (error) {
+        console.error("خطا در ثبت مشتری:", error);
+        showToast("خطا در ثبت مشتری. لطفاً دوباره تلاش کنید", "error");
+      } finally {
+        setIsSubmitting(false);
       }
+    } else {
+      // in add mode
+      if (!validateForm()) {
+        console.log("form is not valid");
 
-      const personData: CreatePersonDTO = {
-        PersonId: 0,
-        FirstName: firstName,
-        LastName: lastName,
-        Mobile: mobile,
-        ProvinceId: provinceId,
-        CityId: cityId,
-        MarketingChannelId: null,
-        Address: address,
-        PersonGroupIdList: personGroupIds,
-      };
+        return;
+      }
+      console.log("here");
+      setIsSubmitting(true);
 
-      const newPersonId = await PersonManagementService.createPerson(
-        personData
-      );
+      try {
+        const provinceId = await LocationService.getProvinceIdByName(
+          selectedProvince
+        );
+        if (!provinceId) {
+          showToast("خطا در دریافت شناسه استان", "error");
+          setIsSubmitting(false);
+          return;
+        }
 
-      showToast(`مشتری با موفقیت ثبت شد.`, "success");
+        const cityId = await PersonManagementService.getCityIdByName(
+          selectedCity,
+          selectedProvince
+        );
+        if (!cityId) {
+          showToast("خطا در دریافت شناسه شهر", "error");
+          setIsSubmitting(false);
+          return;
+        }
 
-      setFirstName("");
-      setLastName("");
-      setMobile("");
-      setAlias("");
-      setAddress("");
-      setDescription("");
-      setSelectedProvince("");
-      setSelectedCity("");
-      setSelectedCustomerTypes([]);
-      setSelectedCustomerTypesString("");
-      setSelectedColleague({ id: "", name: "", phone: "" });
-      setCities([]);
-    } catch (error) {
-      console.error("خطا در ثبت مشتری:", error);
-      showToast("خطا در ثبت مشتری. لطفاً دوباره تلاش کنید", "error");
-    } finally {
-      setIsSubmitting(false);
+        let personGroupIds: number[] = [];
+        if (selectedCustomerTypes.length > 0) {
+          personGroupIds =
+            await PersonManagementService.getPersonGroupIdsByNames(
+              selectedCustomerTypes
+            );
+          if (personGroupIds.length === 0 && selectedCustomerTypes.length > 0) {
+            showToast("خطا در دریافت شناسه‌های گروه مشتری", "warning");
+          }
+        }
+
+        const personData: CreatePersonDTO = {
+          PersonId: 0,
+          FirstName: firstName,
+          LastName: lastName,
+          Mobile: mobile,
+          ProvinceId: provinceId,
+          CityId: cityId,
+          MarketingChannelId: null,
+          Address: address,
+          PersonGroupIdList: personGroupIds,
+        };
+
+        const newPersonId = await PersonManagementService.createPerson(
+          personData
+        );
+
+        showToast(`مشتری با موفقیت ثبت شد.`, "success");
+
+        setFirstName("");
+        setLastName("");
+        setMobile("");
+        setAlias("");
+        setAddress("");
+        setDescription("");
+        setSelectedProvince("");
+        setSelectedCity("");
+        setSelectedCustomerTypes([]);
+        setSelectedCustomerTypesString("");
+        setSelectedColleague({ id: "", name: "", phone: "" });
+        setCities([]);
+      } catch (error) {
+        console.error("خطا در ثبت مشتری:", error);
+        showToast("خطا در ثبت مشتری. لطفاً دوباره تلاش کنید", "error");
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -420,7 +510,9 @@ const CustomerInfo = () => {
               }
               title="گروه مشتری "
               iconName="group"
-              options={customerTypes}
+              options={customerTypes.map(
+                (group: PersonGroup) => group.PersonGroupName
+              )}
               onSelect={handleCustomerTypeSelection}
               multiSelect={false}
               loading={loadingCustomerTypes}
@@ -431,7 +523,7 @@ const CustomerInfo = () => {
               }
               title="شغل"
               iconName="work"
-              options={customerJobs}
+              options={customerJobs.map((job: any) => job.label)}
               onSelect={handleCustomerJobSelection}
               multiSelect={false}
               loading={loadingCustomerJob}

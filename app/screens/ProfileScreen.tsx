@@ -9,6 +9,7 @@ import IconButton from "../components/IconButton";
 import colors from "../config/colors";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
+import { AppNavigationProp } from "../StackNavigator";
 
 // Define your RootStackParamList type
 type RootStackParamList = {
@@ -18,11 +19,14 @@ type RootStackParamList = {
 };
 
 // Create type for the navigation prop
-type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Profile'>;
+type ProfileScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "Profile"
+>;
 
 const ProfileScreen = () => {
   // Use the navigation hook with the correct type
-  const navigation = useNavigation<ProfileScreenNavigationProp>();
+  const navigation = useNavigation<AppNavigationProp>();
 
   return (
     <View style={styles.mainContainer}>
@@ -52,7 +56,7 @@ const ProfileScreen = () => {
             activeOpacity={0.7}
           >
             <LinearGradient
-              colors={['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.15)']}
+              colors={["rgba(255,255,255,0.05)", "rgba(255,255,255,0.15)"]}
               style={styles.menuItemBackground}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
@@ -63,18 +67,22 @@ const ProfileScreen = () => {
               </View>
               <AppText style={styles.menuItemText}>تغییر رمز عبور</AppText>
             </View>
-            <MaterialIcons name="chevron-left" size={24} color={colors.medium} />
+            <MaterialIcons
+              name="chevron-left"
+              size={24}
+              color={colors.medium}
+            />
           </TouchableOpacity>
 
           <View style={styles.divider} />
 
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => { }}
+            onPress={() => navigation.navigate("Login")}
             activeOpacity={0.7}
           >
             <LinearGradient
-              colors={['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.15)']}
+              colors={["rgba(255,255,255,0.05)", "rgba(255,255,255,0.15)"]}
               style={styles.menuItemBackground}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
@@ -83,9 +91,15 @@ const ProfileScreen = () => {
               <View style={[styles.iconContainer, styles.logoutIconContainer]}>
                 <MaterialIcons name="logout" size={22} color={colors.danger} />
               </View>
-              <AppText style={[styles.menuItemText, { color: colors.danger }]}>خروج از حساب کاربری</AppText>
+              <AppText style={[styles.menuItemText, { color: colors.danger }]}>
+                خروج از حساب کاربری
+              </AppText>
             </View>
-            <MaterialIcons name="chevron-left" size={24} color={colors.medium} />
+            <MaterialIcons
+              name="chevron-left"
+              size={24}
+              color={colors.medium}
+            />
           </TouchableOpacity>
         </View>
       </View>
@@ -96,12 +110,12 @@ const ProfileScreen = () => {
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: "#f8f8f8",
   },
   gradient: {
-    position: 'absolute',
-    height: '25%',
-    width: '100%',
+    position: "absolute",
+    height: "25%",
+    width: "100%",
     top: 0,
     zIndex: 0,
   },
@@ -110,13 +124,13 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   profileSection: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingTop: 15,
   },
   avatarCircle: {
     width: 175,
     height: 175,
-    borderRadius: 100, 
+    borderRadius: 100,
     backgroundColor: "#dddddd",
     justifyContent: "center",
     alignItems: "center",
@@ -154,11 +168,11 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     paddingHorizontal: 15,
     borderRadius: 12,
-    position: 'relative',
-    overflow: 'hidden',
+    position: "relative",
+    overflow: "hidden",
   },
   menuItemBackground: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
@@ -173,8 +187,8 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 12,
     backgroundColor: `${colors.primary}15`,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   logoutIconContainer: {
     backgroundColor: `${colors.danger}15`,

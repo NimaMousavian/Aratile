@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Platform,
   StyleSheet,
@@ -15,6 +15,7 @@ import { toPersianDigits } from "../utils/converters";
 import { LinearGradient } from "expo-linear-gradient";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import AppButton from "./Button";
+import Toast from "./Toast";
 type StatusType =
   | "بررسی نشده"
   | "در حال تامین"
@@ -44,6 +45,7 @@ interface PurchaseInfoCardProps {
   containerStyle?: ViewStyle;
   status?: number;
   onPress?: (srID: number) => void;
+  onNotAllowedEdit?: () => void;
 }
 
 const SupplyRequestCard: React.FC<PurchaseInfoCardProps> = ({
@@ -58,6 +60,7 @@ const SupplyRequestCard: React.FC<PurchaseInfoCardProps> = ({
   containerStyle,
   status,
   onPress,
+  onNotAllowedEdit,
 }) => {
   const getStatusColor = (): string => {
     switch (supplyRequest.RequestState) {
@@ -99,7 +102,11 @@ const SupplyRequestCard: React.FC<PurchaseInfoCardProps> = ({
   return (
     <TouchableOpacity
       activeOpacity={0.8}
-      onPress={() => onPress?.(supplyRequest.ProductSupplyRequestId)}
+      onPress={
+        supplyRequest.RequestState === 1
+          ? () => onPress?.(supplyRequest.ProductSupplyRequestId)
+          : () => onNotAllowedEdit?.()
+      }
     >
       <View
         style={[
@@ -212,6 +219,32 @@ const SupplyRequestCard: React.FC<PurchaseInfoCardProps> = ({
                 {supplyRequest.Description}
               </Text>
             </View>
+          </View>
+          <View style={{ flexDirection: "row-reverse", marginTop: 15 }}>
+            <TouchableOpacity
+              style={[
+                styles.iconCircleSmall,
+                {
+                  backgroundColor:
+                    supplyRequest.RequestState === 1 ? "#fef2e0" : "#e7e7e7",
+                },
+              ]}
+              onPress={
+                supplyRequest.RequestState === 1
+                  ? () => onPress?.(supplyRequest.ProductSupplyRequestId)
+                  : () => onNotAllowedEdit?.()
+              }
+            >
+              <MaterialIcons
+                name="edit"
+                size={22}
+                color={
+                  supplyRequest.RequestState === 1
+                    ? colors.warning
+                    : colors.gray
+                }
+              />
+            </TouchableOpacity>
           </View>
         </View>
         {/* <View style={styles.buttonsContainter}>
@@ -490,6 +523,17 @@ const styles = StyleSheet.create({
     padding: 10,
     justifyContent: "center",
     gap: 10,
+  },
+  iconCircleSmall: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+    marginHorizontal: 5,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    backgroundColor: "white",
   },
 });
 

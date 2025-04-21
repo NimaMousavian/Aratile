@@ -32,6 +32,7 @@ import SupplyRequestCard from "../components/SupplyRequestCard";
 import axios from "axios";
 import appConfig from "../../config";
 import SelectionBottomSheet from "../components/SelectionDialog";
+import Toast from "../components/Toast";
 
 const statusStr = [
   "بررسی نشده",
@@ -179,6 +180,12 @@ const SupplyRequest = () => {
           onChangeText={() => {}}
           onSearch={() => {}}
         /> */}
+        <Toast
+          visible={toastVisible}
+          message={toastMessage}
+          type={toastType}
+          onDismiss={() => setToastVisible(false)}
+        />
 
         <Accordion headerStyle={{ backgroundColor: "#e0e0e0" }}>
           <AppTextInput
@@ -361,6 +368,9 @@ const SupplyRequest = () => {
               <SupplyRequestCard
                 supplyRequest={item}
                 onPress={handleSupplyRequestPress}
+                onNotAllowedEdit={() =>
+                  showToast("این درخواست تامین قابل ویرایش نیست", "warning")
+                }
               />
             )}
           />

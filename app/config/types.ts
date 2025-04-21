@@ -62,10 +62,15 @@ export interface IPerson {
   NickName: string;
   Mobile: string;
   ProvinceId: string;
+  ProvinceName: string;
   CityId: number;
+  CityName: string;
   MarketingChannelId: number;
   PersonJobId: number;
   PersonJobName: string;
+  IntroducerPersonId: number;
+  IntroducerPersonFullName: string;
+  IntroducerPersonMobile: string;
   Address: string;
   Description: string;
   Person_PersonGroup_List: {
@@ -73,5 +78,32 @@ export interface IPerson {
     PersonGroupId: number;
     PersonGroupName: string;
     InsertDate: string;
+  }[];
+}
+
+export interface IPersonToEdit {
+  PersonId: number;
+  FirstName: string;
+  LastName: string;
+  NickName?: string | null;
+  Mobile: string;
+  ProvinceId: number;
+  CityId: number;
+  PersonJobId: number;
+  MarketingChannelId: string | null;
+  IntroducerPersonId: number;
+  Address: string;
+  Description?: string | null;
+  PersonGroupIdList: number[];
+}
+
+export interface ILoginResponse {
+  UserName: string;
+  UserMobile: string;
+  Token: string;
+  USerRoleList: {
+    UserId: number;
+    RoleId: number;
+    RoleName: string;
   }[];
 }

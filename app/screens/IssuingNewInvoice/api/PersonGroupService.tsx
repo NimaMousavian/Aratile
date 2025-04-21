@@ -1,7 +1,7 @@
 import axios from "axios";
 import appConfig from "../../../../config";
 
-interface PersonGroup {
+export interface PersonGroup {
   PersonGroupId: number;
   PersonGroupName: string;
   PersonCount: number;
