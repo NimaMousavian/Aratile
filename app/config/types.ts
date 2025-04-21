@@ -96,3 +96,14 @@ export interface IPersonToEdit {
   Description?: string | null;
   PersonGroupIdList: number[];
 }
+
+export interface ILoginResponse {
+  UserName: string;
+  UserMobile: string;
+  Token: string;
+  USerRoleList: {
+    UserId: number;
+    RoleId: number;
+    RoleName: string;
+  }[];
+}

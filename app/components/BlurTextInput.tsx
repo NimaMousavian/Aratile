@@ -71,7 +71,7 @@ const BlurTextInput: React.FC<AppTextInputProps> = ({
       {label && <Text style={[styles.inputLabel, labelStyle]}>{label}</Text>}
 
       <BlurView
-        intensity={80}
+        intensity={40}
         tint="default"
         style={[styles.textInputContainer, inputContainerStyle]}
       >
@@ -79,21 +79,21 @@ const BlurTextInput: React.FC<AppTextInputProps> = ({
           <MaterialIcons
             name={icon as any}
             size={20}
-            color={colors.medium}
+            color={colors.white}
             style={styles.icon}
           />
         )}
         <TextInput
           style={[styles.textInput, style, { height: height }]}
           placeholder={placeholder}
-          placeholderTextColor={colors.dark}
+          placeholderTextColor={colors.white}
           value={value}
           onChangeText={(newValue) => {
             if (onChangeInput && inputId) {
               onChangeInput(inputId, newValue);
             }
           }}
-          textAlign="right"
+          textAlign="center"
           {...otherProps}
         />
       </BlurView>
@@ -108,13 +108,14 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 15,
     fontFamily: getFontFamily("Yekan_Bakh_Bold", "500"),
-    color: colors.dark,
+    color: colors.white,
     marginBottom: 8,
     textAlign: "right",
   },
   textInputContainer: {
     flexDirection: "row-reverse",
     alignItems: "center",
+    justifyContent: "center",
     // borderWidth: 1,
     // borderColor: colors.dark,
     borderRadius: 8,
@@ -129,8 +130,8 @@ const styles = StyleSheet.create({
     padding: 12,
     fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
     fontSize: 15,
-    color: colors.dark,
-    textAlign: "right",
+    color: colors.white,
+    textAlign: "center",
   },
 });
 
