@@ -51,8 +51,8 @@ interface IProps {
   closeDrawer: () => void;
   product?: Product;
   productName: string;
-  requestedValue: number;
-  description: string;
+  requestedValue_?: number;
+  description_?: string;
   getAllSupplyRequest: () => void;
   supplyRequestId?: number;
 }
@@ -61,6 +61,8 @@ const SupplyRequestForm: React.FC<IProps> = ({
   visible,
   closeDrawer,
   product,
+  requestedValue_,
+  description_,
   getAllSupplyRequest,
   supplyRequestId,
 }) => {
@@ -70,8 +72,12 @@ const SupplyRequestForm: React.FC<IProps> = ({
   );
 
   const [productName, setProductName] = useState<string>(product?.title || "");
-  const [requestedValue, setRequestedValue] = useState<number | null>();
-  const [description, setDedcription] = useState<string>("");
+  const [requestedValue, setRequestedValue] = useState<number | undefined>(
+    requestedValue_
+  );
+  const [description, setDedcription] = useState<string | undefined>(
+    description_
+  );
 
   const [toastVisible, setToastVisible] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string>("");
@@ -102,6 +108,9 @@ const SupplyRequestForm: React.FC<IProps> = ({
       console.log("supply", response.data);
 
       setSupplyRequest(response.data);
+      setProductName(response.data.ProductName);
+      setRequestedValue(response.data.RequestedValue);
+      setDedcription(response.data.Description);
     } catch (error) {}
   };
 
@@ -127,6 +136,43 @@ const SupplyRequestForm: React.FC<IProps> = ({
 
       const response = await axios.post(
         `${appConfig.mobileApi}ProductSupplyRequest/Add`,
+        supReqToPost
+      );
+
+      if (response.status === 200) {
+        showToast("درخواست با موفقیت ثبت شد", "success");
+        getAllSupplyRequest();
+        closeDrawer();
+      }
+    } catch (error) {
+      console.log(error);
+      showToast("خطا در ثبت درخواست", "error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const editSupplyRequest = async (reqValu: string, desc: string) => {
+    setIsLoading(true);
+    try {
+      const supReqToPost: ISupplyRequestToPost = {
+        ProductSupplyRequestId: 0,
+        ApplicationUserId: 1,
+        ApplicationUserName: null,
+        ProductId: product?.id || supplyRequest?.ProductId || 0,
+        ProductName: null,
+        ProductVariationId: null,
+        ProductVariationName: null,
+        RequestedValue: Number(reqValu),
+        RequestState: 1,
+        RequestStateStr: null,
+        Description: desc,
+        InsertDate: "2025-04-14T15:41:13.631Z",
+      };
+
+      console.log(supReqToPost);
+
+      const response = await axios.post(
+        `${appConfig.mobileApi}ProductSupplyRequest/Edit`,
         supReqToPost
       );
 
@@ -208,7 +254,17 @@ const SupplyRequestForm: React.FC<IProps> = ({
                 initialValues={{ requestedValue: "", description: "" }}
                 onSubmit={(values) => {
                   console.log("values: ", values);
-                  postSupplyRequest(values.requestedValue, values.description);
+                  if (supplyRequestId) {
+                    editSupplyRequest(
+                      values.requestedValue,
+                      values.description
+                    );
+                  } else {
+                    postSupplyRequest(
+                      values.requestedValue,
+                      values.description
+                    );
+                  }
                 }}
                 validationSchema={validationSchema}
               >
@@ -235,9 +291,7 @@ const SupplyRequestForm: React.FC<IProps> = ({
                           autoCorrect={false}
                           keyboardType="number-pad"
                           icon="10k"
-                          placeholder={`مقدار مورد درخواست ${
-                            product?.ProductMeasurementUnitName || ""
-                          }`}
+                          placeholder={`مقدار مورد درخواست ${""}`}
                           onChangeText={handleChange("requestedValue")}
                           value={requestedValue?.toString()}
                         ></AppTextInput>
@@ -259,9 +313,15 @@ const SupplyRequestForm: React.FC<IProps> = ({
                     </ScrollView>
                     <View style={styles.buttonContainer}>
                       <AppButton
-                        title={isLoading ? "در حال ارسال" : "ثبت درخواست"}
+                        title={
+                          isLoading
+                            ? "در حال ارسال"
+                            : supplyRequestId
+                            ? "ویرایش"
+                            : "ثبت درخواست"
+                        }
                         onPress={handleSubmit}
-                        color="success"
+                        color={supplyRequestId ? "warning" : "success"}
                         style={styles.actionButton}
                       />
                       <AppButton
