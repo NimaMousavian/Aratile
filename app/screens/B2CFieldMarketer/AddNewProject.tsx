@@ -9,6 +9,8 @@ import colors from "../../config/colors";
 import { useNavigation } from "@react-navigation/native";
 import { AppNavigationProp } from "../../StackNavigator";
 import ScreenHeader from "../../components/ScreenHeader";
+import { Formik, FormikProps } from "formik";
+import * as Yup from "yup";
 
 const AddNewProject = () => {
   const navigation = useNavigation<AppNavigationProp>();

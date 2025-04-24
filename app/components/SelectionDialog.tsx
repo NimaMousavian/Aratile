@@ -12,13 +12,14 @@ import {
   Keyboard,
   Modal,
   Easing,
-  ActivityIndicator
+  ActivityIndicator,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from "../config/colors";
 import AppText from "./Text";
 import IconButton from "./IconButton";
+import { getFontFamily } from "./PersianDatePicker";
 
 interface SelectionBottomSheetProps {
   iconName?: React.ComponentProps<typeof MaterialIcons>["name"];
@@ -31,6 +32,7 @@ interface SelectionBottomSheetProps {
   multiSelect?: boolean;
   loading?: boolean;
   onPress?: () => void;
+  error?: string;
 }
 
 const { height } = Dimensions.get("window");
@@ -46,9 +48,11 @@ const SelectionBottomSheet: React.FC<SelectionBottomSheetProps> = ({
   multiSelect = false,
   loading = false,
   onPress,
+  error,
 }) => {
   const [selectedValues, setSelectedValues] = useState<string[]>(initialValues);
-  const [tempSelectedValues, setTempSelectedValues] = useState<string[]>(initialValues);
+  const [tempSelectedValues, setTempSelectedValues] =
+    useState<string[]>(initialValues);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [filteredOptions, setFilteredOptions] = useState<string[]>(options);
   const [searchQuery, setSearchQuery] = useState("");
@@ -65,8 +69,8 @@ const SelectionBottomSheet: React.FC<SelectionBottomSheetProps> = ({
     }
 
     const lowercasedQuery = searchQuery.toLowerCase().trim();
-    const filtered = options.filter(
-      option => option.toLowerCase().includes(lowercasedQuery)
+    const filtered = options.filter((option) =>
+      option.toLowerCase().includes(lowercasedQuery)
     );
 
     setFilteredOptions(filtered);
@@ -74,11 +78,11 @@ const SelectionBottomSheet: React.FC<SelectionBottomSheetProps> = ({
 
   useEffect(() => {
     const keyboardWillShowListener = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
-      e => setKeyboardHeight(e.endCoordinates.height)
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
+      (e) => setKeyboardHeight(e.endCoordinates.height)
     );
     const keyboardWillHideListener = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
       () => setKeyboardHeight(0)
     );
 
@@ -110,7 +114,13 @@ const SelectionBottomSheet: React.FC<SelectionBottomSheetProps> = ({
         setTempSelectedValues([...selectedValues]);
       }
     }
-  }, [modalVisible, slideAnimation, backdropOpacity, selectedValues, multiSelect]);
+  }, [
+    modalVisible,
+    slideAnimation,
+    backdropOpacity,
+    selectedValues,
+    multiSelect,
+  ]);
 
   useEffect(() => {
     if (loading) {
@@ -197,7 +207,7 @@ const SelectionBottomSheet: React.FC<SelectionBottomSheetProps> = ({
 
   const renderPlaceholderText = () => {
     if (selectedValues.length === 0) return placeholderText;
-    if (multiSelect) return selectedValues.join('، ');
+    if (multiSelect) return selectedValues.join("، ");
     return selectedValues[0];
   };
 
@@ -261,12 +271,18 @@ const SelectionBottomSheet: React.FC<SelectionBottomSheetProps> = ({
         activeOpacity={0.7}
       >
         <View style={styles.inputContent}>
-          <MaterialIcons name={iconName} size={20} color={colors.medium} style={styles.icon} />
+          <MaterialIcons
+            name={iconName}
+            size={20}
+            color={colors.medium}
+            style={styles.icon}
+          />
           <AppText style={getPlaceholderStyle()}>
             {renderPlaceholderText()}
           </AppText>
         </View>
       </TouchableOpacity>
+      {error && <Text style={styles.errorText}>{error}</Text>}
 
       <Modal
         visible={modalVisible}
@@ -275,9 +291,7 @@ const SelectionBottomSheet: React.FC<SelectionBottomSheetProps> = ({
         onRequestClose={closeModal}
       >
         <View style={styles.modalContainer}>
-          <Animated.View
-            style={[styles.backdrop, backdropStyle]}
-          >
+          <Animated.View style={[styles.backdrop, backdropStyle]}>
             <TouchableOpacity
               style={styles.backdropTouchable}
               activeOpacity={1}
@@ -293,7 +307,7 @@ const SelectionBottomSheet: React.FC<SelectionBottomSheetProps> = ({
                 paddingBottom: keyboardHeight > 0 ? keyboardHeight : 20,
                 height: getContentHeight(),
                 maxHeight: "80%",
-              }
+              },
             ]}
           >
             <LinearGradient
@@ -303,11 +317,7 @@ const SelectionBottomSheet: React.FC<SelectionBottomSheetProps> = ({
               style={styles.header}
             >
               <View style={styles.headerContent}>
-                <MaterialIcons
-                  name={iconName}
-                  size={24}
-                  color="white"
-                />
+                <MaterialIcons name={iconName} size={24} color="white" />
                 <Text style={styles.headerTitle}>{title}</Text>
               </View>
               <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
@@ -326,11 +336,23 @@ const SelectionBottomSheet: React.FC<SelectionBottomSheetProps> = ({
                   placeholderTextColor={colors.medium}
                 />
                 {searchQuery.length > 0 && (
-                  <TouchableOpacity onPress={handleClearSearch} style={styles.clearButton}>
-                    <MaterialIcons name="close" size={20} color={colors.medium} />
+                  <TouchableOpacity
+                    onPress={handleClearSearch}
+                    style={styles.clearButton}
+                  >
+                    <MaterialIcons
+                      name="close"
+                      size={20}
+                      color={colors.medium}
+                    />
                   </TouchableOpacity>
                 )}
-                <MaterialIcons name="search" size={20} color={colors.medium} style={styles.searchIcon} />
+                <MaterialIcons
+                  name="search"
+                  size={20}
+                  color={colors.medium}
+                  style={styles.searchIcon}
+                />
               </View>
 
               {loading ? (
@@ -357,15 +379,17 @@ const SelectionBottomSheet: React.FC<SelectionBottomSheetProps> = ({
                         style={[
                           styles.checkbox,
                           multiSelect
-                            ? tempSelectedValues.includes(option) && styles.checkboxSelected
-                            : selectedValues[0] === option && styles.checkboxSelected
+                            ? tempSelectedValues.includes(option) &&
+                              styles.checkboxSelected
+                            : selectedValues[0] === option &&
+                              styles.checkboxSelected,
                         ]}
                       >
                         {(multiSelect
                           ? tempSelectedValues.includes(option)
                           : selectedValues[0] === option) && (
-                            <MaterialIcons name="check" size={16} color="white" />
-                          )}
+                          <MaterialIcons name="check" size={16} color="white" />
+                        )}
                       </View>
                       <Text style={styles.optionText}>{option}</Text>
                     </TouchableOpacity>
@@ -373,7 +397,11 @@ const SelectionBottomSheet: React.FC<SelectionBottomSheetProps> = ({
                 </ScrollView>
               ) : (
                 <View style={styles.noResultsContainer}>
-                  <MaterialIcons name="search-off" size={48} color={colors.medium} />
+                  <MaterialIcons
+                    name="search-off"
+                    size={48}
+                    color={colors.medium}
+                  />
                   <Text style={styles.noResultsText}>نتیجه‌ای یافت نشد</Text>
                 </View>
               )}
@@ -406,7 +434,7 @@ const SelectionBottomSheet: React.FC<SelectionBottomSheetProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    position: 'relative',
+    position: "relative",
     zIndex: 10,
     marginBottom: 16,
   },
@@ -543,8 +571,8 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     borderWidth: 2,
     borderColor: colors.medium,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   checkboxSelected: {
     backgroundColor: colors.secondary,
@@ -589,6 +617,13 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     borderTopWidth: 1,
     borderTopColor: "#f0f0f0",
+  },
+  errorText: {
+    /* Added error text style */ color: colors.danger,
+    fontSize: 12,
+    marginTop: 5,
+    textAlign: "right",
+    fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
   },
 });
 

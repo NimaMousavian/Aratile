@@ -170,3 +170,39 @@ export interface IShopCustomField {
   InsertDate: string;
   LastUpdateDate: string;
 }
+
+export interface IAddShopToPost {
+  ShopId: number;
+  ShopName: string;
+  CityId: number;
+  CityName: string;
+  ProvinceId: number;
+  ProvinceName: string;
+  ShopAddress: string;
+  ShopAreaInMeters: number;
+  ShopHistoryInYears: number;
+  ShopOwnershipType: number;
+  ShopOwnershipTypeStr: string;
+  OwnerFirstName: string;
+  OwnerLastName: string;
+  OwnerMobile: string;
+  HasWarehouse: true;
+  HasWarehouseStr: string;
+  WarehouseOwnershipType: number;
+  WarehouseOwnershipTypeStr: string;
+  WarehouseAreaInMeters: number;
+  WarehouseAddress: string;
+  Description: string;
+  ApplicationUserId: number;
+  ApplicationUserName: string;
+  InsertDate: string;
+  ShamsiInsertDate: string;
+  LastUpdateDate: string;
+  ShopCustomFieldList: {
+    ShopId: number;
+    ShopCustomFieldId: number;
+    ShopCustomFieldSelectiveValueId: number;
+    Value: string;
+    InsertDate: string;
+  }[];
+}

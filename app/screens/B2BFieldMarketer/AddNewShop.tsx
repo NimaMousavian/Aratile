@@ -23,10 +23,14 @@ import Toast from "../../components/Toast";
 import { IShopCustomField } from "../../config/types";
 import axios from "axios";
 import appConfig from "../../../config";
+import { Formik, FormikProps } from "formik";
+import * as Yup from "yup";
+import AppButton from "../../components/Button";
+import PersonManagementService from "../IssuingNewInvoice/api/PersonManagementService";
 
 export const InputContainer: React.FC<{
   title: string;
-  children: React.ReactElement[];
+  children: React.ReactNode;
 }> = ({ title, children }) => {
   return (
     <View style={styles.inputContainer}>
@@ -40,7 +44,11 @@ export const InputContainer: React.FC<{
           <AppText style={styles.title}>{title}</AppText>
         </LinearGradient>
       </View>
-      <View style={styles.gridContainer}>{children.map((item) => item)}</View>
+      <View style={styles.gridContainer}>
+        {React.Children.map(children, (child, index) =>
+          child ? <React.Fragment key={index}>{child}</React.Fragment> : null
+        )}
+      </View>
     </View>
   );
 };
@@ -49,6 +57,37 @@ export const InputContainer: React.FC<{
 type AddNewShopRouteParams = {
   recordings?: { uri: string; duration: number }[];
 };
+
+interface FormValues {
+  shopName: string;
+  province: string;
+  city: string;
+  shopAddress: string;
+  shopArea: string;
+  shopOwnershipType: string;
+  firstName: string;
+  lastName: string;
+  mobileNumber: string;
+  hasWarehouse: string;
+  warehouseOwnershipType: string;
+  warehouseArea: string;
+  notes: string;
+  [key: string]: string; // For dynamic custom fields
+}
+
+export function groupBy<T, K extends keyof T>(
+  array: T[],
+  key: K
+): Record<string, T[]> {
+  return array.reduce((result, item) => {
+    const groupKey = String(item[key]); // Convert key to string for Record
+    if (!result[groupKey]) {
+      result[groupKey] = [];
+    }
+    result[groupKey].push(item);
+    return result;
+  }, {} as Record<string, T[]>);
+}
 
 const AddNewShop = () => {
   const navigation = useNavigation<AppNavigationProp>();
@@ -97,8 +136,8 @@ const AddNewShop = () => {
     []
   );
   const [customFieldOtherTypes, setCustomFieldOtherTypes] = useState<
-    IShopCustomField[]
-  >([]);
+    Record<string, IShopCustomField[]>
+  >({});
 
   useEffect(() => {
     const fetchProvinces = async () => {
@@ -121,20 +160,27 @@ const AddNewShop = () => {
         );
         const type1 = response.data
           .filter((customField) => customField.ShopCustomFieldGroupId === 1)
-          .sort((customField) => customField.Form_ShowOrder);
-        const type2 = response.data.filter(
-          (customField) => customField.ShopCustomFieldGroupId === 2
-        );
-        const type3 = response.data.filter(
-          (customField) => customField.ShopCustomFieldGroupId === 3
-        );
+          .sort((a, b) => a.Form_ShowOrder - b.Form_ShowOrder);
+        const type2 = response.data
+          .filter((customField) => customField.ShopCustomFieldGroupId === 2)
+          .sort((a, b) => a.Form_ShowOrder - b.Form_ShowOrder);
+        const type3 = response.data
+          .filter((customField) => customField.ShopCustomFieldGroupId === 3)
+          .sort((a, b) => a.Form_ShowOrder - b.Form_ShowOrder);
 
+        const otherTypes = response.data.filter(
+          (customField) =>
+            customField.ShopCustomFieldGroupId !== 1 &&
+            customField.ShopCustomFieldGroupId !== 2 &&
+            customField.ShopCustomFieldGroupId !== 3
+        );
+        const groupedFields = groupBy(otherTypes, "ShopCustomFieldGroupId");
         setCustomFieldType1(type1);
         setCustomFieldType2(type2);
         setCustomFieldType3(type3);
-
+        setCustomFieldOtherTypes(groupedFields);
         setShopCustomeField(response.data);
-        console.log(response.data);
+        console.log(groupedFields);
       } catch (error) {
         console.log(error);
       }
@@ -171,18 +217,27 @@ const AddNewShop = () => {
     }
   };
 
-  const handleProvinceSelection = (value: string[]): void => {
+  const handleProvinceSelection = (
+    value: string[],
+    setFieldValue: (field: string, value: any) => void
+  ) => {
     if (value && value.length > 0) {
       const provinceName = value[0];
       setSelectedProvince(provinceName);
       setSelectedCity("");
+      setFieldValue("province", provinceName);
+      setFieldValue("city", "");
       fetchCitiesByProvince(provinceName);
     }
   };
 
-  const handleCitySelection = (value: string[]): void => {
+  const handleCitySelection = (
+    value: string[],
+    setFieldValue: (field: string, value: any) => void
+  ) => {
     if (value && value.length > 0) {
       setSelectedCity(value[0]);
+      setFieldValue("city", value[0]);
     }
   };
 
@@ -206,7 +261,100 @@ const AddNewShop = () => {
       .padStart(2, "0")}`;
   };
 
-  const renderInput = (customField: IShopCustomField): React.ReactNode => {
+  // Initialize dynamic initial values and validation schema
+  const generateInitialValues = () => {
+    const initialValues: FormValues = {
+      shopName: "",
+      province: "",
+      city: "",
+      shopAddress: "",
+      shopArea: "",
+      shopOwnershipType: "",
+      firstName: "",
+      lastName: "",
+      mobileNumber: "",
+      hasWarehouse: "",
+      warehouseOwnershipType: "",
+      warehouseArea: "",
+      notes: "",
+    };
+
+    // Add dynamic fields for customFieldType1, customFieldType2, customFieldType3
+    [...customFieldType1, ...customFieldType2, ...customFieldType3].forEach(
+      (field) => {
+        initialValues[`custom_${field.ShopCustomFieldId}`] = "";
+      }
+    );
+
+    return initialValues;
+  };
+
+  const generateValidationSchema = () => {
+    const shape: { [key: string]: any } = {
+      shopName: Yup.string().required("نام فروشگاه الزامی است"),
+      province: Yup.string().required("استان الزامی است"),
+      city: Yup.string().required("شهر الزامی است"),
+      shopAddress: Yup.string().required("آدرس فروشگاه الزامی است"),
+      shopArea: Yup.string()
+        .matches(/^\d+$/, "متراژ باید عدد باشد")
+        .required("متراژ فروشگاه الزامی است"),
+      shopOwnershipType: Yup.string().required("نوع مالکیت فروشگاه الزامی است"),
+      firstName: Yup.string().required("نام الزامی است"),
+      lastName: Yup.string().required("نام خانوادگی الزامی است"),
+      mobileNumber: Yup.string()
+        .matches(/^\d{10,11}$/, "شماره موبایل معتبر نیست")
+        .required("شماره موبایل الزامی است"),
+      hasWarehouse: Yup.string(),
+      warehouseOwnershipType: Yup.string().when(
+        "hasWarehouse",
+        (values, schema) => {
+          return values[0] === "بله"
+            ? schema.required("نوع مالکیت انبار الزامی است")
+            : schema;
+        }
+      ),
+      warehouseArea: Yup.string().when("hasWarehouse", (values, schema) => {
+        return values[0] === "بله"
+          ? schema
+              .matches(/^\d+$/, "متراژ باید عدد باشد")
+              .required("متراژ انبار الزامی است")
+          : schema;
+      }),
+      notes: Yup.string(),
+    };
+
+    // Add validation for dynamic fields
+    [...customFieldType1, ...customFieldType2, ...customFieldType3].forEach(
+      (field) => {
+        if (field.IsRequired) {
+          if (field.FieldType === 2) {
+            // Numeric field
+            shape[`custom_${field.ShopCustomFieldId}`] = Yup.string()
+              .matches(/^\d+$/, `${field.FieldName} باید عدد باشد`)
+              .required(`${field.FieldName} الزامی است`);
+          } else if (field.FieldType === 3) {
+            // Date field
+            shape[`custom_${field.ShopCustomFieldId}`] = Yup.string().required(
+              `${field.FieldName} الزامی است`
+            );
+          } else {
+            // Text field
+            shape[`custom_${field.ShopCustomFieldId}`] = Yup.string().required(
+              `${field.FieldName} الزامی است`
+            );
+          }
+        }
+      }
+    );
+
+    return Yup.object().shape(shape);
+  };
+
+  const renderInput = (
+    customField: IShopCustomField,
+    formikProps: FormikProps<FormValues>
+  ) => {
+    const fieldName = `custom_${customField.ShopCustomFieldId}`;
     switch (customField.FieldType) {
       case 1:
         return (
@@ -220,341 +368,497 @@ const AddNewShop = () => {
             autoCorrect={false}
             keyboardType="default"
             placeholder={customField.FieldName}
-            onChangeText={() => {}}
-          ></AppTextInput>
+            onChangeText={formikProps.handleChange(fieldName)}
+            value={formikProps.values[fieldName]}
+            error={
+              formikProps.touched[fieldName] && formikProps.errors[fieldName]
+                ? formikProps.errors[fieldName]
+                : undefined
+            }
+          />
         );
       case 2:
-        return;
+        return (
+          <AppTextInput
+            autoCapitalize="none"
+            icon={
+              customField.IconName as React.ComponentProps<
+                typeof MaterialIcons
+              >["name"]
+            }
+            autoCorrect={false}
+            keyboardType="number-pad"
+            placeholder={customField.FieldName}
+            onChangeText={formikProps.handleChange(fieldName)}
+            value={formikProps.values[fieldName]}
+            error={
+              formikProps.touched[fieldName] && formikProps.errors[fieldName]
+                ? formikProps.errors[fieldName]
+                : undefined
+            }
+          />
+        );
       case 3:
-        return;
+        return (
+          <DatePickerField
+            date={formikProps.values[fieldName] || ""}
+            label={customField.FieldName}
+            onDateChange={(value) =>
+              formikProps.setFieldValue(fieldName, value)
+            }
+            error={
+              formikProps.touched[fieldName] && formikProps.errors[fieldName]
+                ? formikProps.errors[fieldName]
+                : undefined
+            }
+          />
+        );
       case 4:
-        return;
+        return (
+          <SelectionBottomSheet
+            placeholderText={
+              formikProps.values[fieldName] || customField.FieldName
+            }
+            title={customField.FieldName}
+            iconName={
+              customField.IconName as React.ComponentProps<
+                typeof MaterialIcons
+              >["name"]
+            }
+            options={["1", "2"]}
+            onSelect={(value) => formikProps.setFieldValue(fieldName, value)}
+          />
+        );
       case 5:
-        return;
+        return (
+          <AppTextInput
+            autoCapitalize="none"
+            icon={
+              customField.IconName as React.ComponentProps<
+                typeof MaterialIcons
+              >["name"]
+            }
+            autoCorrect={false}
+            keyboardType="number-pad"
+            placeholder={customField.FieldName}
+            onChangeText={formikProps.handleChange(fieldName)}
+            value={formikProps.values[fieldName]}
+            error={
+              formikProps.touched[fieldName] && formikProps.errors[fieldName]
+                ? formikProps.errors[fieldName]
+                : undefined
+            }
+          />
+        );
       case 6:
-        return;
+        return (
+          <IconButton
+            text="موقعیت جغرافیایی"
+            iconName="location-pin"
+            onPress={() => {}}
+            backgroundColor={colors.primary}
+            flex={1}
+          />
+        );
       case 7:
-        return;
-
+        return (
+          <AppTextInput
+            autoCapitalize="none"
+            icon={
+              customField.IconName as React.ComponentProps<
+                typeof MaterialIcons
+              >["name"]
+            }
+            autoCorrect={false}
+            keyboardType="default"
+            multiline
+            numberOfLines={10}
+            height={200}
+            placeholder={customField.FieldName}
+            onChangeText={formikProps.handleChange(fieldName)}
+            value={formikProps.values[fieldName]}
+            error={
+              formikProps.touched[fieldName] && formikProps.errors[fieldName]
+                ? formikProps.errors[fieldName]
+                : undefined
+            }
+          />
+        );
       default:
-        break;
+        return (
+          <AppTextInput
+            autoCapitalize="none"
+            icon={
+              customField.IconName as React.ComponentProps<
+                typeof MaterialIcons
+              >["name"]
+            }
+            autoCorrect={false}
+            keyboardType="default"
+            placeholder={customField.FieldName}
+            onChangeText={formikProps.handleChange(fieldName)}
+            value={formikProps.values[fieldName]}
+            error={
+              formikProps.touched[fieldName] && formikProps.errors[fieldName]
+                ? formikProps.errors[fieldName]
+                : undefined
+            }
+          />
+        );
     }
   };
 
+  const postFormData = async (values: FormValues) => {
+    try {
+      const provinceId = await LocationService.getProvinceIdByName(
+        values.province
+      );
+      const cityId = await PersonManagementService.getCityIdByName(
+        values.city,
+        values.province
+      );
+
+      const dataToPost = {
+        ShopId: 0,
+        ShopName: values.shopName,
+        CityId: cityId,
+        CityName: values.city,
+        ProvinceId: provinceId,
+        ProvinceName: values.province,
+        ShopAddress: values.shopAddress,
+        ShopAreaInMeters: values.shopArea,
+        ShopHistoryInYears: "",
+        ShopOwnershipType: 0,
+        ShopOwnershipTypeStr: values.shopOwnershipType,
+        OwnerFirstName: values.firstName,
+        OwnerLastName: values.lastName,
+        OwnerMobile: values.mobileNumber,
+        HasWarehouse: true,
+        HasWarehouseStr: values.hasWarehouse,
+        WarehouseOwnershipType: 0,
+        WarehouseOwnershipTypeStr: values.warehouseOwnershipType,
+        WarehouseAreaInMeters: values.warehouseArea,
+        WarehouseAddress: "string",
+        Description: values.notes,
+        ApplicationUserId: 0,
+        ApplicationUserName: "string",
+        InsertDate: null,
+        ShamsiInsertDate: null,
+        LastUpdateDate: null,
+        ShopCustomFieldList: shopCustomeField
+          .filter((cf) => values[`custom_${cf.ShopCustomFieldId}`])
+          .map((customField) => {
+            if (values[`custom_${customField.ShopCustomFieldId}`]) {
+              return {
+                ShopId: 0,
+                ShopCustomFieldId: customField.ShopCustomFieldId,
+                ShopCustomFieldSelectiveValueId: 0,
+                Value:
+                  values[`custom_${customField.ShopCustomFieldId}`].toString(),
+              };
+            }
+          }),
+      };
+
+      console.log("dataToPost", dataToPost);
+
+      // const response = await axios.post(`${appConfig.mobileApi}Shop/Add`);
+    } catch (error) {}
+  };
+
   return (
-    <>
-      <ScreenHeader title="ثبت فروشگاه جدید" />
-      <Toast
-        visible={toastVisible}
-        message={toastMessage}
-        type={toastType}
-        onDismiss={() => setToastVisible(false)}
-      />
-      <View style={styles.container}>
-        <ScrollView>
-          {/* All the previous input containers remain the same */}
-          <InputContainer title="مشخصات فروشگاه">
-            <AppTextInput
-              autoCapitalize="none"
-              icon="shopping-bag"
-              autoCorrect={false}
-              keyboardType="default"
-              placeholder="نام فروشگاه"
-              onChangeText={() => {}}
-            ></AppTextInput>
-            <View style={styles.rowContainer}>
-              <View style={styles.halfWidth}>
-                <SelectionBottomSheet
-                  key={`city-${selectedProvince}`}
-                  placeholderText={selectedCity || "شهرستان"}
-                  title="شهرستان"
-                  iconName="apartment"
-                  options={selectedProvince ? cities : []}
-                  onSelect={handleCitySelection}
-                  loading={loadingCities}
-                  onPress={selectedProvince ? undefined : handleCityClick}
-                />
-              </View>
-              <View style={styles.halfWidth}>
-                <SelectionBottomSheet
-                  placeholderText={selectedProvince || "استان"}
-                  title="استان"
-                  iconName="map"
-                  options={provinces}
-                  onSelect={handleProvinceSelection}
-                  loading={loadingProvinces}
-                />
-              </View>
-            </View>
-            <AppTextInput
-              autoCapitalize="none"
-              icon="shop"
-              autoCorrect={false}
-              keyboardType="default"
-              placeholder="آدرس فروشگاه"
-              onChangeText={() => {}}
-            ></AppTextInput>
-            <AppTextInput
-              autoCapitalize="none"
-              icon="shop"
-              autoCorrect={false}
-              keyboardType="default"
-              placeholder="متراژ فروشگاه"
-              onChangeText={() => {}}
-            ></AppTextInput>
-            <AppTextInput
-              autoCapitalize="none"
-              icon="shop"
-              autoCorrect={false}
-              keyboardType="default"
-              placeholder="نوع مالکیت فروشگاه"
-              onChangeText={() => {}}
-            ></AppTextInput>
-          </InputContainer>
-          <InputContainer title="مشخصات فردی">
-            <AppTextInput
-              autoCapitalize="none"
-              icon="person"
-              autoCorrect={false}
-              keyboardType="default"
-              placeholder="نام"
-              onChangeText={() => {}}
-            ></AppTextInput>
-            <AppTextInput
-              autoCapitalize="none"
-              icon="person"
-              autoCorrect={false}
-              keyboardType="default"
-              placeholder="نام خانوادگی"
-              onChangeText={() => {}}
-            ></AppTextInput>
-            {/* <AppTextInput
-              autoCapitalize="none"
-              icon="person-4"
-              autoCorrect={false}
-              keyboardType="default"
-              placeholder="نام پدر"
-              onChangeText={() => {}}
-            ></AppTextInput>
-            <AppTextInput
-              autoCapitalize="none"
-              icon="location-on"
-              autoCorrect={false}
-              keyboardType="default"
-              placeholder="محل تولد"
-              onChangeText={() => {}}
-            ></AppTextInput>
-
-            <DatePickerField
-              label="تاریخ تولد"
-              onDateChange={(date) => {}}
-              date="1400/01/01"
-            />
-
-            <AppTextInput
-              autoCapitalize="none"
-              icon="numbers"
-              autoCorrect={false}
-              keyboardType="number-pad"
-              placeholder="کد ملی"
-              onChangeText={() => {}}
-            ></AppTextInput> */}
-            <AppTextInput
-              autoCapitalize="none"
-              icon="phone-android"
-              autoCorrect={false}
-              keyboardType="number-pad"
-              placeholder="شماره موبایل"
-              onChangeText={() => {}}
-            ></AppTextInput>
-            {/* <AppTextInput
-              autoCapitalize="none"
-              icon="local-phone"
-              autoCorrect={false}
-              keyboardType="number-pad"
-              placeholder="شماره تلفن"
-              onChangeText={() => {}}
-            ></AppTextInput> */}
-          </InputContainer>
-
-          {/* Other input containers remain the same */}
-          {/* <InputContainer title="وضعیت تاهل">
-            <SelectionDialog
-              placeholderText="وضعیت تاهل"
-              title="وضعیت تاهل"
-              options={["متاهل", "مجرد"]}
-              onSelect={(value) => {}}
-              iconName="person"
-            />
-            <View></View>
-          </InputContainer> */}
-
-          <InputContainer title="مشخصات انبار">
-            <SelectionDialog
-              placeholderText="انبار دارد یا ندارد"
-              title="انبار دارد یا ندارد"
-              iconName="cell-tower"
-              options={["بله", "خیر"]}
-              onSelect={(value) => {}}
-            />
-            <AppTextInput
-              autoCapitalize="none"
-              icon="shop"
-              autoCorrect={false}
-              keyboardType="default"
-              placeholder="نوع مالکیت انبار"
-              onChangeText={() => {}}
-            ></AppTextInput>
-            <AppTextInput
-              autoCapitalize="none"
-              icon="shop"
-              autoCorrect={false}
-              keyboardType="default"
-              placeholder="متراژ انبار"
-              onChangeText={() => {}}
-            ></AppTextInput>
-            {/* <AppTextInput
-              autoCapitalize="none"
-              icon="shop"
-              autoCorrect={false}
-              keyboardType="default"
-              placeholder="تعداد لیفتراک"
-              onChangeText={() => {}}
-            ></AppTextInput>
-            <AppTextInput
-              autoCapitalize="none"
-              icon="shop"
-              autoCorrect={false}
-              keyboardType="default"
-              placeholder="متراژ دپویی"
-              onChangeText={() => {}}
-            ></AppTextInput> */}
-            {/* <AppTextInput
-              autoCapitalize="none"
-              icon="shop"
-              autoCorrect={false}
-              keyboardType="default"
-              placeholder="ثبت عکس های انبار"
-              onChangeText={() => {}}
-            ></AppTextInput> */}
-          </InputContainer>
-
-          {/* <InputContainer title="زمینه فعالیت فروشگاه">
-            <SelectionDialog
-              placeholderText="شبکه فروش دارد یا خیر"
-              title="شبکه فروش دارد یا خیر"
-              iconName="cell-tower"
-              options={["بله", "خیر"]}
-              onSelect={(value) => {}}
-            />
-            <SelectionDialog
-              placeholderText="شریک دارد یا خیر"
-              title="شریک دارد یا خیر"
-              iconName="group"
-              options={["بله", "خیر"]}
-              onSelect={(value) => {}}
-            />
-
-            <AppTextInput
-              autoCapitalize="none"
-              icon="currency-exchange"
-              autoCorrect={false}
-              keyboardType="default"
-              placeholder="سیستم مالی"
-              onChangeText={() => {}}
-            ></AppTextInput>
-            <AppTextInput
-              autoCapitalize="none"
-              icon="pin-drop"
-              autoCorrect={false}
-              keyboardType="default"
-              placeholder="ثبت موقعیت جغرافیایی"
-              onChangeText={() => {}}
-            ></AppTextInput>
-          </InputContainer> */}
-
-          <InputContainer title="خلاصه مذاکرات انجام شده">
-            <View style={styles.recordingsWrapper}>
-              {/* <IconButton
-                text="ضبط صدا"
-                iconName="record-voice-over"
-                backgroundColor={colors.primaryLight}
-                onPress={() => navigation.navigate("VoiceRecording")}
-                //   gradient={true}
-                //   iconSize={28}
-                //   style={styles.voiceButton}
-              /> */}
-
-              {recordings.length > 0 && (
-                <View style={styles.recordingsList}>
-                  <AppText style={styles.recordingsTitle}>
-                    صداهای ضبط شده ({recordings.length})
-                  </AppText>
-
-                  {recordings.map((item, index) => (
-                    <View key={index} style={styles.recordingItem}>
-                      <FontAwesome5
-                        name="file-audio"
-                        size={18}
-                        color={colors.primary}
-                      />
-                      <AppText style={styles.recordingText}>
-                        ضبط {index + 1} - {formatTime(item.duration)}
-                      </AppText>
-                    </View>
-                  ))}
-                </View>
-              )}
-            </View>
-
-            <View style={{ marginVertical: 7 }}></View>
-            <AppTextInput
-              autoCorrect={false}
-              placeholder="یادداشت متنی"
-              keyboardType="default"
-              multiline
-              numberOfLines={10}
-              height={200}
-            />
-
-            {/* <IconButton
-            text="یادداشت متنی"
-            iconName="text-snippet"
-            backgroundColor={colors.primaryLight}
-            onPress={() => setTextShowNote(true)}
-            // gradient={true}
-            // style={styles.textButton}
-          /> */}
-          </InputContainer>
-          {/* <AppModal
-          visible={textNoteShow}
-          onClose={() => setTextShowNote(false)}
-          onConfirm={() => setTextShowNote(false)}
-          insideElement={
-            <AppTextInput
-              autoCorrect={false}
-              placeholder="یادداشت خود را بنویسید..."
-              keyboardType="default"
-              multiline
-              numberOfLines={10}
-              height={200}
-            />
-          }
-        /> */}
-
-          <IconButton
-            text="ثبت اطلاعات"
-            iconName="done"
-            onPress={() => {
-              Alert.alert("موفق", "اطلاعات با موفقیت ثبت شد");
-            }}
-            backgroundColor={colors.success}
-            flex={1}
-            style={styles.submitButton}
+    <Formik<FormValues>
+      initialValues={generateInitialValues()}
+      validationSchema={generateValidationSchema()}
+      onSubmit={(values) => {
+        console.log("Form Values:", values);
+        Alert.alert("موفق", "اطلاعات با موفقیت ثبت شد");
+        // Implement API call or other submission logic here
+        postFormData(values);
+      }}
+    >
+      {(formikProps) => (
+        <>
+          <ScreenHeader title="ثبت فروشگاه جدید" />
+          <Toast
+            visible={toastVisible}
+            message={toastMessage}
+            type={toastType}
+            onDismiss={() => setToastVisible(false)}
           />
-        </ScrollView>
-      </View>
-    </>
+          <View style={styles.container}>
+            <ScrollView>
+              <InputContainer title="مشخصات فروشگاه">
+                <AppTextInput
+                  autoCapitalize="none"
+                  icon="shopping-bag"
+                  autoCorrect={false}
+                  keyboardType="default"
+                  placeholder="نام فروشگاه"
+                  onChangeText={formikProps.handleChange("shopName")}
+                  value={formikProps.values.shopName}
+                  error={
+                    formikProps.touched.shopName && formikProps.errors.shopName
+                      ? formikProps.errors.shopName
+                      : undefined
+                  }
+                />
+                <View style={styles.rowContainer}>
+                  <View style={styles.halfWidth}>
+                    <SelectionBottomSheet
+                      key={`city-${selectedProvince}`}
+                      placeholderText={selectedCity || "شهرستان"}
+                      title="شهرستان"
+                      iconName="apartment"
+                      options={selectedProvince ? cities : []}
+                      onSelect={(value) =>
+                        handleCitySelection(value, formikProps.setFieldValue)
+                      }
+                      loading={loadingCities}
+                      onPress={selectedProvince ? undefined : handleCityClick}
+                      error={
+                        formikProps.touched.city && formikProps.errors.city
+                          ? formikProps.errors.city
+                          : undefined
+                      }
+                    />
+                  </View>
+                  <View style={styles.halfWidth}>
+                    <SelectionBottomSheet
+                      placeholderText={selectedProvince || "استان"}
+                      title="استان"
+                      iconName="map"
+                      options={provinces}
+                      onSelect={(value) =>
+                        handleProvinceSelection(
+                          value,
+                          formikProps.setFieldValue
+                        )
+                      }
+                      loading={loadingProvinces}
+                      error={
+                        formikProps.touched.province &&
+                        formikProps.errors.province
+                          ? formikProps.errors.province
+                          : undefined
+                      }
+                    />
+                  </View>
+                </View>
+                <AppTextInput
+                  autoCapitalize="none"
+                  icon="shop"
+                  autoCorrect={false}
+                  keyboardType="default"
+                  placeholder="آدرس فروشگاه"
+                  onChangeText={formikProps.handleChange("shopAddress")}
+                  value={formikProps.values.shopAddress}
+                  error={
+                    formikProps.touched.shopAddress &&
+                    formikProps.errors.shopAddress
+                      ? formikProps.errors.shopAddress
+                      : undefined
+                  }
+                />
+                <AppTextInput
+                  autoCapitalize="none"
+                  icon="shop"
+                  autoCorrect={false}
+                  keyboardType="number-pad"
+                  placeholder="متراژ فروشگاه"
+                  onChangeText={formikProps.handleChange("shopArea")}
+                  value={formikProps.values.shopArea}
+                  error={
+                    formikProps.touched.shopArea && formikProps.errors.shopArea
+                      ? formikProps.errors.shopArea
+                      : undefined
+                  }
+                />
+                <AppTextInput
+                  autoCapitalize="none"
+                  icon="shop"
+                  autoCorrect={false}
+                  keyboardType="default"
+                  placeholder="نوع مالکیت فروشگاه"
+                  onChangeText={formikProps.handleChange("shopOwnershipType")}
+                  value={formikProps.values.shopOwnershipType}
+                  error={
+                    formikProps.touched.shopOwnershipType &&
+                    formikProps.errors.shopOwnershipType
+                      ? formikProps.errors.shopOwnershipType
+                      : undefined
+                  }
+                />
+                {customFieldType1.map((customField) =>
+                  renderInput(customField, formikProps)
+                )}
+              </InputContainer>
+              <InputContainer title="مشخصات فردی">
+                <AppTextInput
+                  autoCapitalize="none"
+                  icon="person"
+                  autoCorrect={false}
+                  keyboardType="default"
+                  placeholder="نام"
+                  onChangeText={formikProps.handleChange("firstName")}
+                  value={formikProps.values.firstName}
+                  error={
+                    formikProps.touched.firstName &&
+                    formikProps.errors.firstName
+                      ? formikProps.errors.firstName
+                      : undefined
+                  }
+                />
+                <AppTextInput
+                  autoCapitalize="none"
+                  icon="person"
+                  autoCorrect={false}
+                  keyboardType="default"
+                  placeholder="نام خانوادگی"
+                  onChangeText={formikProps.handleChange("lastName")}
+                  value={formikProps.values.lastName}
+                  error={
+                    formikProps.touched.lastName && formikProps.errors.lastName
+                      ? formikProps.errors.lastName
+                      : undefined
+                  }
+                />
+                <AppTextInput
+                  autoCapitalize="none"
+                  icon="phone-android"
+                  autoCorrect={false}
+                  keyboardType="number-pad"
+                  placeholder="شماره موبایل"
+                  onChangeText={formikProps.handleChange("mobileNumber")}
+                  value={formikProps.values.mobileNumber}
+                  error={
+                    formikProps.touched.mobileNumber &&
+                    formikProps.errors.mobileNumber
+                      ? formikProps.errors.mobileNumber
+                      : undefined
+                  }
+                />
+                {customFieldType3.map((customField) =>
+                  renderInput(customField, formikProps)
+                )}
+              </InputContainer>
+              <InputContainer title="مشخصات انبار">
+                <SelectionDialog
+                  placeholderText="انبار دارد یا ندارد"
+                  title="انبار دارد یا ندارد"
+                  iconName="shop"
+                  options={["بله", "خیر"]}
+                  onSelect={(value) =>
+                    formikProps.setFieldValue("hasWarehouse", value[0])
+                  }
+                  error={
+                    formikProps.touched.hasWarehouse &&
+                    formikProps.errors.hasWarehouse
+                      ? formikProps.errors.hasWarehouse
+                      : undefined
+                  }
+                />
+
+                <AppTextInput
+                  autoCapitalize="none"
+                  icon="shop"
+                  autoCorrect={false}
+                  keyboardType="default"
+                  placeholder="نوع مالکیت انبار"
+                  onChangeText={formikProps.handleChange(
+                    "warehouseOwnershipType"
+                  )}
+                  value={formikProps.values.warehouseOwnershipType}
+                  error={
+                    formikProps.touched.warehouseOwnershipType &&
+                    formikProps.errors.warehouseOwnershipType
+                      ? formikProps.errors.warehouseOwnershipType
+                      : undefined
+                  }
+                />
+                <AppTextInput
+                  autoCapitalize="none"
+                  icon="shop"
+                  autoCorrect={false}
+                  keyboardType="number-pad"
+                  placeholder="متراژ انبار"
+                  onChangeText={formikProps.handleChange("warehouseArea")}
+                  value={formikProps.values.warehouseArea}
+                  error={
+                    formikProps.touched.warehouseArea &&
+                    formikProps.errors.warehouseArea
+                      ? formikProps.errors.warehouseArea
+                      : undefined
+                  }
+                />
+                {customFieldType2.map((customField) =>
+                  renderInput(customField, formikProps)
+                )}
+              </InputContainer>
+              <InputContainer title="سایر توضیحات">
+                <View style={styles.recordingsWrapper}>
+                  {recordings.length > 0 && (
+                    <View style={styles.recordingsList}>
+                      <AppText style={styles.recordingsTitle}>
+                        صداهای ضبط شده ({recordings.length})
+                      </AppText>
+                      {recordings.map((item, index) => (
+                        <View key={index} style={styles.recordingItem}>
+                          <FontAwesome5
+                            name="file-audio"
+                            size={18}
+                            color={colors.primary}
+                          />
+                          <AppText style={styles.recordingText}>
+                            ضبط {index + 1} - {formatTime(item.duration)}
+                          </AppText>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                </View>
+                <View style={{ marginVertical: 7 }} />
+                <AppTextInput
+                  autoCorrect={false}
+                  placeholder="یادداشت متنی"
+                  keyboardType="default"
+                  multiline
+                  numberOfLines={10}
+                  height={200}
+                  onChangeText={formikProps.handleChange("notes")}
+                  value={formikProps.values.notes}
+                  error={
+                    formikProps.touched.notes && formikProps.errors.notes
+                      ? formikProps.errors.notes
+                      : undefined
+                  }
+                />
+              </InputContainer>
+              {Object.entries(customFieldOtherTypes).map(
+                ([groupId, fields]) => (
+                  <InputContainer
+                    key={groupId}
+                    title={fields[0].ShopCustomFieldGroupName}
+                  >
+                    {fields.map((customField) =>
+                      renderInput(customField, formikProps)
+                    )}
+                  </InputContainer>
+                )
+              )}
+              <IconButton
+                text="ثبت اطلاعات"
+                iconName="done"
+                onPress={formikProps.handleSubmit}
+                backgroundColor={colors.success}
+                flex={1}
+                style={styles.submitButton}
+              />
+            </ScrollView>
+          </View>
+        </>
+      )}
+    </Formik>
   );
 };
 
@@ -643,6 +947,11 @@ const styles = StyleSheet.create({
   },
   halfWidth: {
     width: "48%",
+  },
+  errorText: {
+    color: colors.danger,
+    fontSize: 12,
+    textAlign: "right",
   },
 });
 

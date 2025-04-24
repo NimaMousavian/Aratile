@@ -33,11 +33,7 @@ const B2CFieldMarketer = () => {
           ></AppTextInput>
           <AppButton title="جستجو" onPress={() => {}} />
         </View> */}
-        <SearchInput
-          value=""
-          onChangeText={() => {}}
-          onSearch={() => navigation.navigate("CustomerInfo")}
-        />
+        <SearchInput value="" onChangeText={() => {}} onSearch={() => {}} />
         <TouchableOpacity
           style={styles.addIconContainer}
           onPress={() => navigation.navigate("AddNewProject")}

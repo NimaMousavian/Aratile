@@ -83,19 +83,19 @@ const SupplyRequestCard: React.FC<PurchaseInfoCardProps> = ({
   const getGradiantColor = (): string[] => {
     switch (supplyRequest.RequestState) {
       case 1:
-        return ["#72aed6", colors.info];
+        return ["#42A5F5", "#1565C0"];
       case 2:
-        return ["#fdbf4d", colors.warning];
+        return ["#FFA726", "#EF6C00"];
       case 3:
-        return ["#fdbf4d", colors.warning];
+        return ["#FFA726", "#EF6C00"];
       case 4:
-        return ["#63af65", colors.success];
+        return ["#4CAF50", "#2E7D32"];
       case 5:
-        return ["#ff4444", colors.danger];
+        return ["#EF5350", "#C62828"];
       case 6:
-        return ["#9e9e9e", colors.medium];
+        return ["#9E9E9E", "#616161"];
       default:
-        return [colors.medium];
+        return ["#9E9E9E", "#616161"];
     }
   };
 
