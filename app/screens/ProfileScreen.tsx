@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { StyleSheet, View, TouchableOpacity } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import ScreenHeader from "../components/ScreenHeader";
@@ -10,6 +10,9 @@ import colors from "../config/colors";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { AppNavigationProp } from "../StackNavigator";
+import { getLoginResponse } from "./LogingScreen";
+import { ILoginResponse } from "../config/types";
+import { toPersianDigits } from "../utils/converters";
 
 // Define your RootStackParamList type
 type RootStackParamList = {
@@ -27,6 +30,20 @@ type ProfileScreenNavigationProp = StackNavigationProp<
 const ProfileScreen = () => {
   // Use the navigation hook with the correct type
   const navigation = useNavigation<AppNavigationProp>();
+  const [userData, setUserData] = useState<ILoginResponse>();
+
+  const fetchUserData = async () => {
+    const storedData = await getLoginResponse();
+    if (storedData) {
+      setUserData(storedData);
+    } else {
+      console.log("No data found");
+    }
+  };
+
+  useEffect(() => {
+    fetchUserData();
+  }, []);
 
   return (
     <View style={styles.mainContainer}>
@@ -44,8 +61,10 @@ const ProfileScreen = () => {
             <MaterialIcons name="person" size={100} color="#666666" />
           </View>
           <View style={{ marginVertical: 30 }}>
-            <AppText style={styles.nameText}>خانم پوردایی</AppText>
-            <AppText style={styles.roleText}>کارشناس فروش</AppText>
+            <AppText style={styles.nameText}>{userData?.UserName}</AppText>
+            <AppText style={styles.roleText}>
+              {toPersianDigits(userData?.UserMobile || "")}
+            </AppText>
           </View>
         </View>
 

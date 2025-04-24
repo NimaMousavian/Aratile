@@ -17,13 +17,18 @@ import { LinearGradient } from "expo-linear-gradient";
 import colors from "../config/colors";
 import ScreenHeader from "../components/ScreenHeader";
 import SearchInput from "../components/SearchInput";
+import { DatePickerField } from "../components/PersianDatePicker";
+import { useNavigation } from "@react-navigation/native";
+import { AppNavigationProp } from "../StackNavigator";
+import AppButton from "../components/Button";
+import ColleagueBottomSheet, {
+  Colleague,
+} from "./IssuingNewInvoice/ColleagueSearchModal";
+import AppText from "../components/Text";
+import axios from "axios";
 
 type FontWeight = "700" | "600" | "500" | "bold" | "semi-bold" | string;
-type StatusType =
-  | "صادر شده"
-  | "ارجاع از صندوق"
-  | "پیش فاکتور"
-  | "لغو شده";
+type StatusType = "صادر شده" | "ارجاع از صندوق" | "پیش فاکتور" | "لغو شده";
 
 // API response interface based on the JSON file
 interface InvoiceApiResponse {
@@ -233,28 +238,6 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
             </View>
           )} */}
 
-          {/* Date Section on a separate row */}
-          {date && (
-            <>
-              <View style={styles.divider} />
-              <View style={styles.purchaseRow}>
-                <View style={styles.purchaseItem}>
-                  <MaterialIcons
-                    name="event"
-                    size={18}
-                    color={colors.secondary || "#6c5ce7"}
-                  />
-                  <View style={styles.purchaseTextContainer}>
-                    <Text style={styles.secondaryLabel}>تاریخ:</Text>
-                    <Text style={styles.secondaryValue}>{convertToPersianNumbers(date)}</Text>
-                  </View>
-                </View>
-              </View>
-            </>
-          )}
-
-          <View style={styles.divider} />
-
           <View style={styles.purchaseRow}>
             <View style={styles.purchaseItem}>
               <MaterialIcons
@@ -276,12 +259,35 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
               >
                 <MaterialIcons
                   name="call"
-                  size={25}
+                  size={21}
                   color={colors.success || "#4CAF50"}
                 />
               </TouchableOpacity>
             )}
           </View>
+          <View style={styles.divider} />
+
+          {/* Date Section on a separate row */}
+          {date && (
+            <>
+              {/* <View style={styles.divider} /> */}
+              <View style={styles.purchaseRow}>
+                <View style={styles.purchaseItem}>
+                  <MaterialIcons
+                    name="event"
+                    size={18}
+                    color={colors.secondary || "#6c5ce7"}
+                  />
+                  <View style={styles.purchaseTextContainer}>
+                    <Text style={styles.secondaryLabel}>تاریخ:</Text>
+                    <Text style={styles.secondaryValue}>
+                      {convertToPersianNumbers(date)}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </>
+          )}
 
           <View style={styles.divider} />
           <View style={styles.purchaseRow}>
@@ -371,6 +377,8 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
 };
 
 const IssuedInvoices: React.FC = () => {
+  const navigation = useNavigation<AppNavigationProp>();
+
   const [items, setItems] = useState<InspectionItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchText, setSearchText] = useState<string>("");
@@ -386,6 +394,29 @@ const IssuedInvoices: React.FC = () => {
     4: 0, // لغو شده
   });
 
+  const [fromDate, setFromDate] = useState<string>("");
+  const [toDate, setToDate] = useState<string>("");
+
+  const [isColleagueBottomSheetVisible, setIsColleagueBottomSheetVisible] =
+    useState<boolean>(false);
+  const [selectedColleague, setSelectedColleague] = useState<Colleague>();
+  const [filterParams, setFilterParams] = useState<any>();
+
+  const [toastVisible, setToastVisible] = useState<boolean>(false);
+  const [toastMessage, setToastMessage] = useState<string>("");
+  const [toastType, setToastType] = useState<
+    "success" | "error" | "warning" | "info"
+  >("error");
+
+  const showToast = (
+    message: string,
+    type: "success" | "error" | "warning" | "info" = "error"
+  ) => {
+    setToastMessage(message);
+    setToastType(type);
+    setToastVisible(true);
+  };
+
   useEffect(() => {
     fetchInvoices();
     fetchInvoiceCounts();
@@ -394,9 +425,7 @@ const IssuedInvoices: React.FC = () => {
   // New function to fetch invoice counts
   const fetchInvoiceCounts = async () => {
     try {
-      const response = await fetch(
-        `${appConfig.mobileApi}Invoice/GetCount`
-      );
+      const response = await fetch(`${appConfig.mobileApi}Invoice/GetCount`);
 
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
@@ -406,7 +435,7 @@ const IssuedInvoices: React.FC = () => {
 
       // Convert the array to a record for easier access
       const countsRecord: Record<number, number> = {};
-      data.forEach(item => {
+      data.forEach((item) => {
         countsRecord[item.State] = item.InvoiceCount;
       });
 
@@ -445,7 +474,6 @@ const IssuedInvoices: React.FC = () => {
 
       setItems(mappedItems);
       setTotalPages(data.TotalPages);
-
     } catch (error) {
       console.error("Error fetching invoices:", error);
       Alert.alert(
@@ -455,6 +483,66 @@ const IssuedInvoices: React.FC = () => {
     } finally {
       setLoading(false);
       setRefreshing(false);
+    }
+  };
+
+  const getInvoicesWithFilter = async () => {
+    setLoading(true);
+    try {
+      console.log("filterParams:", filterParams);
+
+      // Initialize query string with required parameters
+      let queryString = "page=1&pageSize=1000";
+
+      // Add filterParams if they exist
+      if (filterParams) {
+        if (filterParams.filterPersonId) {
+          queryString += `&filterPersonId=${encodeURIComponent(
+            filterParams.filterPersonId
+          )}`;
+        }
+        if (filterParams.filterInvoiceDateFrom) {
+          queryString += `&filterInvoiceDateFrom=${encodeURIComponent(
+            filterParams.filterInvoiceDateFrom
+          )}`;
+        }
+        if (filterParams.filterInvoiceDateTo) {
+          queryString += `&filterInvoiceDateTo=${encodeURIComponent(
+            filterParams.filterInvoiceDateTo
+          )}`;
+        }
+      }
+
+      console.log("Query String:", queryString);
+
+      const response = await axios.get(
+        `${appConfig.mobileApi}Invoice/GetAll?${queryString}`
+      );
+
+      const data = response.data;
+      console.log("datas", data);
+
+      if (data) {
+        const mappedItems: InspectionItem[] = data.Items.map((item: any) => ({
+          id: item.InvoiceId.toString(),
+          buyerName: item.PersonFullName.trim() || "مشتری",
+          buyerPhone: item.PersonMobile,
+          invoiceNumber: item.InvoiceId.toString(),
+          date: item.ShamsiInvoiceDate,
+          sellerName: item.ApplicationUserName,
+          sellerPhone: "", // API doesn't provide seller phone
+          description: item.Description,
+          status: stateMap[item.State] || "صادر شده",
+          amount: item.TotalAmount,
+        }));
+
+        setItems(mappedItems);
+      }
+    } catch (error) {
+      console.log(error);
+      showToast("خطا در دریافت اطلاعات فاکتور ها", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -543,7 +631,11 @@ const IssuedInvoices: React.FC = () => {
         status={item.status}
         amount={item.amount}
         gradientColors={getColorsByStatus(item.status)}
-        onPress={() => console.log(`Card ${item.id} pressed`)}
+        onPress={() =>
+          navigation.navigate("ReceiveNewInvoice", {
+            invoicId: Number(item.id),
+          })
+        }
       />
     );
   };
@@ -557,6 +649,17 @@ const IssuedInvoices: React.FC = () => {
     );
   };
 
+  const handleSelectColleague = (colleague: Colleague) => {
+    setSelectedColleague(colleague);
+    setFilterParams((prev: any) => {
+      return {
+        ...prev,
+        filterPersonId: colleague.id.toString(),
+      };
+    });
+    console.log(colleague.id);
+  };
+
   return (
     <>
       <ScreenHeader title="فاکتورها" />
@@ -568,8 +671,74 @@ const IssuedInvoices: React.FC = () => {
             value={searchText}
             onChangeText={setSearchText}
             onSearch={handleSearch}
+            hasFilter
+            filterItems={
+              <>
+                <View style={{ flexDirection: "row-reverse", gap: 10 }}>
+                  <DatePickerField
+                    date={fromDate}
+                    label="از تاریخ"
+                    onDateChange={(value) => {
+                      setFromDate(value);
+                      setFilterParams((prev: any) => {
+                        return {
+                          ...prev,
+                          filterInvoiceDateFrom: value,
+                        };
+                      });
+                    }}
+                    customStyles={{ infoItem: { width: "50%" } }}
+                  />
+                  <DatePickerField
+                    date={toDate}
+                    label="تا تاریخ"
+                    onDateChange={(value) => {
+                      setToDate(value);
+                      setFilterParams((prev: any) => {
+                        return {
+                          ...prev,
+                          filterInvoiceDateTo: value,
+                        };
+                      });
+                    }}
+                  />
+                </View>
+                <TouchableOpacity
+                  onPress={() => setIsColleagueBottomSheetVisible(true)}
+                  style={styles.selectColleague}
+                >
+                  <MaterialIcons
+                    name="person"
+                    size={24}
+                    color={colors.medium}
+                  />
+                  <AppText
+                    style={{
+                      color: colors.medium,
+                      fontSize: 15,
+                      marginRight: 10,
+                    }}
+                  >
+                    {selectedColleague?.name || "خریدار"}
+                  </AppText>
+                </TouchableOpacity>
+                <AppButton
+                  title="فیلتر"
+                  onPress={() => getInvoicesWithFilter()}
+                  color="primary"
+                />
+              </>
+            }
           />
         </View>
+
+        <ColleagueBottomSheet
+          visible={isColleagueBottomSheetVisible}
+          onClose={() => setIsColleagueBottomSheetVisible(false)}
+          onSelectColleague={handleSelectColleague}
+          isCustomer
+          title="انتخاب خریدار"
+        />
 
         <View style={styles.tabContainer}>
           {/* Updated tab for "لغو شده" (Canceled) instead of "درحال ویرایش" (Editing) */}
@@ -848,7 +1017,7 @@ const styles = StyleSheet.create({
   purchaseCard: {
     backgroundColor: "#ffffff",
     borderRadius: 12,
-    marginBottom: 16,
+    marginBottom: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -882,7 +1051,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 10,
     paddingVertical: 4,
-    marginLeft: 8,
   },
   statusText: {
     color: "#ffffff",
@@ -896,6 +1064,7 @@ const styles = StyleSheet.create({
     flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
+    height: 25,
   },
   purchaseItem: {
     flex: 1,
@@ -959,8 +1128,8 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   callButtonCircle: {
-    width: 40,
-    height: 40,
+    width: 35,
+    height: 35,
     borderRadius: 20,
     borderColor: "#4CAF50",
     borderWidth: 2,
@@ -968,6 +1137,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginRight: 8,
+  },
+  selectColleague: {
+    borderWidth: 1,
+    borderColor: colors.gray,
+    borderRadius: 8,
+    padding: 10,
+    flexDirection: "row-reverse",
+    marginBottom: 10,
   },
 });
 

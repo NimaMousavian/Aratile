@@ -16,6 +16,8 @@ import { useNavigation } from "@react-navigation/native";
 import { AppNavigationProp, RootStackParamList } from "../StackNavigator";
 import { PanGestureHandler, State } from "react-native-gesture-handler";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getLoginResponse } from "./LogingScreen";
+import { ILoginResponse } from "../config/types";
 
 interface MenuItem {
   id: number;
@@ -59,13 +61,13 @@ const safeNavigate = (navigation: any, screenName: string, params?: any) => {
 
   // چک کردن سایر ناوبری‌های رایج
   const commonScreens: { [key: string]: string } = {
-    "IssuedInvoic": "IssuedInvoices",
-    "SupplyReques": "SupplyRequest",
-    "SupplyRequestLis": "SupplyRequestList",
-    "ReceiveNewInvoic": "ReceiveNewInvoice",
-    "StatusFilterScree": "StatusFilterScreen",
-    "B2BFieldMarkete": "B2BFieldMarketer",
-    "B2CFieldMarkete": "B2CFieldMarketer"
+    IssuedInvoic: "IssuedInvoices",
+    SupplyReques: "SupplyRequest",
+    SupplyRequestLis: "SupplyRequestList",
+    ReceiveNewInvoic: "ReceiveNewInvoice",
+    StatusFilterScree: "StatusFilterScreen",
+    B2BFieldMarkete: "B2BFieldMarketer",
+    B2CFieldMarkete: "B2CFieldMarketer",
   };
 
   // بررسی و اصلاح موارد شناخته شده
@@ -96,6 +98,45 @@ const safeNavigate = (navigation: any, screenName: string, params?: any) => {
   }
 };
 
+const testItems = [
+  {
+    id: 1,
+    display: true,
+  },
+  {
+    id: 2,
+    display: true,
+  },
+  {
+    id: 3,
+    display: true,
+  },
+  {
+    id: 4,
+    display: true,
+  },
+  {
+    id: 5,
+    display: true,
+  },
+  {
+    id: 6,
+    display: true,
+  },
+  {
+    id: 7,
+    display: true,
+  },
+  {
+    id: 8,
+    display: true,
+  },
+  {
+    id: 9,
+    display: true,
+  },
+];
+
 const initialItems: MenuItem[] = [
   {
     id: 1,
@@ -112,54 +153,43 @@ const initialItems: MenuItem[] = [
     screenName: "IssuedInvoices",
   },
   {
-    id: 5,
+    id: 3,
     name: "راس گیر چک",
     icon: "account-balance",
     iconColor: "#1C3F64",
   },
   {
-    id: 6,
+    id: 4,
     name: "ماشین حساب",
     icon: "calculate",
     iconColor: "#1C3F64",
   },
   {
-    id: 7,
+    id: 5,
     name: "درخواست تامین محصول",
     icon: "shopping-cart",
     iconColor: "#1C3F64",
     screenName: "SupplyRequest",
   },
-
   {
-    id: 8,
-    name: "دریافت فاکتور جدید",
-    icon: "receipt-long",
-    iconColor: "#1C3F64",
-    screenName: "ReceiveNewInvoice",
-  },
-  {
-    id: 9,
-    name: "فاکتور ها",
-    icon: "done-all",
-    iconColor: "#1C3F64",
-    screenName: "StatusFilterScreen",
-  },
-  {
-    id: 10,
+    id: 6,
     name: "بازاریاب میدانی B2B",
     icon: "business",
     iconColor: "#1C3F64",
     screenName: "B2BFieldMarketer",
   },
   {
-    id: 11,
+    id: 7,
     name: "بازاریاب میدانی B2C",
     icon: "business-center",
     iconColor: "#1C3F64",
     screenName: "B2CFieldMarketer",
   },
 ];
+
+const selectedItems = initialItems.filter(
+  (sItem) => testItems.find((item) => item.id === sItem.id)?.display !== false
+);
 
 const LAYOUT_STORAGE_KEY = "home_screen_items_layout";
 
@@ -170,7 +200,7 @@ const itemWidth = (screenWidth - (numColumns + 1) * itemMargin) / numColumns;
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<AppNavigationProp>();
-  const [items, setItems] = useState(initialItems);
+  const [items, setItems] = useState(selectedItems);
   const [isDragging, setIsDragging] = useState(false);
   const [draggedItem, setDraggedItem] = useState<MenuItem | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -178,6 +208,7 @@ const HomeScreen: React.FC = () => {
   const [layoutSaved, setLayoutSaved] = useState(false);
   const [showSaveButton, setShowSaveButton] = useState(false);
   const [layoutModified, setLayoutModified] = useState(false);
+  const [userData, setUserData] = useState<ILoginResponse>();
 
   const SPRING_CONFIG = {
     tension: 50,
@@ -217,8 +248,18 @@ const HomeScreen: React.FC = () => {
 
   const panState = useRef(State.UNDETERMINED);
 
+  const fetchUserData = async () => {
+    const storedData = await getLoginResponse();
+    if (storedData) {
+      setUserData(storedData);
+    } else {
+      console.log("No data found");
+    }
+  };
+
   useEffect(() => {
     loadSavedLayout();
+    fetchUserData();
   }, []);
 
   const loadSavedLayout = async () => {
@@ -287,7 +328,7 @@ const HomeScreen: React.FC = () => {
       }
     }
 
-    return () => { };
+    return () => {};
   }, [isDragging]);
 
   useEffect(() => {
@@ -486,7 +527,7 @@ const HomeScreen: React.FC = () => {
 
       const distance = Math.sqrt(
         Math.pow(position.x - currentPosition.x, 2) +
-        Math.pow(position.y - currentPosition.y, 2)
+          Math.pow(position.y - currentPosition.y, 2)
       );
 
       if (distance < minDistance) {
@@ -836,7 +877,7 @@ const HomeScreen: React.FC = () => {
           <View style={styles.avatarCircle}>
             <MaterialIcons name="person" size={26} color="#666666" />
           </View>
-          <Text style={styles.userName}>خانم پوردایی</Text>
+          <Text style={styles.userName}>{userData?.UserName}</Text>
         </TouchableOpacity>
         {/* <MaterialIcons name="create" size={24} color="#666666" /> */}
       </View>

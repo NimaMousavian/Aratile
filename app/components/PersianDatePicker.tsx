@@ -99,7 +99,7 @@ export const PersianDatePicker: React.FC<PersianDatePickerProps> = ({
   isVisible,
   onClose,
   onConfirm,
-  initialDate = [1400, 1, 1],
+  initialDate = [1404, 1, 1],
   startYear = 1390,
   yearCount = 21,
   customStyles = {},

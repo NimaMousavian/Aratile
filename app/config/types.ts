@@ -107,3 +107,47 @@ export interface ILoginResponse {
     RoleName: string;
   }[];
 }
+
+export interface IInvoic {
+  InvoiceId: number;
+  PersonId: number;
+  PersonFullName: string;
+  PersonMobile: string;
+  ApplicationUserId: number;
+  ApplicationUserName: string;
+  InvoiceDate: string;
+  ShamsiInvoiceDate: string;
+  PaymentType: number;
+  State: number;
+  TotalAmount: number;
+  Description: string;
+  InsertDate: string;
+  InvoiceItemList: IInvoidItem[];
+}
+
+export interface IInvoidItem {
+  InvoiceItemId: number;
+  InvoiceId: number;
+  ProductId: number;
+  ProductName: string;
+  ProductSKU: string;
+  ProductMeasurementUnitId: number;
+  ProductMeasurementUnitName: string;
+  ProductPackaginName: string;
+  ProductVariationId: number;
+  ProductVariationName: string;
+  ProductVariationSKU: string;
+  PackagingRule_ProductPropertyValue: string;
+  PackagingRule_MathematicalOperationType: number;
+  PackagingRule_RoundingType: number;
+  PackagingRule_DiscountApplyType: number;
+  PackagingRule_ExtraAmountApplyType: number;
+  ProductQuantity: number;
+  PackagingQuantity: number;
+  PerUnitPrice: number;
+  PerPackagePrice: number;
+  Discount: number;
+  Extra: number;
+  Description: string;
+  InsertDate: string;
+}

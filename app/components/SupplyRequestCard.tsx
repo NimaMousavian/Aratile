@@ -482,7 +482,7 @@ const styles = StyleSheet.create({
   purchaseCard: {
     backgroundColor: "#ffffff",
     borderRadius: 12,
-    marginBottom: 16,
+    marginBottom: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -511,7 +511,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 10,
     paddingVertical: 4,
-    marginLeft: 8,
   },
   statusText: {
     color: "#ffffff",

@@ -50,7 +50,6 @@ interface IProps {
   visible: boolean;
   closeDrawer: () => void;
   product?: Product;
-  productName: string;
   requestedValue_?: number;
   description_?: string;
   getAllSupplyRequest: () => void;
@@ -177,13 +176,13 @@ const SupplyRequestForm: React.FC<IProps> = ({
       );
 
       if (response.status === 200) {
-        showToast("درخواست با موفقیت ثبت شد", "success");
+        showToast("ویرایش با موفقیت انجام شد", "success");
         getAllSupplyRequest();
         closeDrawer();
       }
     } catch (error) {
       console.log(error);
-      showToast("خطا در ثبت درخواست", "error");
+      showToast("خطا در ویرایش اطلاعات", "error");
     } finally {
       setIsLoading(false);
     }

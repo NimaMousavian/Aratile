@@ -9,8 +9,20 @@ import AppText from "../components/Text";
 import BlurTextInput from "../components/BlurTextInput";
 import { BlurView } from "expo-blur";
 import Toast from "../components/Toast";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import appConfig from "../../config";
+import { ILoginResponse } from "../config/types";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+export const getLoginResponse = async (): Promise<ILoginResponse | null> => {
+  try {
+    const jsonValue = await AsyncStorage.getItem("loginResponse");
+    return jsonValue != null ? JSON.parse(jsonValue) : null;
+  } catch (error) {
+    console.error("Error retrieving login response:", error);
+    return null;
+  }
+};
 
 const LogingScreen = () => {
   const [userName, setUserName] = useState<string>("");
@@ -51,18 +63,36 @@ const LogingScreen = () => {
       };
 
       try {
-        const response = await axios.post(
+        const response = await axios.post<ILoginResponse>(
           `${appConfig.mobileApi}Account/login`,
           loginInfo
         );
+        console.log(response.data);
+
         if (response.status === 200) {
           console.log("login successfuly");
+          storeLoginResponse(response.data);
         }
       } catch (error) {
+        const axiosError = error as AxiosError;
+        console.log(axiosError);
+
         showToast("خطا در ورود، لطفا دوباره سعی کنید", "error");
       }
     }
     console.log(userName, password);
+  };
+
+  const storeLoginResponse = async (loginResponse: ILoginResponse) => {
+    try {
+      await AsyncStorage.setItem(
+        "loginResponse",
+        JSON.stringify(loginResponse)
+      );
+      console.log("Login response stored successfully");
+    } catch (error) {
+      console.error("Error storing login response:", error);
+    }
   };
 
   return (
