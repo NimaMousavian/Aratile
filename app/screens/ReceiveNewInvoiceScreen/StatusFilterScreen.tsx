@@ -143,16 +143,6 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
             <Text style={styles.purchaseHeaderText}>{headerTitle}</Text>
           </View>
 
-          {status && (
-            <View
-              style={[
-                styles.statusBadge,
-                { backgroundColor: getStatusColor() },
-              ]}
-            >
-              <Text style={styles.statusText}>{status}</Text>
-            </View>
-          )}
         </LinearGradient>
 
         <View style={styles.purchaseContent}>

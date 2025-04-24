@@ -14,8 +14,8 @@ import colors from "../config/colors";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useNavigation } from "@react-navigation/native";
 import { AppNavigationProp, RootStackParamList } from "../StackNavigator";
-import { PanGestureHandler, State } from "react-native-gesture-handler";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { PanGestureHandler, State } from "react-native-gesture-handler";
 
 interface MenuItem {
   id: number;
@@ -44,20 +44,16 @@ const getFontFamily = (baseFont: string, weight: FontWeight): string => {
   return baseFont;
 };
 
-// تابع کمکی برای اصلاح نام صفحات و ناوبری امن
 const safeNavigate = (navigation: any, screenName: string, params?: any) => {
   console.log(`Attempting to navigate to: ${screenName}`);
 
-  // بررسی و اصلاح نام صفحات در صورت وجود خطای تایپی
   let correctedName = screenName;
 
-  // اصلاح نام‌های رایج که ممکن است اشتباه تایپ شوند
   if (screenName === "IssuingNewInvoic") {
     correctedName = "IssuingNewInvoice";
     console.log(`Corrected screen name from ${screenName} to ${correctedName}`);
   }
 
-  // چک کردن سایر ناوبری‌های رایج
   const commonScreens: { [key: string]: string } = {
     "IssuedInvoic": "IssuedInvoices",
     "SupplyReques": "SupplyRequest",
@@ -68,25 +64,21 @@ const safeNavigate = (navigation: any, screenName: string, params?: any) => {
     "B2CFieldMarkete": "B2CFieldMarketer"
   };
 
-  // بررسی و اصلاح موارد شناخته شده
   if (commonScreens[screenName]) {
     correctedName = commonScreens[screenName];
     console.log(`Corrected screen name from ${screenName} to ${correctedName}`);
   }
 
   try {
-    // کد جلوگیری از خطا با چک کردن نام دقیق
     if (correctedName === "IssuingNewInvoice") {
       console.log("Navigating to IssuingNewInvoice with explicit parameters");
       navigation.navigate(correctedName, { scannedCode: undefined });
     } else {
-      // سایر صفحات
       navigation.navigate(correctedName, params);
     }
   } catch (error) {
     console.error(`Navigation error: ${error}`);
 
-    // تلاش برای ناوبری به صفحه اصلی در صورت خطا
     try {
       console.log("Fallback to Home navigation");
       navigation.navigate("Home");
@@ -130,7 +122,6 @@ const initialItems: MenuItem[] = [
     iconColor: "#1C3F64",
     screenName: "SupplyRequest",
   },
-
   {
     id: 8,
     name: "دریافت فاکتور جدید",
@@ -168,6 +159,17 @@ const numColumns = 2;
 const itemMargin = 10;
 const itemWidth = (screenWidth - (numColumns + 1) * itemMargin) / numColumns;
 
+const SPRING_CONFIG = {
+  tension: 50,
+  friction: 7,
+  useNativeDriver: true,
+};
+
+const TIMING_CONFIG = {
+  duration: 200,
+  useNativeDriver: true,
+};
+
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<AppNavigationProp>();
   const [items, setItems] = useState(initialItems);
@@ -177,18 +179,11 @@ const HomeScreen: React.FC = () => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [layoutSaved, setLayoutSaved] = useState(false);
   const [showSaveButton, setShowSaveButton] = useState(false);
-  const [layoutModified, setLayoutModified] = useState(false);
+  const instructionOpacity = useRef(new Animated.Value(0)).current;
+  const isDraggingRef = useRef(false);
 
-  const SPRING_CONFIG = {
-    tension: 50,
-    friction: 7,
-    useNativeDriver: true,
-  };
-
-  const TIMING_CONFIG = {
-    duration: 200,
-    useNativeDriver: true,
-  };
+  const interactionType = useRef<'none' | 'scrolling' | 'dragging'>('none');
+  const lastInteractionTimestamp = useRef(0);
 
   const itemRefs = useRef<{
     [key: number]: {
@@ -208,57 +203,36 @@ const HomeScreen: React.FC = () => {
 
   const scrollOffset = useRef(0);
   const flatListRef = useRef<FlatList | null>(null);
-
   const lastGestureLocation = useRef({ x: 0, y: 0 });
-
   const isSwapping = useRef(false);
-
   const swapDebounceTimer = useRef<NodeJS.Timeout | null>(null);
-
   const panState = useRef(State.UNDETERMINED);
+
+  useEffect(() => {
+    isDraggingRef.current = isDragging;
+
+    if (isDragging) {
+      setShowSaveButton(true);
+      interactionType.current = 'dragging';
+    } else {
+ 
+      setTimeout(() => {
+        if (interactionType.current === 'dragging') {
+          interactionType.current = 'none';
+        }
+      }, 300);
+    }
+
+    Animated.timing(instructionOpacity, {
+      toValue: showSaveButton ? 1 : 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [isDragging, showSaveButton]);
 
   useEffect(() => {
     loadSavedLayout();
   }, []);
-
-  const loadSavedLayout = async () => {
-    try {
-      const savedLayout = await AsyncStorage.getItem(LAYOUT_STORAGE_KEY);
-      if (savedLayout !== null) {
-        const parsedLayout = JSON.parse(savedLayout);
-        setItems(parsedLayout);
-      }
-    } catch (error) {
-      console.error("خطا در بارگذاری چیدمان:", error);
-    }
-  };
-
-  const saveLayout = async () => {
-    try {
-      await AsyncStorage.setItem(LAYOUT_STORAGE_KEY, JSON.stringify(items));
-      setLayoutSaved(true);
-      setLayoutModified(false);
-      setShowSaveButton(false);
-    } catch (error) {
-      console.error("خطا در ذخیره چیدمان:", error);
-    }
-  };
-
-  const calculateGridPositions = () => {
-    Object.keys(itemRefs.current).forEach((indexStr) => {
-      const index = parseInt(indexStr);
-      const itemRef = itemRefs.current[index];
-
-      if (itemRef && itemRef.position && itemRef.dimensions) {
-        gridPositions.current[index] = {
-          x: itemRef.position.x,
-          y: itemRef.position.y,
-          width: itemRef.dimensions.width,
-          height: itemRef.dimensions.height,
-        };
-      }
-    });
-  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -271,7 +245,7 @@ const HomeScreen: React.FC = () => {
   useEffect(() => {
     const handleTouchEnd = () => {
       if (isDragging) {
-        finishDragging();
+        stopDraggingButKeepSaveButton();
       }
     };
 
@@ -295,7 +269,7 @@ const HomeScreen: React.FC = () => {
 
     if (isDragging) {
       safetyTimer = setTimeout(() => {
-        finishDragging();
+        stopDraggingButKeepSaveButton();
       }, 10000);
     }
 
@@ -306,11 +280,82 @@ const HomeScreen: React.FC = () => {
     };
   }, [isDragging]);
 
-  const finishDragging = () => {
-    setLayoutModified(true);
-    setShowSaveButton(true);
+  const pendingGridCalculation = useRef(false);
+  const calculateGridPositions = () => {
+    if (pendingGridCalculation.current) return;
+    pendingGridCalculation.current = true;
+
+    requestAnimationFrame(() => {
+      Object.keys(itemRefs.current).forEach((indexStr) => {
+        const index = parseInt(indexStr);
+        const itemRef = itemRefs.current[index];
+
+        if (itemRef && itemRef.component &&
+          (!gridPositions.current[index] ||
+            !itemRef.position ||
+            itemRef.position.x === 0)) {
+
+          itemRef.component.measure(
+            (
+              x: number,
+              y: number,
+              width: number,
+              height: number,
+              pageX: number,
+              pageY: number
+            ) => {
+              if (typeof pageX === "number" && typeof pageY === "number") {
+                itemRef.position = {
+                  x: pageX + width / 2,
+                  y: pageY + height / 2 - scrollOffset.current,
+                };
+
+                itemRef.dimensions = { width, height };
+
+                gridPositions.current[index] = {
+                  x: pageX + width / 2,
+                  y: pageY + height / 2 - scrollOffset.current,
+                  width,
+                  height,
+                };
+              }
+            }
+          );
+        }
+      });
+
+      pendingGridCalculation.current = false;
+    });
+  };
+
+  const loadSavedLayout = async () => {
+    try {
+      const savedLayout = await AsyncStorage.getItem(LAYOUT_STORAGE_KEY);
+      if (savedLayout !== null) {
+        const parsedLayout = JSON.parse(savedLayout);
+        setItems(parsedLayout);
+      }
+    } catch (error) {
+      console.error("خطا در بارگذاری چیدمان:", error);
+    }
+  };
+
+  const saveLayout = async () => {
+    try {
+      await AsyncStorage.setItem(LAYOUT_STORAGE_KEY, JSON.stringify(items));
+      setLayoutSaved(true);
+      console.log("چیدمان ذخیره شد:", items);
+    } catch (error) {
+      console.error("خطا در ذخیره چیدمان:", error);
+    }
+  };
+
+  const stopDraggingButKeepSaveButton = () => {
+    interactionType.current = 'none';
 
     if (draggedIndex !== null) {
+      saveLayout();
+
       Animated.parallel([
         Animated.spring(itemRefs.current[draggedIndex].scale, {
           toValue: 1,
@@ -334,6 +379,8 @@ const HomeScreen: React.FC = () => {
         setDraggedIndex(null);
         setHoveredIndex(null);
 
+        setShowSaveButton(true);
+
         Object.keys(itemRefs.current).forEach((indexStr) => {
           const index = parseInt(indexStr);
           if (itemRefs.current[index]) {
@@ -349,6 +396,7 @@ const HomeScreen: React.FC = () => {
       setDraggedItem(null);
       setDraggedIndex(null);
       setHoveredIndex(null);
+      setShowSaveButton(true);
     }
 
     isSwapping.current = false;
@@ -357,6 +405,72 @@ const HomeScreen: React.FC = () => {
       clearTimeout(swapDebounceTimer.current);
       swapDebounceTimer.current = null;
     }
+
+    setTimeout(() => {
+      if (interactionType.current === 'none') {
+        lastInteractionTimestamp.current = Date.now();
+      }
+    }, 200);
+  };
+
+  const finishDragging = () => {
+    if (draggedIndex !== null) {
+      saveLayout();
+
+      Animated.parallel([
+        Animated.spring(itemRefs.current[draggedIndex].scale, {
+          toValue: 1,
+          ...SPRING_CONFIG,
+        }),
+        Animated.spring(itemRefs.current[draggedIndex].translateX, {
+          toValue: 0,
+          ...SPRING_CONFIG,
+        }),
+        Animated.spring(itemRefs.current[draggedIndex].translateY, {
+          toValue: 0,
+          ...SPRING_CONFIG,
+        }),
+        Animated.timing(itemRefs.current[draggedIndex].opacity, {
+          toValue: 1,
+          ...TIMING_CONFIG,
+        }),
+      ]).start(() => {
+        setIsDragging(false);
+        setDraggedItem(null);
+        setDraggedIndex(null);
+        setHoveredIndex(null);
+        setShowSaveButton(false);
+
+        Object.keys(itemRefs.current).forEach((indexStr) => {
+          const index = parseInt(indexStr);
+          if (itemRefs.current[index]) {
+            itemRefs.current[index].translateX.setValue(0);
+            itemRefs.current[index].translateY.setValue(0);
+            itemRefs.current[index].scale.setValue(1);
+            itemRefs.current[index].opacity.setValue(1);
+          }
+        });
+      });
+    } else {
+      setIsDragging(false);
+      setDraggedItem(null);
+      setDraggedIndex(null);
+      setHoveredIndex(null);
+      setShowSaveButton(false);
+    }
+
+    interactionType.current = 'none';
+    isSwapping.current = false;
+
+    if (swapDebounceTimer.current) {
+      clearTimeout(swapDebounceTimer.current);
+      swapDebounceTimer.current = null;
+    }
+  };
+
+  const finishDraggingAndSave = () => {
+    saveLayout();
+    finishDragging();
   };
 
   const debouncedSwapItems = (fromIndex: number, toIndex: number) => {
@@ -382,8 +496,7 @@ const HomeScreen: React.FC = () => {
     newItems[toIndex] = temp;
 
     setItems(newItems);
-    setLayoutModified(true);
-    setShowSaveButton(true);
+    saveLayout();
     setDraggedIndex(toIndex);
 
     if (
@@ -498,57 +611,68 @@ const HomeScreen: React.FC = () => {
     return closestIndex;
   };
 
-  const handleAutoScroll = (y: number) => {
-    if (!flatListRef.current) return;
+  const autoScrollTimerId = useRef<NodeJS.Timeout | null>(null);
 
-    const SCROLL_THRESHOLD = 100;
-    const SCROLL_INCREMENT = 5;
+  const handleAutoScroll = (y: number) => {
+    if (!flatListRef.current || interactionType.current !== 'dragging') return;
+
+    if (autoScrollTimerId.current) {
+      clearTimeout(autoScrollTimerId.current);
+      autoScrollTimerId.current = null;
+    }
+
+    const SCROLL_THRESHOLD = 120;
+    const MIN_SCROLL_INCREMENT = 2;
+    const MAX_SCROLL_INCREMENT = 12;
     const { height } = Dimensions.get("window");
 
-    if (y < SCROLL_THRESHOLD) {
-      if (flatListRef.current.scrollToOffset) {
-        flatListRef.current.scrollToOffset({
-          offset: Math.max(0, scrollOffset.current - SCROLL_INCREMENT),
-          animated: false,
-        });
-      }
-    } else if (y > height - SCROLL_THRESHOLD) {
-      if (flatListRef.current.scrollToOffset) {
-        flatListRef.current.scrollToOffset({
-          offset: scrollOffset.current + SCROLL_INCREMENT,
-          animated: false,
-        });
-      }
+    const topDistance = Math.max(0, y);
+    const bottomDistance = Math.max(0, height - y);
+
+    let scrollSpeed = 0;
+
+    if (topDistance < SCROLL_THRESHOLD) {
+      const factor = 1 - (topDistance / SCROLL_THRESHOLD);
+      scrollSpeed = -MIN_SCROLL_INCREMENT - (MAX_SCROLL_INCREMENT - MIN_SCROLL_INCREMENT) * factor;
+    }
+    else if (bottomDistance < SCROLL_THRESHOLD) {
+      const factor = 1 - (bottomDistance / SCROLL_THRESHOLD);
+      scrollSpeed = MIN_SCROLL_INCREMENT + (MAX_SCROLL_INCREMENT - MIN_SCROLL_INCREMENT) * factor;
+    }
+
+    if (scrollSpeed !== 0) {
+      const newOffset = Math.max(0, scrollOffset.current + scrollSpeed);
+
+      flatListRef.current.scrollToOffset({
+        offset: newOffset,
+        animated: false,
+      });
+
+      autoScrollTimerId.current = setTimeout(() => {
+        if (interactionType.current === 'dragging') {
+          handleAutoScroll(y);
+        }
+      }, 16);
     }
   };
 
-  const renderInstructionsAndSaveButton = () => {
-    if (!isDragging && !showSaveButton) return null;
+  const renderSaveButton = () => {
+    if (!showSaveButton) return null;
 
     return (
-      <View style={styles.dragInstructionContainer}>
-        {isDragging ? (
-          <Text style={styles.dragInstructionText}>
-            کارت را به مکان دلخواه بکشید و رها کنید
-          </Text>
-        ) : (
-          showSaveButton && (
-            <Text style={styles.dragInstructionText}>
-              چیدمان جدید ایجاد شد. برای اتمام روی دکمه زیر کلیک کنید
-            </Text>
-          )
-        )}
-
+      <Animated.View
+        style={[
+          styles.saveButtonContainer,
+          { opacity: instructionOpacity },
+        ]}
+      >
         <TouchableOpacity
-          style={styles.saveButton}
-          onPress={isDragging ? finishDragging : saveLayout}
+          style={styles.floatingSaveButton}
+          onPress={finishDraggingAndSave}
         >
-          <View style={styles.saveButtonContent}>
-            <MaterialIcons name="save" size={20} color="#fff" />
-            <Text style={styles.saveButtonText}>ذخیره و اتمام</Text>
-          </View>
+          <MaterialIcons name="check" size={28} color="#fff" />
         </TouchableOpacity>
-      </View>
+      </Animated.View>
     );
   };
 
@@ -569,9 +693,18 @@ const HomeScreen: React.FC = () => {
     const translateX = itemRefs.current[index].translateX;
     const translateY = itemRefs.current[index].translateY;
     const opacity = itemRefs.current[index].opacity;
+    const isLastItemInOddList =
+      index === items.length - 1 && items.length % 2 !== 0;
 
     const onLongPress = () => {
       if (isDragging) return;
+      if (interactionType.current === 'scrolling' &&
+        Date.now() - lastInteractionTimestamp.current < 300) {
+        return;
+      }
+
+      interactionType.current = 'dragging';
+      lastInteractionTimestamp.current = Date.now();
 
       if (
         !itemRefs.current[index]?.position ||
@@ -620,6 +753,7 @@ const HomeScreen: React.FC = () => {
       setIsDragging(true);
       setDraggedItem(item);
       setDraggedIndex(index);
+      setShowSaveButton(true);
 
       Animated.spring(scale, {
         toValue: 1.1,
@@ -634,7 +768,8 @@ const HomeScreen: React.FC = () => {
     };
 
     const onGestureEvent = (event: any) => {
-      if (isDragging && draggedIndex === index) {
+
+      if (isDragging && draggedIndex === index && interactionType.current === 'dragging') {
         const {
           translationX: tx,
           translationY: ty,
@@ -644,15 +779,19 @@ const HomeScreen: React.FC = () => {
 
         lastGestureLocation.current = { x: absoluteX, y: absoluteY };
 
-        translateX.setValue(tx);
-        translateY.setValue(ty);
+        requestAnimationFrame(() => {
+          translateX.setValue(tx);
+          translateY.setValue(ty);
+        });
 
         const currentPosition = {
           x: itemRefs.current[index].position.x + tx,
           y: itemRefs.current[index].position.y + ty,
         };
 
-        handleAutoScroll(absoluteY);
+        if (interactionType.current === 'dragging') {
+          handleAutoScroll(absoluteY);
+        }
 
         const closestIndex = findClosestItem(currentPosition);
 
@@ -673,14 +812,16 @@ const HomeScreen: React.FC = () => {
       panState.current = state;
 
       if (state === State.BEGAN) {
-        translateX.setValue(0);
-        translateY.setValue(0);
+        if (interactionType.current === 'dragging') {
+          translateX.setValue(0);
+          translateY.setValue(0);
+        }
       } else if (
         state === State.END ||
         state === State.CANCELLED ||
         state === State.FAILED
       ) {
-        if (isDragging && draggedIndex === index) {
+        if (isDragging && draggedIndex === index && interactionType.current === 'dragging') {
           const { translationX: tx, translationY: ty } = event.nativeEvent;
           const currentPosition = {
             x: itemRefs.current[index].position.x + tx,
@@ -697,19 +838,16 @@ const HomeScreen: React.FC = () => {
             swapItems(index, closestIndex);
           }
 
-          setLayoutModified(true);
-          setShowSaveButton(true);
-
-          finishDragging();
+          saveLayout();
+          stopDraggingButKeepSaveButton();
         }
       }
 
-      if (state !== State.ACTIVE && state !== State.BEGAN && isDragging) {
+      if (state !== State.ACTIVE && state !== State.BEGAN && isDragging && interactionType.current === 'dragging') {
         setTimeout(() => {
-          if (isDragging) {
-            setLayoutModified(true);
-            setShowSaveButton(true);
-            finishDragging();
+          if (isDragging && interactionType.current === 'dragging') {
+            saveLayout();
+            stopDraggingButKeepSaveButton();
           }
         }, 300);
       }
@@ -720,9 +858,11 @@ const HomeScreen: React.FC = () => {
 
     return (
       <PanGestureHandler
-        enabled={true}
+        enabled={interactionType.current === 'dragging'} 
         onGestureEvent={onGestureEvent}
         onHandlerStateChange={onHandlerStateChange}
+        minDist={5} 
+        avgTouches
       >
         <Animated.View
           ref={(ref) => {
@@ -732,6 +872,7 @@ const HomeScreen: React.FC = () => {
           }}
           style={[
             styles.gridItemContainer,
+            isLastItemInOddList && styles.fullWidthItem,
             {
               transform: [
                 { scale: isBeingDragged ? scale : 1 },
@@ -786,6 +927,7 @@ const HomeScreen: React.FC = () => {
           <TouchableOpacity
             style={[
               styles.gridItem,
+              isLastItemInOddList && styles.fullWidthItemContent,
               isBeingDragged && styles.draggingItem,
               isHovered && styles.hoveredItem,
             ]}
@@ -795,8 +937,6 @@ const HomeScreen: React.FC = () => {
             onPress={() => {
               if (!isDragging && item.screenName) {
                 console.log("Navigating to:", item.screenName);
-
-                // استفاده از تابع کمکی safeNavigate
                 safeNavigate(navigation, item.screenName);
               }
             }}
@@ -838,44 +978,74 @@ const HomeScreen: React.FC = () => {
           </View>
           <Text style={styles.userName}>خانم پوردایی</Text>
         </TouchableOpacity>
-        {/* <MaterialIcons name="create" size={24} color="#666666" /> */}
       </View>
 
-      {renderInstructionsAndSaveButton()}
+      {renderSaveButton()}
 
-      <FlatList
-        ref={flatListRef}
-        data={items}
-        numColumns={2}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={styles.list}
-        columnWrapperStyle={styles.columnWrapper}
-        extraData={[
-          isDragging,
-          draggedIndex,
-          hoveredIndex,
-          items,
-          showSaveButton,
-        ]}
-        scrollEnabled={true}
-        onScroll={(e) => {
-          scrollOffset.current = e.nativeEvent.contentOffset.y;
+      <View style={styles.listContainer}>
+        <FlatList
+          ref={flatListRef}
+          data={items}
+          numColumns={2}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={styles.list}
+          columnWrapperStyle={styles.columnWrapper}
+          extraData={[isDragging, draggedIndex, hoveredIndex, items, showSaveButton]}
+          showsVerticalScrollIndicator={true}
+          scrollEnabled={interactionType.current !== 'dragging'} 
+          onScrollBeginDrag={() => {
+            if (interactionType.current !== 'dragging') {
+              interactionType.current = 'scrolling';
+              lastInteractionTimestamp.current = Date.now();
+            }
+          }}
+          onScrollEndDrag={() => {
+            if (interactionType.current === 'scrolling') {
+              setTimeout(() => {
+                interactionType.current = 'none';
+              }, 200);
+            }
+          }}
+          onScroll={(e) => {
+            scrollOffset.current = e.nativeEvent.contentOffset.y;
 
-          if (isDragging) {
-            Object.keys(gridPositions.current).forEach((key) => {
-              const index = parseInt(key);
-              if (gridPositions.current[index]) {
-                gridPositions.current[index].y =
-                  itemRefs.current[index].position.y -
-                  scrollOffset.current +
-                  e.nativeEvent.contentOffset.y;
+            if (isDragging && interactionType.current === 'dragging') {
+              if (draggedIndex !== null && itemRefs.current[draggedIndex]) {
+                const index = draggedIndex;
+
+                if (itemRefs.current[index]?.component) {
+                  itemRefs.current[index].component.measure(
+                    (
+                      x: number,
+                      y: number,
+                      width: number,
+                      height: number,
+                      pageX: number,
+                      pageY: number
+                    ) => {
+                      if (typeof pageX === "number" && typeof pageY === "number") {
+                        itemRefs.current[index].position = {
+                          x: pageX + width / 2,
+                          y: pageY + height / 2 - scrollOffset.current,
+                        };
+
+                        gridPositions.current[index] = {
+                          x: pageX + width / 2,
+                          y: pageY + height / 2 - scrollOffset.current,
+                          width,
+                          height,
+                        };
+                      }
+                    }
+                  );
+                }
               }
-            });
-          }
-        }}
-        scrollEventThrottle={16}
-      />
+            }
+          }}
+          scrollEventThrottle={16}
+        />
+      </View>
     </View>
   );
 };
@@ -883,23 +1053,25 @@ const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 50,
     backgroundColor: "#ffffff",
   },
   logoContainer: {
     alignItems: "center",
     justifyContent: "center",
     paddingTop: 10,
+    marginTop: Platform.OS === 'ios' ? 50 : 30,
   },
   logo: {
     width: 100,
     height: 36,
   },
+  listContainer: {
+    flex: 1,
+    width: '100%',
+  },
   list: {
-    paddingLeft: 5,
-    paddingRight: 5,
-    marginLeft: 5,
-    marginRight: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
     paddingBottom: 100,
   },
   gridItemContainer: {
@@ -934,7 +1106,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
-    elevation: 1,
   },
   hoveredItem: {
     borderColor: colors.primary,
@@ -954,7 +1125,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 20,
-    marginVertical: 20,
+    marginVertical: 10,
   },
   infoBox: {
     flexDirection: "row-reverse",
@@ -981,25 +1152,36 @@ const styles = StyleSheet.create({
     flexDirection: "row-reverse",
     justifyContent: "center",
   },
-
-  dragInstructionContainer: {
-    backgroundColor: colors.light,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 15,
-    marginHorizontal: 20,
-    marginBottom: 15,
-    alignItems: "center",
+  unevenColumnWrapper: {
+    flexDirection: "row-reverse",
+    justifyContent: "center",
+    paddingHorizontal: itemMargin,
+  },
+  fullWidthItem: {
+    width: screenWidth - 2 * itemMargin,
+    alignSelf: "center",
+  },
+  fullWidthItemContent: {
+    width: "100%",
+  },
+  saveButtonContainer: {
+    position: 'absolute',
+    bottom: 30,
+    right: 30,
+    zIndex: 1000,
+  },
+  floatingSaveButton: {
+    backgroundColor: colors.primary || "#1C3F64",
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.3,
     shadowRadius: 5,
-    elevation: 1,
-  },
-  dragInstructionText: {
-    fontFamily: getFontFamily("Yekan_Bakh_Bold", "500"),
-    textAlign: "center",
-    fontSize: 16,
+    elevation: 5,
   },
   dragHandle: {
     position: "absolute",
@@ -1015,7 +1197,7 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   saveButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.primary || "#1C3F64",
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: 10,
@@ -1025,18 +1207,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 3,
-  },
-  saveButtonContent: {
-    flexDirection: "row-reverse",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  saveButtonText: {
-    color: "white",
-    fontFamily: getFontFamily("Yekan_Bakh_Bold", "600"),
-    fontSize: 16,
-    textAlign: "center",
   },
 });
 
