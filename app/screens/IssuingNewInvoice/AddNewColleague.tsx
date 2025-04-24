@@ -19,7 +19,7 @@ import PersonGroupService from "./api/PersonGroupService";
 import PersonManagementService, {
   CreatePersonDTO,
 } from "./api/PersonManagementService";
-import { InputContainer } from "../B2BFieldMarketer/AddNewShop";
+import { InputContainer } from "../FieldMarketer/B2BFieldMarketer/AddNewShop";
 import axios from "axios";
 import appConfig from "../../../config";
 

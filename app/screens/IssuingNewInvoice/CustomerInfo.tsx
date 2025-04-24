@@ -19,7 +19,7 @@ import PersonGroupService, { PersonGroup } from "./api/PersonGroupService";
 import PersonManagementService, {
   CreatePersonDTO,
 } from "./api/PersonManagementService";
-import { InputContainer } from "../B2BFieldMarketer/AddNewShop";
+import { InputContainer } from "../FieldMarketer/B2BFieldMarketer/AddNewShop";
 import axios from "axios";
 import appConfig from "../../../config";
 import { useRoute } from "@react-navigation/native";
@@ -124,7 +124,7 @@ const CustomerInfo = () => {
         name: person.IntroducerPersonFullName,
         phone: person.IntroducerPersonMobile,
       });
-    } catch (error) {}
+    } catch (error) { }
   };
 
   useEffect(() => {
@@ -545,7 +545,7 @@ const CustomerInfo = () => {
                     ? `${selectedColleague.name} (${selectedColleague.phone})`
                     : ""
                 }
-                onChangeText={() => {}}
+                onChangeText={() => { }}
                 editable={false}
               />
             </TouchableOpacity>

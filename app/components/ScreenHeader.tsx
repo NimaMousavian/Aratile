@@ -1,5 +1,5 @@
 import { LinearGradient } from "expo-linear-gradient";
-import React from "react";
+import React, { ReactNode } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import colors from "../config/colors";
 import AppText from "./Text";
@@ -10,11 +10,15 @@ import { AppNavigationProp } from "../StackNavigator";
 interface IProps {
   title: string;
   isProfilePage?: boolean;
+  rightComponent?: ReactNode; 
 }
 
-const ScreenHeader: React.FC<IProps> = ({ title, isProfilePage = false }) => {
+const ScreenHeader: React.FC<IProps> = ({
+  title,
+  isProfilePage = false,
+  rightComponent
+}) => {
   const navigation = useNavigation<AppNavigationProp>();
-
 
   const textColor = isProfilePage ? colors.white : colors.dark;
   const iconColor = isProfilePage ? "white" : colors.secondary;
@@ -28,6 +32,12 @@ const ScreenHeader: React.FC<IProps> = ({ title, isProfilePage = false }) => {
         <MaterialIcons name="arrow-forward-ios" size={24} color={iconColor} />
       </TouchableOpacity>
       <AppText style={[styles.headerText, { color: textColor }]}>{title}</AppText>
+
+      {rightComponent && (
+        <View style={styles.rightComponentContainer}>
+          {rightComponent}
+        </View>
+      )}
     </View>
   );
 };
@@ -54,6 +64,11 @@ const styles = StyleSheet.create({
     right: 12,
     top: 63,
   },
+  rightComponentContainer: {
+    position: "absolute",
+    left: 12, 
+    top: 63,
+  }
 });
 
 export default ScreenHeader;

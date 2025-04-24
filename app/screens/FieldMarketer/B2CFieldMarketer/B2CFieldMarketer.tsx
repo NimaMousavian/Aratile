@@ -1,0 +1,53 @@
+import React from "react";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
+import colors from "../../../config/colors";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useNavigation } from "@react-navigation/native";
+import { AppNavigationProp } from "../../../StackNavigator";
+import ScreenHeader from "../../../components/ScreenHeader";
+import SearchInput from "../../../components/SearchInput";
+
+const B2CFieldMarketer = () => {
+  const navigation = useNavigation<AppNavigationProp>();
+  return (
+    <>
+      <ScreenHeader
+        title="بازاریاب میدانی B2C"
+        rightComponent={
+          <TouchableOpacity
+            style={styles.addIconContainer}
+            onPress={() => navigation.navigate("AddNewProject")}
+          >
+            <MaterialIcons name="add" size={24} color="white" />
+          </TouchableOpacity>
+        }
+      />
+      <View style={styles.container}>
+        <SearchInput
+          value=""
+          onChangeText={() => { }}
+          onSearch={() => navigation.navigate("CustomerInfo")}
+        />
+      </View>
+    </>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20
+  },
+  addIconContainer: {
+   backgroundColor: colors.secondary,
+      width: 40,
+      height: 40,
+      marginLeft: 8,
+      marginTop:-4,
+      justifyContent: "center",
+      alignItems: "center",
+      borderRadius: 12,
+    }
+});
+
+export default B2CFieldMarketer;

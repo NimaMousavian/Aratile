@@ -21,11 +21,12 @@ import { IProduct } from "./config/types";
 import AppText from "./components/Text";
 import LogingScreen from "./screens/LogingScreen";
 import ProfileScreen from "./screens/ProfileScreen";
-import B2BFieldMarketer from "./screens/B2BFieldMarketer/B2BFieldMarketer";
-import B2CFieldMarketer from "./screens/B2CFieldMarketer/B2CFieldMarketer";
-import AddNewShop from "./screens/B2BFieldMarketer/AddNewShop";
-import VoiceRecordingScreen from "./screens/B2BFieldMarketer/VoiceRecording";
-import AddNewProject from "./screens/B2CFieldMarketer/AddNewProject";
+import B2BFieldMarketer from "./screens/FieldMarketer/B2BFieldMarketer/B2BFieldMarketer";
+import B2CFieldMarketer from "./screens/FieldMarketer/B2CFieldMarketer/B2CFieldMarketer";
+import FieldMarketer from "./screens/FieldMarketer/FieldMarketer";
+import AddNewShop from "./screens/FieldMarketer/B2BFieldMarketer/AddNewShop";
+import VoiceRecordingScreen from "./screens/FieldMarketer/B2BFieldMarketer/VoiceRecording";
+import AddNewProject from "./screens/FieldMarketer/B2CFieldMarketer/AddNewProject";
 import ReceiveNewInvoiceScreen from "./screens/ReceiveNewInvoiceScreen/ReceiveNewInvoiceScreen";
 import StatusFilterScreen from "./screens/ReceiveNewInvoiceScreen/StatusFilterScreen";
 import HomeScreen from "./screens/HomeScreen";
@@ -76,6 +77,7 @@ export type RootStackParamList = {
   StatusFilterScreen: undefined;
 
   MarketerHome: undefined;
+  FieldMarketer: undefined;
   B2BFieldMarketer: undefined;
   B2CFieldMarketer: undefined;
   AddNewShop: undefined;
@@ -196,6 +198,7 @@ const StackNavigator: React.FC = () => {
         }}
       />
       {/* FieldMarketing Screens */}
+      <Stack.Screen name="FieldMarketer" component={FieldMarketer} />
       <Stack.Screen name="B2BFieldMarketer" component={B2BFieldMarketer} />
       <Stack.Screen name="B2CFieldMarketer" component={B2CFieldMarketer} />
       <Stack.Screen name="AddNewShop" component={AddNewShop} />

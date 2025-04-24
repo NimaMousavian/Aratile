@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from "react";
 import { ScrollView, StyleSheet, View, Alert } from "react-native";
-import AppText from "../../components/Text";
-import AppTextInput from "../../components/TextInput";
+import AppText from "../../../components/Text";
+import AppTextInput from "../../../components/TextInput";
 
-import colors from "../../config/colors";
+import colors from "../../../config/colors";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   DatePickerField,
   PersianDatePicker,
-} from "../../components/PersianDatePicker";
-import IconButton from "../../components/IconButton";
+} from "../../../components/PersianDatePicker";
+import IconButton from "../../../components/IconButton";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
-import { AppNavigationProp } from "../../StackNavigator";
+import { AppNavigationProp } from "../../../StackNavigator";
 import { MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
-import IconButtonSquare from "../../components/IconButtonSquare";
-import SelectionDialog from "../../components/SelectionDialog";
-import AppModal from "../../components/AppModal";
-import ScreenHeader from "../../components/ScreenHeader";
+import IconButtonSquare from "../../../components/IconButtonSquare";
+import SelectionDialog from "../../../components/SelectionDialog";
+import AppModal from "../../../components/AppModal";
+import ScreenHeader from "../../../components/ScreenHeader";
 
 export const InputContainer: React.FC<{
   title: string;
@@ -84,7 +84,7 @@ const AddNewShop = () => {
               autoCorrect={false}
               keyboardType="default"
               placeholder="نام و نام خانوادگی"
-              onChangeText={() => {}}
+              onChangeText={() => { }}
             ></AppTextInput>
             <AppTextInput
               autoCapitalize="none"
@@ -92,7 +92,7 @@ const AddNewShop = () => {
               autoCorrect={false}
               keyboardType="default"
               placeholder="نام پدر"
-              onChangeText={() => {}}
+              onChangeText={() => { }}
             ></AppTextInput>
             <AppTextInput
               autoCapitalize="none"
@@ -100,12 +100,12 @@ const AddNewShop = () => {
               autoCorrect={false}
               keyboardType="default"
               placeholder="محل تولد"
-              onChangeText={() => {}}
+              onChangeText={() => { }}
             ></AppTextInput>
 
             <DatePickerField
               label="تاریخ تولد"
-              onDateChange={(date) => {}}
+              onDateChange={(date) => { }}
               date="1400/01/01"
             />
 
@@ -115,7 +115,7 @@ const AddNewShop = () => {
               autoCorrect={false}
               keyboardType="number-pad"
               placeholder="کد ملی"
-              onChangeText={() => {}}
+              onChangeText={() => { }}
             ></AppTextInput>
             <AppTextInput
               autoCapitalize="none"
@@ -123,7 +123,7 @@ const AddNewShop = () => {
               autoCorrect={false}
               keyboardType="number-pad"
               placeholder="شماره موبایل"
-              onChangeText={() => {}}
+              onChangeText={() => { }}
             ></AppTextInput>
             <AppTextInput
               autoCapitalize="none"
@@ -131,7 +131,7 @@ const AddNewShop = () => {
               autoCorrect={false}
               keyboardType="number-pad"
               placeholder="شماره تلفن"
-              onChangeText={() => {}}
+              onChangeText={() => { }}
             ></AppTextInput>
           </InputContainer>
 
@@ -141,7 +141,7 @@ const AddNewShop = () => {
               placeholderText="وضعیت تاهل"
               title="وضعیت تاهل"
               options={["متاهل", "مجرد"]}
-              onSelect={(value) => {}}
+              onSelect={(value) => { }}
               iconName="person"
             />
             <View></View>
@@ -154,7 +154,7 @@ const AddNewShop = () => {
               autoCorrect={false}
               keyboardType="default"
               placeholder="نام فروشگاه"
-              onChangeText={() => {}}
+              onChangeText={() => { }}
             ></AppTextInput>
             <AppTextInput
               autoCapitalize="none"
@@ -162,7 +162,7 @@ const AddNewShop = () => {
               autoCorrect={false}
               keyboardType="default"
               placeholder="آدرس فروشگاه"
-              onChangeText={() => {}}
+              onChangeText={() => { }}
             ></AppTextInput>
             <AppTextInput
               autoCapitalize="none"
@@ -170,7 +170,7 @@ const AddNewShop = () => {
               autoCorrect={false}
               keyboardType="default"
               placeholder="متراژ فروشگاه"
-              onChangeText={() => {}}
+              onChangeText={() => { }}
             ></AppTextInput>
             <AppTextInput
               autoCapitalize="none"
@@ -178,7 +178,7 @@ const AddNewShop = () => {
               autoCorrect={false}
               keyboardType="default"
               placeholder="مدت زمان فعالیت (سال)"
-              onChangeText={() => {}}
+              onChangeText={() => { }}
             ></AppTextInput>
             <AppTextInput
               autoCapitalize="none"
@@ -186,13 +186,13 @@ const AddNewShop = () => {
               autoCorrect={false}
               keyboardType="default"
               placeholder="مالکیت فروشگاه"
-              onChangeText={() => {}}
+              onChangeText={() => { }}
             ></AppTextInput>
             <SelectionDialog
               placeholderText="پانل ریلی دارد یا خیر"
               title="پانل ریلی دارد یا خیر"
               options={["بله", "خیر"]}
-              onSelect={(value) => {}}
+              onSelect={(value) => { }}
               iconName="shop"
             />
             <AppTextInput
@@ -201,7 +201,7 @@ const AddNewShop = () => {
               autoCorrect={false}
               keyboardType="default"
               placeholder="تعداد دکور زنده"
-              onChangeText={() => {}}
+              onChangeText={() => { }}
             ></AppTextInput>
             <AppTextInput
               autoCapitalize="none"
@@ -209,7 +209,7 @@ const AddNewShop = () => {
               autoCorrect={false}
               keyboardType="default"
               placeholder="ثبت عکس های فروشگاه"
-              onChangeText={() => {}}
+              onChangeText={() => { }}
             ></AppTextInput>
           </InputContainer>
           <InputContainer title="مشخصات انبار">
@@ -219,7 +219,7 @@ const AddNewShop = () => {
               autoCorrect={false}
               keyboardType="default"
               placeholder="آدرس انبار"
-              onChangeText={() => {}}
+              onChangeText={() => { }}
             ></AppTextInput>
             <AppTextInput
               autoCapitalize="none"
@@ -227,7 +227,7 @@ const AddNewShop = () => {
               autoCorrect={false}
               keyboardType="default"
               placeholder="متراژ انبار"
-              onChangeText={() => {}}
+              onChangeText={() => { }}
             ></AppTextInput>
             <AppTextInput
               autoCapitalize="none"
@@ -235,7 +235,7 @@ const AddNewShop = () => {
               autoCorrect={false}
               keyboardType="default"
               placeholder="تعداد لیفتراک"
-              onChangeText={() => {}}
+              onChangeText={() => { }}
             ></AppTextInput>
             <AppTextInput
               autoCapitalize="none"
@@ -243,7 +243,7 @@ const AddNewShop = () => {
               autoCorrect={false}
               keyboardType="default"
               placeholder="متراژ دپویی"
-              onChangeText={() => {}}
+              onChangeText={() => { }}
             ></AppTextInput>
             <AppTextInput
               autoCapitalize="none"
@@ -251,7 +251,7 @@ const AddNewShop = () => {
               autoCorrect={false}
               keyboardType="default"
               placeholder="مالکیت انبار"
-              onChangeText={() => {}}
+              onChangeText={() => { }}
             ></AppTextInput>
             <AppTextInput
               autoCapitalize="none"
@@ -259,7 +259,7 @@ const AddNewShop = () => {
               autoCorrect={false}
               keyboardType="default"
               placeholder="ثبت عکس های انبار"
-              onChangeText={() => {}}
+              onChangeText={() => { }}
             ></AppTextInput>
           </InputContainer>
           <InputContainer title="زمینه فعالیت فروشگاه">
@@ -268,14 +268,14 @@ const AddNewShop = () => {
               title="شبکه فروش دارد یا خیر"
               iconName="cell-tower"
               options={["بله", "خیر"]}
-              onSelect={(value) => {}}
+              onSelect={(value) => { }}
             />
             <SelectionDialog
               placeholderText="شریک دارد یا خیر"
               title="شریک دارد یا خیر"
               iconName="group"
               options={["بله", "خیر"]}
-              onSelect={(value) => {}}
+              onSelect={(value) => { }}
             />
 
             <AppTextInput
@@ -284,7 +284,7 @@ const AddNewShop = () => {
               autoCorrect={false}
               keyboardType="default"
               placeholder="سیستم مالی"
-              onChangeText={() => {}}
+              onChangeText={() => { }}
             ></AppTextInput>
             <AppTextInput
               autoCapitalize="none"
@@ -292,7 +292,7 @@ const AddNewShop = () => {
               autoCorrect={false}
               keyboardType="default"
               placeholder="ثبت موقعیت جغرافیایی"
-              onChangeText={() => {}}
+              onChangeText={() => { }}
             ></AppTextInput>
           </InputContainer>
 
@@ -303,9 +303,9 @@ const AddNewShop = () => {
                 iconName="record-voice-over"
                 backgroundColor={colors.primaryLight}
                 onPress={() => navigation.navigate("VoiceRecording")}
-                //   gradient={true}
-                //   iconSize={28}
-                //   style={styles.voiceButton}
+              //   gradient={true}
+              //   iconSize={28}
+              //   style={styles.voiceButton}
               />
 
               {recordings.length > 0 && (

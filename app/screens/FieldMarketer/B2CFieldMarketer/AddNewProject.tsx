@@ -1,14 +1,14 @@
 import React from "react";
 import { Alert, ScrollView, StyleSheet, View } from "react-native";
 import { InputContainer } from "../B2BFieldMarketer/AddNewShop";
-import AppTextInput from "../../components/TextInput";
-import SelectionDialog from "../../components/SelectionDialog";
-import AppButton from "../../components/Button";
-import IconButton from "../../components/IconButton";
-import colors from "../../config/colors";
+import AppTextInput from "../../../components/TextInput";
+import SelectionDialog from "../../../components/SelectionDialog";
+import AppButton from "../../../components/Button";
+import IconButton from "../../../components/IconButton";
+import colors from "../../../config/colors";
 import { useNavigation } from "@react-navigation/native";
-import { AppNavigationProp } from "../../StackNavigator";
-import ScreenHeader from "../../components/ScreenHeader";
+import { AppNavigationProp } from "../../../StackNavigator";
+import ScreenHeader from "../../../components/ScreenHeader";
 
 const AddNewProject = () => {
   const navigation = useNavigation<AppNavigationProp>();
@@ -24,7 +24,7 @@ const AddNewProject = () => {
               autoCorrect={false}
               keyboardType="default"
               placeholder="عنوان پروژه"
-              onChangeText={() => {}}
+              onChangeText={() => { }}
             ></AppTextInput>
             <AppTextInput
               autoCapitalize="none"
@@ -32,7 +32,7 @@ const AddNewProject = () => {
               autoCorrect={false}
               keyboardType="default"
               placeholder="نام و نام خانوادگی کارفرما"
-              onChangeText={() => {}}
+              onChangeText={() => { }}
             ></AppTextInput>
 
             <AppTextInput
@@ -41,7 +41,7 @@ const AddNewProject = () => {
               autoCorrect={false}
               keyboardType="number-pad"
               placeholder="شماره موبایل"
-              onChangeText={() => {}}
+              onChangeText={() => { }}
             ></AppTextInput>
             <AppTextInput
               autoCapitalize="none"
@@ -49,7 +49,7 @@ const AddNewProject = () => {
               autoCorrect={false}
               keyboardType="number-pad"
               placeholder="شماره تلفن"
-              onChangeText={() => {}}
+              onChangeText={() => { }}
             ></AppTextInput>
             <AppTextInput
               autoCapitalize="none"
@@ -57,7 +57,7 @@ const AddNewProject = () => {
               autoCorrect={false}
               keyboardType="default"
               placeholder="آدرس"
-              onChangeText={() => {}}
+              onChangeText={() => { }}
             ></AppTextInput>
 
             <AppTextInput
@@ -66,7 +66,7 @@ const AddNewProject = () => {
               autoCorrect={false}
               keyboardType="number-pad"
               placeholder="متراژ زیربنا"
-              onChangeText={() => {}}
+              onChangeText={() => { }}
             ></AppTextInput>
             <AppTextInput
               autoCapitalize="none"
@@ -74,7 +74,7 @@ const AddNewProject = () => {
               autoCorrect={false}
               keyboardType="number-pad"
               placeholder="تعداد طبقات"
-              onChangeText={() => {}}
+              onChangeText={() => { }}
             ></AppTextInput>
           </InputContainer>
           <InputContainer title="مرحله ی ساخت">
@@ -90,11 +90,11 @@ const AddNewProject = () => {
                 "تاسیسات",
                 "کاشی شده",
               ]}
-              onSelect={(value) => {}}
+              onSelect={(value) => { }}
             />
             <AppButton
               title="ثبت عکس های پروژه"
-              onPress={() => {}}
+              onPress={() => { }}
               color="primaryLight"
             />
           </InputContainer>
@@ -104,11 +104,11 @@ const AddNewProject = () => {
               title="مرحله ی ساخت در چه وضعیتی است؟"
               iconName="high-quality"
               options={["A", "B", "C"]}
-              onSelect={(value) => {}}
+              onSelect={(value) => { }}
             />
             <AppButton
               title="ثبت موقعیت جفرافیایی"
-              onPress={() => {}}
+              onPress={() => { }}
               color="primaryLight"
             />
           </InputContainer>
@@ -119,9 +119,9 @@ const AddNewProject = () => {
                 iconName="record-voice-over"
                 backgroundColor={colors.primaryLight}
                 onPress={() => navigation.navigate("VoiceRecording")}
-                //   gradient={true}
-                //   iconSize={28}
-                //   style={styles.voiceButton}
+              //   gradient={true}
+              //   iconSize={28}
+              //   style={styles.voiceButton}
               />
 
               {/* {recordings.length > 0 && (
