@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -9,8 +9,9 @@ import {
   SafeAreaView,
   StatusBar,
   Linking,
+  ActivityIndicator,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../StackNavigator";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -22,6 +23,10 @@ import DynamicModal from "../../components/DynamicModal";
 import IconButton from "../../components/IconButton";
 import PurchaseInfoCard from "../../components/PurchaseInfoCard";
 import ScreenHeader from "../../components/ScreenHeader";
+import axios from "axios";
+import appConfig from "../../../config";
+import { IInvoic } from "../../config/types";
+import { toPersianDigits } from "../../utils/converters";
 interface PurchaseData {
   buyer: {
     name: string;
@@ -114,6 +119,9 @@ enum ModalType {
 
 const ReceiveNewInvoiceScreen: React.FC = () => {
   const navigation = useNavigation<ReceiveNewInvoiceNavigationProp>();
+  const route = useRoute();
+  const params = route.params as { invoicId: number };
+  const invoicId = params.invoicId;
 
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [modalType, setModalType] = useState<ModalType>(ModalType.None);
@@ -129,6 +137,39 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
     icon: "check-circle",
     colors: [colors.success, colors.success],
   });
+  const [invoic, setInvoic] = useState<IInvoic>();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [toastVisible, setToastVisible] = useState<boolean>(false);
+  const [toastMessage, setToastMessage] = useState<string>("");
+  const [toastType, setToastType] = useState<
+    "success" | "error" | "warning" | "info"
+  >("error");
+
+  const showToast = (
+    message: string,
+    type: "success" | "error" | "warning" | "info" = "error"
+  ) => {
+    setToastMessage(message);
+    setToastType(type);
+    setToastVisible(true);
+  };
+
+  const getInvoic = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get<IInvoic>(
+        `${appConfig.mobileApi}Invoice/Get?id=${invoicId}`
+      );
+      setInvoic(response.data);
+    } catch (error) {
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    getInvoic();
+  }, []);
 
   const handlePhoneCall = (phoneNumber: string) => {
     Linking.openURL(`tel:${phoneNumber}`);
@@ -456,105 +497,141 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
 
       <SafeAreaView style={styles.safeAreaBottom}>
         <View style={styles.container}>
-          <ScrollView
-            style={[
-              styles.content,
-              Platform.OS === "android" && styles.androidContentAdjustment,
-            ]}
-            showsVerticalScrollIndicator={false}
-          >
-            <View
-              style={[
-                styles.card,
-                Platform.OS === "android" && styles.androidCardAdjustment,
-              ]}
-            >
-              <View style={styles.cardHeaderSection}>
-                <View style={styles.invoiceNumberBadge}>
-                  <Text style={styles.invoiceNumberLabel}>شماره فاکتور:</Text>
-                  <Text style={styles.invoiceNumberValue}>16528</Text>
-                </View>
-                <View style={styles.invoiceDate}>
-                  <MaterialIcons name="event" size={16} color={colors.medium} />
-                  <Text style={styles.dateValue}>١٤٠٣/١٠/١</Text>
-                </View>
-              </View>
+          {isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text style={styles.loadingText}>در حال دریافت فاکتور...</Text>
             </View>
-
-            <PurchaseInfoCard
-              headerTitle="اطلاعات خرید"
-              headerIcon="person"
-              buyer={purchaseData.buyer}
-              seller={purchaseData.seller}
-              address={purchaseData.address}
-              note={purchaseData.note}
-              gradientColors={[colors.secondary, colors.primary]}
-            />
-
-            <View style={styles.productsSection}>
-              <View style={styles.sectionHeader}>
-                <MaterialIcons
-                  name="shopping-bag"
-                  size={18}
-                  color={colors.primary}
-                />
-                <Text style={styles.sectionHeaderText}>اطلاعات محصولات</Text>
-              </View>
-
-              {productData.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  title={product.title}
-                  // titleIcon={{
-                  //   name: "inventory",
-                  //   color: colors.primary,
-                  // }}
-                  fields={[
-                    {
-                      icon: "qr-code",
-                      iconColor: colors.secondary,
-                      label: "کد:",
-                      value: product.code,
-                    },
-                    {
-                      icon: "straighten",
-                      iconColor: colors.secondary,
-                      label: "مقدار:",
-                      value: product.quantity,
-                    },
-                    {
-                      icon: "palette",
-                      iconColor: colors.secondary,
-                      label: "طیف رنگی:",
-                      value: product.hasColorSpectrum ? "دارد" : "ندارد",
-                      valueColor: product.hasColorSpectrum
-                        ? colors.success
-                        : colors.danger,
-                    },
+          ) : (
+            invoic && (
+              <ScrollView
+                style={[
+                  styles.content,
+                  Platform.OS === "android" && styles.androidContentAdjustment,
+                ]}
+                showsVerticalScrollIndicator={false}
+              >
+                <View
+                  style={[
+                    styles.card,
+                    Platform.OS === "android" && styles.androidCardAdjustment,
                   ]}
-                  note={product.note}
-                  noteConfig={{
-                    show: true,
-                    icon: "notes",
-                    iconColor: colors.secondary,
-                    label: "توضیحات:",
-                  }}
-                  qrConfig={{
-                    show: true,
-                    icon: "qr-code-2",
-                    iconSize: 36,
-                    iconColor: colors.secondary,
-                  }}
-                  containerStyle={
-                    Platform.OS === "android"
-                      ? styles.androidCardAdjustment
-                      : {}
-                  }
-                />
-              ))}
-            </View>
+                >
+                  <View style={styles.cardHeaderSection}>
+                    <View style={styles.invoiceNumberBadge}>
+                      <Text style={styles.invoiceNumberLabel}>
+                        شماره فاکتور:
+                      </Text>
+                      <Text style={styles.invoiceNumberValue}>
+                        {toPersianDigits(invoic?.InvoiceId.toString())}
+                      </Text>
+                    </View>
+                    <View style={styles.invoiceDate}>
+                      <MaterialIcons
+                        name="event"
+                        size={16}
+                        color={colors.medium}
+                      />
+                      <Text style={styles.dateValue}>
+                        {toPersianDigits(invoic.ShamsiInvoiceDate)}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
 
-            <View
+                <PurchaseInfoCard
+                  headerTitle="اطلاعات خرید"
+                  headerIcon="person"
+                  buyer={{
+                    name: invoic.PersonFullName,
+                    phone: invoic.PersonMobile,
+                  }}
+                  seller={{ name: invoic.ApplicationUserName, phone: "" }}
+                  address={""}
+                  note={invoic.Description}
+                  gradientColors={[colors.secondary, colors.primary]}
+                />
+
+                <View style={styles.productsSection}>
+                  <View style={styles.sectionHeader}>
+                    <MaterialIcons
+                      name="shopping-bag"
+                      size={18}
+                      color={colors.primary}
+                    />
+                    <Text style={styles.sectionHeaderText}>
+                      اطلاعات محصولات
+                    </Text>
+                  </View>
+
+                  {invoic.InvoiceItemList.map((invoicItem) => (
+                    <ProductCard
+                      key={invoicItem.InvoiceItemId}
+                      title={invoicItem.ProductName}
+                      // titleIcon={{
+                      //   name: "inventory",
+                      //   color: colors.primary,
+                      // }}
+                      fields={[
+                        {
+                          icon: "qr-code",
+                          iconColor: colors.secondary,
+                          label: "کد:",
+                          value: invoicItem.ProductSKU,
+                        },
+                        {
+                          icon: "straighten",
+                          iconColor: colors.secondary,
+                          label: "مقدار:",
+                          value: `${invoicItem.ProductQuantity.toFixed(
+                            2
+                          ).toString()} ${
+                            invoicItem.ProductMeasurementUnitName
+                          }`,
+                        },
+                        {
+                          icon: "shopping-bag",
+                          label: `تعداد ${invoicItem.ProductPackaginName}:`,
+                          value: toPersianDigits(
+                            invoicItem.PackagingQuantity.toString()
+                          ),
+                        },
+                        {
+                          icon: "attach-money",
+                          label: "مبلغ:",
+                          value: toPersianDigits(
+                            (
+                              invoicItem.PackagingQuantity *
+                              invoicItem.PerPackagePrice
+                            ).toLocaleString() + " ریال"
+                          ),
+                          isPriceField: true,
+                          containerStyle: { marginVertical: 7 },
+                        },
+                      ]}
+                      note={invoicItem.Description}
+                      noteConfig={{
+                        show: true,
+                        icon: "notes",
+                        iconColor: colors.secondary,
+                        label: "توضیحات:",
+                      }}
+                      qrConfig={{
+                        show: true,
+                        icon: "qr-code-2",
+                        iconSize: 36,
+                        iconColor: colors.secondary,
+                      }}
+                      containerStyle={
+                        Platform.OS === "android"
+                          ? styles.androidCardAdjustment
+                          : {}
+                      }
+                    />
+                  ))}
+                </View>
+
+                {/* <View
               style={[
                 styles.sellerCard,
                 Platform.OS === "android" && styles.androidCardAdjustment,
@@ -571,10 +648,12 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                   />
                 </View>
               </View>
-            </View>
+            </View> */}
 
-            <View style={styles.bottomSpacer} />
-          </ScrollView>
+                <View style={styles.bottomSpacer} />
+              </ScrollView>
+            )
+          )}
 
           <View style={styles.actionsContainer}>
             <View style={styles.actionButtonsRow}>
@@ -1051,6 +1130,17 @@ const styles = StyleSheet.create({
   },
   cancelBtn: {
     backgroundColor: colors.danger,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  loadingText: {
+    fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
+    fontSize: 16,
+    color: "#6B7280",
+    marginTop: 12,
   },
 });
 

@@ -36,7 +36,6 @@ interface Person {
   phone: string;
 }
 
-
 type StatusType = "تایید نهایی" | "تعلیق" | "بسته نشده" | "لغو شده" | undefined;
 
 interface PurchaseInfoCardProps {
@@ -62,7 +61,6 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
   containerStyle,
   status,
 }) => {
-
   const handlePhoneCall = (phoneNumber: string): void => {
     if (phoneNumber) {
       Linking.openURL(`tel:${phoneNumber}`);
@@ -101,13 +99,13 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
       >
         <View style={styles.headerTitleContainer}>
           <MaterialIcons name={headerIcon} size={22} color={colors.white} />
-          <Text style={styles.purchaseHeaderText}>
-            {headerTitle}
-          </Text>
+          <Text style={styles.purchaseHeaderText}>{headerTitle}</Text>
         </View>
 
         {status && (
-          <View style={[styles.statusBadge, { backgroundColor: getStatusColor() }]}>
+          <View
+            style={[styles.statusBadge, { backgroundColor: getStatusColor() }]}
+          >
             <Text style={styles.statusText}>{status}</Text>
           </View>
         )}
@@ -155,14 +153,14 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
                   <Text style={styles.secondaryValue}>{seller.name}</Text>
                 </View>
               </View>
-              {seller.phone && (
+              {/* {seller.phone && (
                 <TouchableOpacity
                   style={styles.callButtonCircle}
                   onPress={() => handlePhoneCall(seller.phone)}
                 >
                   <MaterialIcons name="call" size={25} color={colors.success} />
                 </TouchableOpacity>
-              )}
+              )} */}
             </View>
             <View style={styles.divider} />
           </>
@@ -185,19 +183,17 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
           </>
         )}
 
-        {note && (
-          <View style={styles.noteContainer}>
-            <MaterialIcons
-              name="error-outline"
-              size={18}
-              color={colors.secondary}
-            />
-            <View style={styles.noteTextContainer}>
-              <Text style={styles.noteLabel}>توضیحات:</Text>
-              <Text style={styles.noteContent}>{note}</Text>
-            </View>
+        <View style={styles.noteContainer}>
+          <MaterialIcons
+            name="error-outline"
+            size={18}
+            color={colors.secondary}
+          />
+          <View style={styles.noteTextContainer}>
+            <Text style={styles.noteLabel}>توضیحات:</Text>
+            <Text style={styles.noteContent}>{note ? note : "-"}</Text>
           </View>
-        )}
+        </View>
       </View>
     </View>
   );

@@ -87,32 +87,43 @@ const Accordion: React.FC<AccordionProps> = ({
           {renderHeader({ isExpanded, toggleAccordion })}
         </TouchableOpacity>
       ) : (
+        // <TouchableOpacity
+        //   onPress={toggleAccordion}
+        //   style={[styles.header, headerStyle]}
+        //   disabled={disabled}
+        // >
+        //   <View style={{ flexDirection: "row-reverse", gap: 10 }}>
+        //     <MaterialIcons
+        //       name="filter-list-alt"
+        //       size={24}
+        //       color={colors.primary}
+        //     />
+        //     <AppText style={styles.headerText}>{title}</AppText>
+        //   </View>
+        //   {isExpanded ? (
+        //     <MaterialIcons
+        //       name="arrow-drop-up"
+        //       size={24}
+        //       color={colors.secondary}
+        //     />
+        //   ) : (
+        //     <MaterialIcons
+        //       name="arrow-drop-down"
+        //       size={24}
+        //       color={colors.secondary}
+        //     />
+        //   )}
+        // </TouchableOpacity>
         <TouchableOpacity
           onPress={toggleAccordion}
           style={[styles.header, headerStyle]}
           disabled={disabled}
         >
-          <View style={{ flexDirection: "row-reverse", gap: 10 }}>
-            <MaterialIcons
-              name="filter-list-alt"
-              size={24}
-              color={colors.primary}
-            />
-            <AppText style={styles.headerText}>{title}</AppText>
-          </View>
-          {isExpanded ? (
-            <MaterialIcons
-              name="arrow-drop-up"
-              size={24}
-              color={colors.secondary}
-            />
-          ) : (
-            <MaterialIcons
-              name="arrow-drop-down"
-              size={24}
-              color={colors.secondary}
-            />
-          )}
+          <MaterialIcons
+            name="filter-list-alt"
+            size={24}
+            color={colors.white}
+          />
         </TouchableOpacity>
       )}
 
@@ -135,17 +146,18 @@ const Accordion: React.FC<AccordionProps> = ({
 const styles = StyleSheet.create({
   container: {
     marginBottom: 10,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
+    // borderWidth: 1,
+    // borderColor: "#ddd",
+    // borderRadius: 10,
   },
   header: {
     flexDirection: "row-reverse",
-    justifyContent: "space-between",
+    justifyContent: "center",
     alignItems: "center",
-    padding: 15,
-    backgroundColor: colors.gray,
-    borderRadius: 10,
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    width: 50,
+    height: 50,
   },
   headerText: {
     fontSize: 16,

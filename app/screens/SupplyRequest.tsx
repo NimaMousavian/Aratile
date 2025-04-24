@@ -67,6 +67,9 @@ const SupplyRequest = () => {
     undefined
   );
 
+  const [searchText, setSearchText] = useState<string>("");
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+
   const showToast = (
     message: string,
     type: "success" | "error" | "warning" | "info" = "error"
@@ -98,7 +101,6 @@ const SupplyRequest = () => {
 
       const data = response.data.Items;
       setSupplyRequests(data);
-      console.log("datas", data);
     } catch (error) {
       console.log(error);
     } finally {
@@ -161,6 +163,14 @@ const SupplyRequest = () => {
     setShowSupplyRequestForm(true);
   };
 
+  const handleSearch = () => {
+    getSupplyRequestWithFilter();
+  };
+  const handleRefresh = () => {
+    setRefreshing(true);
+    getSupplyRequest();
+  };
+
   return (
     <>
       <ScreenHeader title="درخواست تامین محصول" />
@@ -187,24 +197,134 @@ const SupplyRequest = () => {
           onDismiss={() => setToastVisible(false)}
         />
 
-        <Accordion headerStyle={{ backgroundColor: "#e0e0e0" }}>
+        <SearchInput
+          placeholder="نام محصول را جستجو کنید..."
+          value={searchText}
+          onChangeText={(text) => {
+            setSearchText(text);
+            setFilterParams((prev: any) => {
+              return {
+                ...prev,
+                filterProductName: text,
+              };
+            });
+          }}
+          onSearch={handleSearch}
+          hasFilter
+          filterItems={
+            <>
+              {/* <AppTextInput
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="default"
+                placeholder="نام محصول"
+                icon="shop"
+                onChangeText={(text) => {
+                  setFilterParams((prev: any) => {
+                    return {
+                      ...prev,
+                      filterProductName: text,
+                    };
+                  });
+                }}
+              ></AppTextInput> */}
+              <View style={{ flexDirection: "row-reverse", gap: 10 }}>
+                <DatePickerField
+                  date={fromDate}
+                  label="از تاریخ"
+                  onDateChange={(value) => {
+                    setFromDate(value);
+                    setFilterParams((prev: any) => {
+                      return {
+                        ...prev,
+                        filterInsertDateFrom: value,
+                      };
+                    });
+                  }}
+                  customStyles={{ infoItem: { width: "50%" } }}
+                />
+                <DatePickerField
+                  date={toDate}
+                  label="تا تاریخ"
+                  onDateChange={(value) => {
+                    setToDate(value);
+                    setFilterParams((prev: any) => {
+                      return {
+                        ...prev,
+                        filterInsertDateTo: value,
+                      };
+                    });
+                  }}
+                />
+              </View>
+              <SelectionBottomSheet
+                onSelect={(values) =>
+                  setFilterParams((prev: any) => {
+                    return {
+                      ...prev,
+                      filterRequestState: statusStr.indexOf(values[0]) + 1,
+                    };
+                  })
+                }
+                options={["همه", ...statusStr]}
+                placeholderText="وضعیت"
+                iconName="question-mark"
+              />
+              <AppButton
+                title="فیلتر"
+                onPress={() => getSupplyRequestWithFilter()}
+                color="primary"
+                // style={{ width: "49%" }}
+              />
+            </>
+          }
+        />
+
+        {/* <Accordion>
           <AppTextInput
             autoCapitalize="none"
             autoCorrect={false}
             keyboardType="default"
             placeholder="نام محصول"
-            onChangeText={() => {}}
+            icon="shop"
+            onChangeText={(text) => {
+              setFilterParams((prev: any) => {
+                return {
+                  ...prev,
+                  filterProductName: text,
+                };
+              });
+            }}
           ></AppTextInput>
-          <DatePickerField
-            date={fromDate}
-            label="از تاریخ"
-            onDateChange={(value) => setFromDate(value)}
-          />
-          <DatePickerField
-            date={toDate}
-            label="تا تاریخ"
-            onDateChange={(value) => setToDate(value)}
-          />
+          <View style={{ flexDirection: "row-reverse", gap: 10 }}>
+            <DatePickerField
+              date={fromDate}
+              label="از تاریخ"
+              onDateChange={(value) => {
+                setFromDate(value);
+                setFilterParams((prev: any) => {
+                  return {
+                    ...prev,
+                    filterInsertDateFrom: value,
+                  };
+                });
+              }}
+              customStyles={{ infoItem: { width: "50%" } }}
+            />
+            <DatePickerField
+              date={toDate}
+              label="تا تاریخ"
+              onDateChange={(value) => {
+                setToDate(value);
+                setFilterParams((prev: any) => {
+                  return {
+                    ...prev,
+                    filterInsertDateTo: value,
+                  };
+                });
+              }}
+            />
+          </View>
           <SelectionBottomSheet
             onSelect={(values) =>
               setFilterParams((prev: any) => {
@@ -224,7 +344,7 @@ const SupplyRequest = () => {
             color="primary"
             // style={{ width: "49%" }}
           />
-        </Accordion>
+        </Accordion> */}
 
         {/* <View style={styles.tabContainer}>
                     <TouchableOpacity
@@ -373,6 +493,9 @@ const SupplyRequest = () => {
                 }
               />
             )}
+            onRefresh={handleRefresh}
+            refreshing={refreshing}
+            showsVerticalScrollIndicator={true}
           />
         )}
 

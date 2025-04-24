@@ -29,7 +29,9 @@ import AddNewProject from "./screens/B2CFieldMarketer/AddNewProject";
 import ReceiveNewInvoiceScreen from "./screens/ReceiveNewInvoiceScreen/ReceiveNewInvoiceScreen";
 import StatusFilterScreen from "./screens/ReceiveNewInvoiceScreen/StatusFilterScreen";
 import HomeScreen from "./screens/HomeScreen";
-import IssuingNewInvoice, { Product } from "./screens/IssuingNewInvoice/IssuingNewInvoice";
+import IssuingNewInvoice, {
+  Product,
+} from "./screens/IssuingNewInvoice/IssuingNewInvoice";
 import BarcodeScanner from "./screens/IssuingNewInvoice/BarcodeScanner";
 import CustomerInfo from "./screens/IssuingNewInvoice/CustomerInfo";
 import SupplyRequest from "./screens/SupplyRequest";
@@ -47,7 +49,7 @@ export type RootStackParamList = {
 
   Home: undefined;
 
-  // اصلاح شده برای صفحه صدور فاکتور 
+  // اصلاح شده برای صفحه صدور فاکتور
   IssuingNewInvoice: {
     scannedCode?: string;
     scannedProduct?: Product;
@@ -66,7 +68,7 @@ export type RootStackParamList = {
   IssuedInvoices: undefined;
 
   CashierHome: undefined;
-  ReceiveNewInvoice: undefined;
+  ReceiveNewInvoice: { invoicId: number };
   CanceledInvoices: undefined;
   ClosedInvoices: undefined;
   SuspendedInvoices: undefined;

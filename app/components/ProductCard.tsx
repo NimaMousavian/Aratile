@@ -12,7 +12,6 @@ import {
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import colors from "../config/colors";
 
-
 type FontWeight = "700" | "600" | "500" | "bold" | "semi-bold" | string;
 
 const getFontFamily = (baseFont: string, weight: FontWeight): string => {
@@ -31,7 +30,6 @@ const getFontFamily = (baseFont: string, weight: FontWeight): string => {
   }
   return baseFont;
 };
-
 
 interface IconConfig {
   name: React.ComponentProps<typeof MaterialIcons>["name"];
@@ -101,7 +99,6 @@ interface ProductCardProps {
   showTitle?: boolean;
 }
 
-
 const ProductCard: React.FC<ProductCardProps> = ({
   title,
   titleIcon,
@@ -120,7 +117,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     show: true,
     icon: "qr-code-2",
     iconSize: 36,
-    iconColor: colors.secondary
+    iconColor: colors.secondary,
   },
 
   // New action icons with default values
@@ -137,20 +134,25 @@ const ProductCard: React.FC<ProductCardProps> = ({
   showTitle = true,
 }) => {
   // Separate fields into regular fields and dividers
-  const regularFields = fields.filter(field => !field.divider);
+  const regularFields = fields.filter((field) => !field.divider);
 
   // Find the index of the price field (if marked with isPriceField)
-  const priceFieldIndex = regularFields.findIndex(field => field.isPriceField);
+  const priceFieldIndex = regularFields.findIndex(
+    (field) => field.isPriceField
+  );
 
   // Organize fields into sections for rendering
-  const fieldsBeforePrice = priceFieldIndex > 0
-    ? regularFields.slice(0, priceFieldIndex)
-    : regularFields;
+  const fieldsBeforePrice =
+    priceFieldIndex > 0
+      ? regularFields.slice(0, priceFieldIndex)
+      : regularFields;
 
-  const priceField = priceFieldIndex >= 0 ? regularFields[priceFieldIndex] : null;
-  const fieldsAfterPrice = priceFieldIndex >= 0 && priceFieldIndex < regularFields.length - 1
-    ? regularFields.slice(priceFieldIndex + 1)
-    : [];
+  const priceField =
+    priceFieldIndex >= 0 ? regularFields[priceFieldIndex] : null;
+  const fieldsAfterPrice =
+    priceFieldIndex >= 0 && priceFieldIndex < regularFields.length - 1
+      ? regularFields.slice(priceFieldIndex + 1)
+      : [];
 
   return (
     <TouchableOpacity
@@ -159,8 +161,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
       onLongPress={onLongPress}
       style={[
         styles.productCard,
-        Platform.OS === 'android' && styles.androidCardAdjustment,
-        containerStyle
+        Platform.OS === "android" && styles.androidCardAdjustment,
+        containerStyle,
       ]}
     >
       {showTitle && title && (
@@ -171,7 +173,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
               {editIcon && (
                 <TouchableOpacity
                   onPress={editIcon.onPress}
-                  style={[styles.iconCircle, { backgroundColor: "#fef2e0" }, editIcon.containerStyle]}
+                  style={[
+                    styles.iconCircle,
+                    { backgroundColor: "#fef2e0" },
+                    editIcon.containerStyle,
+                  ]}
                 >
                   <MaterialIcons
                     name={editIcon.name || "edit"}
@@ -185,7 +191,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
               {deleteIcon && (
                 <TouchableOpacity
                   onPress={deleteIcon.onPress}
-                  style={[styles.iconCircle, { backgroundColor: "#fee2e0" }, deleteIcon.containerStyle]}
+                  style={[
+                    styles.iconCircle,
+                    { backgroundColor: "#fee2e0" },
+                    deleteIcon.containerStyle,
+                  ]}
                 >
                   <MaterialIcons
                     name={deleteIcon.name || "delete"}
@@ -215,7 +225,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
         <View style={styles.infoWithImageContainer}>
           {/* QR code positioned next to product details */}
           {qrConfig.show && (
-            <View style={[styles.productImagePlaceholder, qrConfig.containerStyle]}>
+            <View
+              style={[styles.productImagePlaceholder, qrConfig.containerStyle]}
+            >
               <MaterialIcons
                 name={qrConfig.icon || "qr-code-2"}
                 size={qrConfig.iconSize}
@@ -232,7 +244,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 style={[
                   styles.fieldContainer,
                   field.containerStyle,
-                  index < fieldsBeforePrice.length - 1 && styles.fieldMarginBottom
+                  index < fieldsBeforePrice.length - 1 &&
+                    styles.fieldMarginBottom,
                 ]}
               >
                 {field.icon && (
@@ -244,20 +257,24 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 )}
 
                 {field.label && (
-                  <Text style={[
-                    styles.secondaryLabel,
-                    styles.iconTextSpacing,
-                    field.labelStyle
-                  ]}>
+                  <Text
+                    style={[
+                      styles.secondaryLabel,
+                      styles.iconTextSpacing,
+                      field.labelStyle,
+                    ]}
+                  >
                     {field.label}
                   </Text>
                 )}
 
-                <Text style={[
-                  styles.fieldValue,
-                  { color: field.valueColor || colors.dark },
-                  field.valueStyle
-                ]}>
+                <Text
+                  style={[
+                    styles.fieldValue,
+                    { color: field.valueColor || colors.dark },
+                    field.valueStyle,
+                  ]}
+                >
                   {field.value}
                 </Text>
               </View>
@@ -266,9 +283,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </View>
 
         {/* Divider before price field - full width outside of infoWithImageContainer */}
-        {priceField && (
-          <View style={styles.fullWidthDivider} />
-        )}
+        {priceField && <View style={styles.fullWidthDivider} />}
 
         {/* Price field - rendered separately to ensure it's after the divider */}
         {priceField && (
@@ -281,7 +296,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 style={[
                   styles.fieldContainer,
                   priceField.containerStyle,
-                  fieldsAfterPrice.length > 0 && styles.fieldMarginBottom
+                  fieldsAfterPrice.length > 0 && styles.fieldMarginBottom,
                 ]}
               >
                 {priceField.icon && (
@@ -293,20 +308,24 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 )}
 
                 {priceField.label && (
-                  <Text style={[
-                    styles.secondaryLabel,
-                    styles.iconTextSpacing,
-                    priceField.labelStyle
-                  ]}>
+                  <Text
+                    style={[
+                      styles.secondaryLabel,
+                      styles.iconTextSpacing,
+                      priceField.labelStyle,
+                    ]}
+                  >
                     {priceField.label}
                   </Text>
                 )}
 
-                <Text style={[
-                  styles.fieldValue,
-                  { color: priceField.valueColor || colors.dark },
-                  priceField.valueStyle
-                ]}>
+                <Text
+                  style={[
+                    styles.fieldValue,
+                    { color: priceField.valueColor || colors.dark },
+                    priceField.valueStyle,
+                  ]}
+                >
                   {priceField.value}
                 </Text>
               </View>
@@ -327,7 +346,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
                   style={[
                     styles.fieldContainer,
                     field.containerStyle,
-                    index < fieldsAfterPrice.length - 1 && styles.fieldMarginBottom
+                    index < fieldsAfterPrice.length - 1 &&
+                      styles.fieldMarginBottom,
                   ]}
                 >
                   {field.icon && (
@@ -339,20 +359,24 @@ const ProductCard: React.FC<ProductCardProps> = ({
                   )}
 
                   {field.label && (
-                    <Text style={[
-                      styles.secondaryLabel,
-                      styles.iconTextSpacing,
-                      field.labelStyle
-                    ]}>
+                    <Text
+                      style={[
+                        styles.secondaryLabel,
+                        styles.iconTextSpacing,
+                        field.labelStyle,
+                      ]}
+                    >
                       {field.label}
                     </Text>
                   )}
 
-                  <Text style={[
-                    styles.fieldValue,
-                    { color: field.valueColor || colors.dark },
-                    field.valueStyle
-                  ]}>
+                  <Text
+                    style={[
+                      styles.fieldValue,
+                      { color: field.valueColor || colors.dark },
+                      field.valueStyle,
+                    ]}
+                  >
                     {field.value}
                   </Text>
                 </View>
@@ -362,18 +386,19 @@ const ProductCard: React.FC<ProductCardProps> = ({
         )}
 
         {/* Render divider fields that are explicitly added */}
-        {fields.filter(field => field.divider).map((field, index) => (
-          <View
-            key={`explicit-divider-${index}`}
-            style={[
-              styles.fullWidthDivider,
-              field.customStyle
-            ]}
-          />
-        ))}
+        {fields
+          .filter((field) => field.divider)
+          .map((field, index) => (
+            <View
+              key={`explicit-divider-${index}`}
+              style={[styles.fullWidthDivider, field.customStyle]}
+            />
+          ))}
 
-        {noteConfig.show && note && (
-          <View style={[styles.productCodeContainer, noteConfig.containerStyle]}>
+        {noteConfig.show && (
+          <View
+            style={[styles.productCodeContainer, noteConfig.containerStyle]}
+          >
             <View style={styles.noteHeaderContainer}>
               {noteConfig.icon && (
                 <MaterialIcons
@@ -384,21 +409,20 @@ const ProductCard: React.FC<ProductCardProps> = ({
               )}
 
               {noteConfig.label && (
-                <Text style={[
-                  styles.secondaryLabel,
-                  styles.iconTextSpacing,
-                  noteConfig.labelStyle
-                ]}>
+                <Text
+                  style={[
+                    styles.secondaryLabel,
+                    styles.iconTextSpacing,
+                    noteConfig.labelStyle,
+                  ]}
+                >
                   {noteConfig.label}
                 </Text>
               )}
             </View>
 
-            <Text style={[
-              styles.regularNoteContent,
-              noteConfig.valueStyle
-            ]}>
-              {note}
+            <Text style={[styles.regularNoteContent, noteConfig.valueStyle]}>
+              {note ? note : "-"}
             </Text>
           </View>
         )}
@@ -485,6 +509,7 @@ const styles = StyleSheet.create({
   fieldContainer: {
     flexDirection: "row-reverse",
     alignItems: "center",
+    height: 25,
   },
   fieldMarginBottom: {
     marginBottom: 12,
@@ -506,14 +531,14 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.gray,
     marginVertical: 10,
-    width: '100%',
-    alignSelf: 'stretch'
+    width: "100%",
+    alignSelf: "stretch",
   },
   fullWidthDivider: {
     borderBottomWidth: 1,
     borderBottomColor: colors.gray,
     marginVertical: 10,
-    width: '100%',
+    width: "100%",
   },
   productCodeContainer: {
     flexDirection: "column",
@@ -540,6 +565,5 @@ const styles = StyleSheet.create({
     paddingRight: 22,
   },
 });
-
 
 export default ProductCard;
