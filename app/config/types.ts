@@ -151,3 +151,22 @@ export interface IInvoidItem {
   Description: string;
   InsertDate: string;
 }
+
+export interface IShopCustomField {
+  ShopCustomFieldId: number;
+  FieldName: string;
+  ShopCustomFieldGroupId: number;
+  ShopCustomFieldGroupName: string;
+  FieldType: number;
+  DefaultValue: number;
+  Min: string;
+  Max: string;
+  IsRequired: boolean;
+  Form_ShowOrder: number;
+  Filterable: boolean;
+  Filter_ShowOrder: number;
+  IconName: string;
+  Active: boolean;
+  InsertDate: string;
+  LastUpdateDate: string;
+}

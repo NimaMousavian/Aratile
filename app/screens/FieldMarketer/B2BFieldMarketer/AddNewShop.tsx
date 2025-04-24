@@ -17,6 +17,12 @@ import IconButtonSquare from "../../../components/IconButtonSquare";
 import SelectionDialog from "../../../components/SelectionDialog";
 import AppModal from "../../../components/AppModal";
 import ScreenHeader from "../../../components/ScreenHeader";
+import SelectionBottomSheet from "../../components/SelectionDialog";
+import LocationService from "../IssuingNewInvoice/api/LocationService";
+import Toast from "../../components/Toast";
+import { IShopCustomField } from "../../config/types";
+import axios from "axios";
+import appConfig from "../../../config";
 
 export const InputContainer: React.FC<{
   title: string;
@@ -55,6 +61,135 @@ const AddNewShop = () => {
   const [marriagShow, setMarriageShow] = useState<boolean>(true);
   const [textNoteShow, setTextShowNote] = useState<boolean>(false);
 
+  const [toastVisible, setToastVisible] = useState<boolean>(false);
+  const [toastMessage, setToastMessage] = useState<string>("");
+  const [toastType, setToastType] = useState<
+    "success" | "error" | "warning" | "info"
+  >("error");
+
+  const showToast = (
+    message: string,
+    type: "success" | "error" | "warning" | "info" = "error"
+  ) => {
+    setToastMessage(message);
+    setToastType(type);
+    setToastVisible(true);
+  };
+
+  const [selectedProvince, setSelectedProvince] = useState("");
+  const [selectedCity, setSelectedCity] = useState("");
+  const [provinces, setProvinces] = useState<string[]>([]);
+  const [cities, setCities] = useState<string[]>([]);
+
+  const [loadingProvinces, setLoadingProvinces] = useState(true);
+  const [loadingCities, setLoadingCities] = useState(false);
+
+  const [shopCustomeField, setShopCustomeField] = useState<IShopCustomField[]>(
+    []
+  );
+  const [customFieldType1, setCustomFieldType1] = useState<IShopCustomField[]>(
+    []
+  );
+  const [customFieldType2, setCustomFieldType2] = useState<IShopCustomField[]>(
+    []
+  );
+  const [customFieldType3, setCustomFieldType3] = useState<IShopCustomField[]>(
+    []
+  );
+  const [customFieldOtherTypes, setCustomFieldOtherTypes] = useState<
+    IShopCustomField[]
+  >([]);
+
+  useEffect(() => {
+    const fetchProvinces = async () => {
+      setLoadingProvinces(true);
+      try {
+        const provinceNames = await LocationService.getProvinceNames();
+        setProvinces(provinceNames);
+      } catch (error) {
+        console.error("خطا در دریافت لیست استان‌ها:", error);
+        showToast("خطا در دریافت لیست استان‌ها", "error");
+      } finally {
+        setLoadingProvinces(false);
+      }
+    };
+
+    const fetchShopCustomField = async () => {
+      try {
+        const response = await axios.get<IShopCustomField[]>(
+          `${appConfig.mobileApi}ShopCustomField/GetAll`
+        );
+        const type1 = response.data
+          .filter((customField) => customField.ShopCustomFieldGroupId === 1)
+          .sort((customField) => customField.Form_ShowOrder);
+        const type2 = response.data.filter(
+          (customField) => customField.ShopCustomFieldGroupId === 2
+        );
+        const type3 = response.data.filter(
+          (customField) => customField.ShopCustomFieldGroupId === 3
+        );
+
+        setCustomFieldType1(type1);
+        setCustomFieldType2(type2);
+        setCustomFieldType3(type3);
+
+        setShopCustomeField(response.data);
+        console.log(response.data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    fetchProvinces();
+    fetchShopCustomField();
+  }, []);
+
+  const fetchCitiesByProvince = async (provinceName: string) => {
+    if (!provinceName) return;
+
+    setLoadingCities(true);
+    setCities([]);
+    setSelectedCity("");
+
+    try {
+      const cityNames = await LocationService.getCityNamesByProvinceName(
+        provinceName
+      );
+
+      if (cityNames.length === 0) {
+        setCities(["خطا در دریافت شهرها، لطفاً دوباره تلاش کنید"]);
+        showToast("شهری برای این استان یافت نشد", "warning");
+      } else {
+        setCities(cityNames);
+      }
+    } catch (error) {
+      console.error(`خطا در دریافت شهرهای استان ${provinceName}:`, error);
+      setCities(["خطا در دریافت شهرها، لطفاً دوباره تلاش کنید"]);
+      showToast("خطا در دریافت شهرها", "error");
+    } finally {
+      setLoadingCities(false);
+    }
+  };
+
+  const handleProvinceSelection = (value: string[]): void => {
+    if (value && value.length > 0) {
+      const provinceName = value[0];
+      setSelectedProvince(provinceName);
+      setSelectedCity("");
+      fetchCitiesByProvince(provinceName);
+    }
+  };
+
+  const handleCitySelection = (value: string[]): void => {
+    if (value && value.length > 0) {
+      setSelectedCity(value[0]);
+    }
+  };
+
+  const handleCityClick = (): void => {
+    showToast("لطفاً ابتدا استان را انتخاب کنید", "error");
+  };
+
   useEffect(() => {
     // Check if we have recordings from the route params
     if (route.params?.recordings) {
@@ -71,22 +206,129 @@ const AddNewShop = () => {
       .padStart(2, "0")}`;
   };
 
+  const renderInput = (customField: IShopCustomField): React.ReactNode => {
+    switch (customField.FieldType) {
+      case 1:
+        return (
+          <AppTextInput
+            autoCapitalize="none"
+            icon={
+              customField.IconName as React.ComponentProps<
+                typeof MaterialIcons
+              >["name"]
+            }
+            autoCorrect={false}
+            keyboardType="default"
+            placeholder={customField.FieldName}
+            onChangeText={() => {}}
+          ></AppTextInput>
+        );
+      case 2:
+        return;
+      case 3:
+        return;
+      case 4:
+        return;
+      case 5:
+        return;
+      case 6:
+        return;
+      case 7:
+        return;
+
+      default:
+        break;
+    }
+  };
+
   return (
     <>
       <ScreenHeader title="ثبت فروشگاه جدید" />
+      <Toast
+        visible={toastVisible}
+        message={toastMessage}
+        type={toastType}
+        onDismiss={() => setToastVisible(false)}
+      />
       <View style={styles.container}>
         <ScrollView>
           {/* All the previous input containers remain the same */}
+          <InputContainer title="مشخصات فروشگاه">
+            <AppTextInput
+              autoCapitalize="none"
+              icon="shopping-bag"
+              autoCorrect={false}
+              keyboardType="default"
+              placeholder="نام فروشگاه"
+              onChangeText={() => {}}
+            ></AppTextInput>
+            <View style={styles.rowContainer}>
+              <View style={styles.halfWidth}>
+                <SelectionBottomSheet
+                  key={`city-${selectedProvince}`}
+                  placeholderText={selectedCity || "شهرستان"}
+                  title="شهرستان"
+                  iconName="apartment"
+                  options={selectedProvince ? cities : []}
+                  onSelect={handleCitySelection}
+                  loading={loadingCities}
+                  onPress={selectedProvince ? undefined : handleCityClick}
+                />
+              </View>
+              <View style={styles.halfWidth}>
+                <SelectionBottomSheet
+                  placeholderText={selectedProvince || "استان"}
+                  title="استان"
+                  iconName="map"
+                  options={provinces}
+                  onSelect={handleProvinceSelection}
+                  loading={loadingProvinces}
+                />
+              </View>
+            </View>
+            <AppTextInput
+              autoCapitalize="none"
+              icon="shop"
+              autoCorrect={false}
+              keyboardType="default"
+              placeholder="آدرس فروشگاه"
+              onChangeText={() => {}}
+            ></AppTextInput>
+            <AppTextInput
+              autoCapitalize="none"
+              icon="shop"
+              autoCorrect={false}
+              keyboardType="default"
+              placeholder="متراژ فروشگاه"
+              onChangeText={() => {}}
+            ></AppTextInput>
+            <AppTextInput
+              autoCapitalize="none"
+              icon="shop"
+              autoCorrect={false}
+              keyboardType="default"
+              placeholder="نوع مالکیت فروشگاه"
+              onChangeText={() => {}}
+            ></AppTextInput>
+          </InputContainer>
           <InputContainer title="مشخصات فردی">
             <AppTextInput
               autoCapitalize="none"
               icon="person"
               autoCorrect={false}
               keyboardType="default"
-              placeholder="نام و نام خانوادگی"
-              onChangeText={() => { }}
+              placeholder="نام"
+              onChangeText={() => {}}
             ></AppTextInput>
             <AppTextInput
+              autoCapitalize="none"
+              icon="person"
+              autoCorrect={false}
+              keyboardType="default"
+              placeholder="نام خانوادگی"
+              onChangeText={() => {}}
+            ></AppTextInput>
+            {/* <AppTextInput
               autoCapitalize="none"
               icon="person-4"
               autoCorrect={false}
@@ -115,8 +357,8 @@ const AddNewShop = () => {
               autoCorrect={false}
               keyboardType="number-pad"
               placeholder="کد ملی"
-              onChangeText={() => { }}
-            ></AppTextInput>
+              onChangeText={() => {}}
+            ></AppTextInput> */}
             <AppTextInput
               autoCapitalize="none"
               icon="phone-android"
@@ -125,18 +367,18 @@ const AddNewShop = () => {
               placeholder="شماره موبایل"
               onChangeText={() => { }}
             ></AppTextInput>
-            <AppTextInput
+            {/* <AppTextInput
               autoCapitalize="none"
               icon="local-phone"
               autoCorrect={false}
               keyboardType="number-pad"
               placeholder="شماره تلفن"
-              onChangeText={() => { }}
-            ></AppTextInput>
+              onChangeText={() => {}}
+            ></AppTextInput> */}
           </InputContainer>
 
           {/* Other input containers remain the same */}
-          <InputContainer title="وضعیت تاهل">
+          {/* <InputContainer title="وضعیت تاهل">
             <SelectionDialog
               placeholderText="وضعیت تاهل"
               title="وضعیت تاهل"
@@ -145,81 +387,23 @@ const AddNewShop = () => {
               iconName="person"
             />
             <View></View>
-          </InputContainer>
+          </InputContainer> */}
 
-          <InputContainer title="مشخصات فروشگاه">
-            <AppTextInput
-              autoCapitalize="none"
-              icon="shopping-bag"
-              autoCorrect={false}
-              keyboardType="default"
-              placeholder="نام فروشگاه"
-              onChangeText={() => { }}
-            ></AppTextInput>
-            <AppTextInput
-              autoCapitalize="none"
-              icon="shop"
-              autoCorrect={false}
-              keyboardType="default"
-              placeholder="آدرس فروشگاه"
-              onChangeText={() => { }}
-            ></AppTextInput>
-            <AppTextInput
-              autoCapitalize="none"
-              icon="shop"
-              autoCorrect={false}
-              keyboardType="default"
-              placeholder="متراژ فروشگاه"
-              onChangeText={() => { }}
-            ></AppTextInput>
-            <AppTextInput
-              autoCapitalize="none"
-              icon="shop"
-              autoCorrect={false}
-              keyboardType="default"
-              placeholder="مدت زمان فعالیت (سال)"
-              onChangeText={() => { }}
-            ></AppTextInput>
-            <AppTextInput
-              autoCapitalize="none"
-              icon="shop"
-              autoCorrect={false}
-              keyboardType="default"
-              placeholder="مالکیت فروشگاه"
-              onChangeText={() => { }}
-            ></AppTextInput>
+          <InputContainer title="مشخصات انبار">
             <SelectionDialog
-              placeholderText="پانل ریلی دارد یا خیر"
-              title="پانل ریلی دارد یا خیر"
+              placeholderText="انبار دارد یا ندارد"
+              title="انبار دارد یا ندارد"
+              iconName="cell-tower"
               options={["بله", "خیر"]}
-              onSelect={(value) => { }}
-              iconName="shop"
+              onSelect={(value) => {}}
             />
             <AppTextInput
               autoCapitalize="none"
               icon="shop"
               autoCorrect={false}
               keyboardType="default"
-              placeholder="تعداد دکور زنده"
-              onChangeText={() => { }}
-            ></AppTextInput>
-            <AppTextInput
-              autoCapitalize="none"
-              icon="shop"
-              autoCorrect={false}
-              keyboardType="default"
-              placeholder="ثبت عکس های فروشگاه"
-              onChangeText={() => { }}
-            ></AppTextInput>
-          </InputContainer>
-          <InputContainer title="مشخصات انبار">
-            <AppTextInput
-              autoCapitalize="none"
-              icon="shop"
-              autoCorrect={false}
-              keyboardType="default"
-              placeholder="آدرس انبار"
-              onChangeText={() => { }}
+              placeholder="نوع مالکیت انبار"
+              onChangeText={() => {}}
             ></AppTextInput>
             <AppTextInput
               autoCapitalize="none"
@@ -229,7 +413,7 @@ const AddNewShop = () => {
               placeholder="متراژ انبار"
               onChangeText={() => { }}
             ></AppTextInput>
-            <AppTextInput
+            {/* <AppTextInput
               autoCapitalize="none"
               icon="shop"
               autoCorrect={false}
@@ -243,26 +427,19 @@ const AddNewShop = () => {
               autoCorrect={false}
               keyboardType="default"
               placeholder="متراژ دپویی"
-              onChangeText={() => { }}
-            ></AppTextInput>
-            <AppTextInput
-              autoCapitalize="none"
-              icon="shop"
-              autoCorrect={false}
-              keyboardType="default"
-              placeholder="مالکیت انبار"
-              onChangeText={() => { }}
-            ></AppTextInput>
-            <AppTextInput
+              onChangeText={() => {}}
+            ></AppTextInput> */}
+            {/* <AppTextInput
               autoCapitalize="none"
               icon="shop"
               autoCorrect={false}
               keyboardType="default"
               placeholder="ثبت عکس های انبار"
-              onChangeText={() => { }}
-            ></AppTextInput>
+              onChangeText={() => {}}
+            ></AppTextInput> */}
           </InputContainer>
-          <InputContainer title="زمینه فعالیت فروشگاه">
+
+          {/* <InputContainer title="زمینه فعالیت فروشگاه">
             <SelectionDialog
               placeholderText="شبکه فروش دارد یا خیر"
               title="شبکه فروش دارد یا خیر"
@@ -294,19 +471,19 @@ const AddNewShop = () => {
               placeholder="ثبت موقعیت جغرافیایی"
               onChangeText={() => { }}
             ></AppTextInput>
-          </InputContainer>
+          </InputContainer> */}
 
           <InputContainer title="خلاصه مذاکرات انجام شده">
             <View style={styles.recordingsWrapper}>
-              <IconButton
+              {/* <IconButton
                 text="ضبط صدا"
                 iconName="record-voice-over"
                 backgroundColor={colors.primaryLight}
                 onPress={() => navigation.navigate("VoiceRecording")}
-              //   gradient={true}
-              //   iconSize={28}
-              //   style={styles.voiceButton}
-              />
+                //   gradient={true}
+                //   iconSize={28}
+                //   style={styles.voiceButton}
+              /> */}
 
               {recordings.length > 0 && (
                 <View style={styles.recordingsList}>
@@ -458,6 +635,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.dark,
     marginRight: 10,
+  },
+  rowContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  halfWidth: {
+    width: "48%",
   },
 });
 
