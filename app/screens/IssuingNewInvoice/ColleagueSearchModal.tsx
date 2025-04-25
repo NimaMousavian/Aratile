@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  TextInput,
   FlatList,
   Animated,
   Dimensions,
@@ -20,13 +19,8 @@ import PersonService from "./api/PersonService";
 import {
   toPersianDigits,
   toEnglishDigits,
-  NumberConverterInput,
 } from "../../utils/numberConversions";
 import SearchInput from "../../components/SearchInput";
-import IconButton from "../../components/IconButton";
-import AppButton from "../../components/Button";
-import { useNavigation } from "@react-navigation/native";
-import { AppNavigationProp } from "../../StackNavigator";
 
 export interface Colleague {
   id: string;
@@ -40,10 +34,8 @@ interface ColleagueBottomSheetProps {
   visible: boolean;
   onClose: () => void;
   onSelectColleague: (colleague: Colleague) => void;
-  onAddNewPerson?: (searchQuery: string) => void;
   title?: string;
   pageSize?: number;
-  isCustomer?: boolean;
 }
 
 const { height } = Dimensions.get("window");
@@ -54,13 +46,9 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
   visible,
   onClose,
   onSelectColleague,
-  onAddNewPerson,
   title = "انتخاب شخص معرف",
   pageSize = DEFAULT_PAGE_SIZE,
-  isCustomer = true,
 }) => {
-  const navigation = useNavigation<AppNavigationProp>();
-
   const [searchQuery, setSearchQuery] = useState("");
   const [colleagues, setColleagues] = useState<Colleague[]>([]);
   const [filteredColleagues, setFilteredColleagues] = useState<Colleague[]>([]);
@@ -267,14 +255,6 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
     onClose();
   };
 
-  const handleAddNewPerson = () => {
-    if (onAddNewPerson) {
-      const englishQuery = convertToEnglishNumbers(searchQuery.trim());
-      onAddNewPerson(englishQuery);
-      onClose();
-    }
-  };
-
   const handleChangeText = (text: string) => {
     const persianText = toPersianDigits(text);
     setSearchQuery(persianText);
@@ -293,18 +273,6 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
     }
 
     return null;
-  };
-
-  const pulseAnimation = {
-    opacity: loadingAnimation,
-    transform: [
-      {
-        scale: loadingAnimation.interpolate({
-          inputRange: [0, 1],
-          outputRange: [0.95, 1.05],
-        }),
-      },
-    ],
   };
 
   if (!visible) return null;
@@ -422,34 +390,7 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
                 color={colors.medium}
               />
               <Text style={styles.noResultsText}>نتیجه‌ای یافت نشد</Text>
-              <AppButton
-                title={isCustomer ? "افزودن خریدار جدید" : "افزودن معرف جدید"}
-                onPress={() =>
-                  isCustomer
-                    ? navigation.navigate("CustomerInfo", {
-                        customer: undefined,
-                      })
-                    : navigation.navigate("AddNewColleague")
-                }
-                style={{ width: "50%" }}
-                color="success"
-              />
-
-              {onAddNewPerson && (
-                <TouchableOpacity
-                  style={styles.addPersonButton}
-                  onPress={handleAddNewPerson}
-                >
-                  <MaterialIcons
-                    name="person-add"
-                    size={20}
-                    color={colors.white}
-                  />
-                  <Text style={styles.addPersonButtonText}>
-                    افزودن فرد جدید
-                  </Text>
-                </TouchableOpacity>
-              )}
+              {/* All buttons have been removed here */}
             </View>
           ) : (
             <View style={styles.initialStateContainer}>
@@ -586,7 +527,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.medium,
     marginTop: 12,
-    marginBottom: 20,
     fontFamily: "Yekan_Bakh_Regular",
   },
   initialStateContainer: {
@@ -634,22 +574,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontFamily: "Yekan_Bakh_Regular",
     textAlign: "center",
-  },
-  addPersonButton: {
-    flexDirection: "row-reverse",
-    alignItems: "center",
-    backgroundColor: colors.primary,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    marginTop: 16,
-  },
-  addPersonButtonText: {
-    color: colors.white,
-    fontFamily: "Yekan_Bakh_Bold",
-    fontSize: 16,
-    marginRight: 8,
-  },
+  }
 });
 
 export default ColleagueBottomSheet;

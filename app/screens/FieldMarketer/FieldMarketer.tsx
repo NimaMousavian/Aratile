@@ -60,14 +60,14 @@ const safeNavigate = (navigation: any, screenName: string, params?: any) => {
 const marketingItems: MenuItem[] = [
   {
     id: 1,
-    name: "بازاریاب میدانی B2B",
+    name: "بازاریابی میدانی B2B",
     icon: "business",
     iconColor: "#1C3F64",
     screenName: "B2BFieldMarketer",
   },
   {
     id: 2,
-    name: "بازاریاب میدانی B2C",
+    name: "بازاریابی میدانی B2C",
     icon: "business-center",
     iconColor: "#1C3F64",
     screenName: "B2CFieldMarketer",
@@ -113,7 +113,7 @@ const FieldMarketer: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <ScreenHeader title="بازاریاب میدانی" />
+      <ScreenHeader title="بازاریابی میدانی" isFieldMarketerPage={true} />
       <View style={styles.gridContainer}>
         {marketingItems.map((item, index) => renderItem(item, index))}
       </View>

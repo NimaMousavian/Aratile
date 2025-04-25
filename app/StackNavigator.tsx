@@ -1,17 +1,13 @@
-import React from "react";
-import { View, Text } from "react-native";
-import { NavigationContainer } from "@react-navigation/native";
+import React, { useEffect } from "react";
+import { View, ActivityIndicator } from "react-native";
 import {
   createStackNavigator,
   CardStyleInterpolators,
-  StackNavigationOptions,
   StackScreenProps,
 } from "@react-navigation/stack";
 import {
-  createNativeStackNavigator,
   NativeStackNavigationProp,
 } from "@react-navigation/native-stack";
-import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 
 import AppSelectionScreen from "./screens/AppSelectionScreen";
@@ -41,6 +37,7 @@ import IssuedInvoices from "./screens/IssuedInvoices";
 import ChangePasswordScreen from "./screens/ChangePasswordScreen";
 import AddNewColleague from "./screens/IssuingNewInvoice/AddNewColleague";
 import { Colleague } from "./screens/IssuingNewInvoice/ColleagueSearchModal";
+import { useAuth } from "./screens/AuthContext";
 
 export type RootStackParamList = {
   AppSelection: undefined;
@@ -50,13 +47,11 @@ export type RootStackParamList = {
 
   Home: undefined;
 
-  // اصلاح شده برای صفحه صدور فاکتور
   IssuingNewInvoice: {
     scannedCode?: string;
     scannedProduct?: Product;
   };
 
-  // اضافه کردن پارامتر onReturn به صفحه بارکد اسکنر
   BarCodeScanner: {
     onReturn?: (product: Product) => void;
   };
@@ -88,9 +83,34 @@ export type AppNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const Stack = createStackNavigator<RootStackParamList>();
 
-const StackNavigator: React.FC = () => {
+const AuthStack = () => (
+  <Stack.Navigator
+    screenOptions={{
+      headerShown: false,
+      cardStyle: { backgroundColor: "#FFFFFF" },
+      gestureEnabled: true,
+      gestureDirection: "horizontal-inverted",
+      cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+      transitionSpec: {
+        open: {
+          animation: "timing",
+          config: { duration: 350 },
+        },
+        close: {
+          animation: "timing",
+          config: { duration: 350 },
+        },
+      },
+    }}
+  >
+    <Stack.Screen name="Login" component={LogingScreen} />
+  </Stack.Navigator>
+);
+
+const AppStack = () => {
   type NavigationProps = StackScreenProps<RootStackParamList>;
   const navigation = useNavigation<NavigationProps["navigation"]>();
+
   return (
     <Stack.Navigator
       initialRouteName="Home"
@@ -117,11 +137,9 @@ const StackNavigator: React.FC = () => {
         component={AppSelectionScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen name="Login" component={LogingScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
 
       {/* Seller Screens */}
-
       <Stack.Screen
         name="Home"
         component={HomeScreen}
@@ -169,7 +187,6 @@ const StackNavigator: React.FC = () => {
       />
 
       {/* Cashier Screens */}
-
       <Stack.Screen
         name="ReceiveNewInvoice"
         component={ReceiveNewInvoiceScreen}
@@ -208,7 +225,12 @@ const StackNavigator: React.FC = () => {
   );
 };
 
-// Temporary placeholder component for screens not yet implemented
+const LoadingScreen = () => (
+  <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.primary }}>
+    <ActivityIndicator size="large" color={colors.white} />
+  </View>
+);
+
 const PlaceholderScreen: React.FC = () => {
   return (
     <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -217,6 +239,16 @@ const PlaceholderScreen: React.FC = () => {
       </AppText>
     </View>
   );
+};
+
+const StackNavigator: React.FC = () => {
+  const { isLoggedIn, loading } = useAuth();
+
+  if (loading) {
+    return <LoadingScreen />;
+  }
+
+  return isLoggedIn() ? <AppStack /> : <AuthStack />;
 };
 
 export default StackNavigator;

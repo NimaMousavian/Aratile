@@ -1,49 +1,87 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { StyleSheet, View, TouchableOpacity } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import ScreenHeader from "../components/ScreenHeader";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import AppText from "../components/Text";
-import AppButton from "../components/Button";
-import IconButton from "../components/IconButton";
 import colors from "../config/colors";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { AppNavigationProp } from "../StackNavigator";
-import { getLoginResponse } from "./LogingScreen";
-import { ILoginResponse } from "../config/types";
 import { toPersianDigits } from "../utils/converters";
+import { useAuth } from "./AuthContext";
+import ReusableModal from "../components/Modal";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// Define your RootStackParamList type
 type RootStackParamList = {
   Profile: undefined;
   ChangePassword: undefined;
-  // Add other screens here as needed
 };
 
-// Create type for the navigation prop
 type ProfileScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
   "Profile"
 >;
 
 const ProfileScreen = () => {
-  // Use the navigation hook with the correct type
   const navigation = useNavigation<AppNavigationProp>();
-  const [userData, setUserData] = useState<ILoginResponse>();
+  const { user, logout } = useAuth();
+  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const fetchUserData = async () => {
-    const storedData = await getLoginResponse();
-    if (storedData) {
-      setUserData(storedData);
-    } else {
-      console.log("No data found");
+  const handleLogout = async () => {
+    setLogoutModalVisible(true);
+  };
+
+  const clearAllDatabaseData = async () => {
+    try {
+      // Clear all AsyncStorage data
+      await AsyncStorage.clear();
+
+      // If you're using SQLite or other database, clear them here
+      // Example for SQLite:
+      // const db = SQLite.openDatabase('your_database.db');
+      // db.transaction(tx => {
+      //   // Clear all tables or drop them as needed
+      //   tx.executeSql('DELETE FROM table1');
+      //   tx.executeSql('DELETE FROM table2');
+      //   // ... other tables
+      // });
+
+      console.log("All database data has been cleared");
+      return true;
+    } catch (error) {
+      console.error("Error clearing database:", error);
+      return false;
     }
   };
 
-  useEffect(() => {
-    fetchUserData();
-  }, []);
+  const performLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+
+      // Clear all database data before logout
+      const dataCleared = await clearAllDatabaseData();
+      if (!dataCleared) {
+        console.error("Failed to clear database data");
+        // Continue with logout anyway
+      }
+
+      // Perform the original logout operation
+      const success = await logout();
+
+      setLogoutModalVisible(false);
+      setIsLoggingOut(false);
+
+      // If needed, you can add additional navigation here
+      // For example, navigate to the login screen
+      // navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+    } catch (error) {
+      console.error("Error during logout process:", error);
+      setIsLoggingOut(false);
+      setLogoutModalVisible(false);
+    }
+  };
 
   return (
     <View style={styles.mainContainer}>
@@ -61,9 +99,9 @@ const ProfileScreen = () => {
             <MaterialIcons name="person" size={100} color="#666666" />
           </View>
           <View style={{ marginVertical: 30 }}>
-            <AppText style={styles.nameText}>{userData?.UserName}</AppText>
+            <AppText style={styles.nameText}>{user?.DisplayName}</AppText>
             <AppText style={styles.roleText}>
-              {toPersianDigits(userData?.UserMobile || "")}
+              {toPersianDigits(user?.UserMobile || "")}
             </AppText>
           </View>
         </View>
@@ -97,8 +135,9 @@ const ProfileScreen = () => {
 
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => navigation.navigate("Login")}
+            onPress={handleLogout}
             activeOpacity={0.7}
+            disabled={isLoggingOut}
           >
             <LinearGradient
               colors={["rgba(255,255,255,0.05)", "rgba(255,255,255,0.15)"]}
@@ -122,6 +161,42 @@ const ProfileScreen = () => {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* مدال خروج از حساب کاربری */}
+      <ReusableModal
+        visible={logoutModalVisible}
+        onClose={() => !isLoggingOut && setLogoutModalVisible(false)}
+        headerConfig={{
+          title: "خروج از حساب کاربری",
+          icon: "logout",
+          colors: [colors.danger, colors.dangerLight || "#ff6b6b"],
+        }}
+        messages={[
+          {
+            text: "آیا مطمئن هستید که می‌خواهید از حساب کاربری خود خارج شوید؟",
+            icon: "warning",
+            iconColor: colors.danger,
+          },
+        ]}
+        buttons={[
+          {
+            id: "cancel",
+            text: "انصراف",
+            color: colors.medium,
+            icon: "close",
+            onPress: () => !isLoggingOut && setLogoutModalVisible(false),
+            disabled: isLoggingOut,
+          },
+          {
+            id: "logout",
+            text: isLoggingOut ? "در حال خروج..." : "خروج",
+            color: colors.danger,
+            icon: isLoggingOut ? "hourglass-empty" : "logout",
+            onPress: performLogout,
+            disabled: isLoggingOut,
+          },
+        ]}
+      />
     </View>
   );
 };

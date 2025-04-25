@@ -10,12 +10,14 @@ import { AppNavigationProp } from "../StackNavigator";
 interface IProps {
   title: string;
   isProfilePage?: boolean;
-  rightComponent?: ReactNode; 
+  isFieldMarketerPage?: boolean;
+  rightComponent?: ReactNode;
 }
 
 const ScreenHeader: React.FC<IProps> = ({
   title,
   isProfilePage = false,
+  isFieldMarketerPage = false,
   rightComponent
 }) => {
   const navigation = useNavigation<AppNavigationProp>();
@@ -23,10 +25,20 @@ const ScreenHeader: React.FC<IProps> = ({
   const textColor = isProfilePage ? colors.white : colors.dark;
   const iconColor = isProfilePage ? "white" : colors.secondary;
 
+  // Determine background color based on page type
+  let backgroundColor;
+  if (isProfilePage) {
+    backgroundColor = 'transparent';
+  } else if (isFieldMarketerPage) {
+    backgroundColor = colors.white;
+  } else {
+    backgroundColor = colors.background;
+  }
+
   return (
     <View style={[
       styles.header,
-      { backgroundColor: isProfilePage ? 'transparent' : colors.background }
+      { backgroundColor }
     ]}>
       <TouchableOpacity style={styles.icon} onPress={() => navigation.goBack()}>
         <MaterialIcons name="arrow-forward-ios" size={24} color={iconColor} />
@@ -66,7 +78,7 @@ const styles = StyleSheet.create({
   },
   rightComponentContainer: {
     position: "absolute",
-    left: 12, 
+    left: 12,
     top: 63,
   }
 });

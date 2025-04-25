@@ -133,7 +133,7 @@ const initialItems: MenuItem[] = [
   },
   {
     id: 5,
-    name: "درخواست تامین محصول",
+    name: "درخواست تامین",
     icon: "shopping-cart",
     iconColor: "#1C3F64",
     screenName: "SupplyRequest",
@@ -141,7 +141,7 @@ const initialItems: MenuItem[] = [
 
   {
     id: 6,
-    name: "بازاریاب میدانی",
+    name: "بازاریابی میدانی",
     icon: "store",
     iconColor: "#1C3F64",
     screenName: "FieldMarketer",
@@ -1003,7 +1003,7 @@ const HomeScreen: React.FC = () => {
           <View style={styles.avatarCircle}>
             <MaterialIcons name="person" size={26} color="#666666" />
           </View>
-          <Text style={styles.userName}>{userData?.UserName}</Text>
+          <Text style={styles.userName}>{userData?.DisplayName}</Text>
         </TouchableOpacity>
       </View>
 

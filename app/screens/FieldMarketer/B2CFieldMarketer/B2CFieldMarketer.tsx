@@ -36,10 +36,11 @@ const B2CFieldMarketer = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20
+    padding: 20,
+    backgroundColor: colors.background,
   },
   addIconContainer: {
-   backgroundColor: colors.secondary,
+   backgroundColor: colors.success,
       width: 40,
       height: 40,
       marginLeft: 8,

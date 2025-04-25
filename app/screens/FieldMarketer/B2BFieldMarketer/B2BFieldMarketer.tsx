@@ -12,7 +12,7 @@ const B2BFieldMarketer = () => {
   return (
     <>
       <ScreenHeader
-        title="بازاریاب میدانی B2B"
+        title="بازاریابی میدانی B2B"
         rightComponent={
           <View style={styles.headerIconContainer}>
             <MaterialIcons
@@ -38,10 +38,11 @@ const B2BFieldMarketer = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20
+    padding: 20,
+    backgroundColor: colors.background,
   },
   headerIconContainer: {
-    backgroundColor: colors.secondary,
+    backgroundColor: colors.success,
     width: 40,
     height: 40,
     marginLeft: 10,
