@@ -9,7 +9,7 @@ import {
   I18nManager,
   Keyboard,
   KeyboardEvent,
-  EmitterSubscription
+  EmitterSubscription,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -79,6 +79,8 @@ interface AppTextInputProps extends TextInputProps {
   inputContainerStyle?: any;
   labelStyle?: any;
   isLargeInput?: boolean;
+  error?: string; // Add error prop
+  [key: string]: any; // Allow other props (e.g., multiline, numberOfLines)
 }
 
 const AppTextInput: React.FC<AppTextInputProps> = ({
@@ -96,11 +98,14 @@ const AppTextInput: React.FC<AppTextInputProps> = ({
   labelStyle,
   isLargeInput = false,
   onChangeText,
+  error,
   ...otherProps
 }) => {
   const [inputRef, setInputRef] = useState<TextInput | null>(null);
   // حالت داخلی برای نگهداری نسخه فارسی متن نمایشی
-  const [displayText, setDisplayText] = useState<string>(value ? toPersianDigits(value) : "");
+  const [displayText, setDisplayText] = useState<string>(
+    value ? toPersianDigits(value) : ""
+  );
 
   // استفاده از حالت داخلی برای نمایش متن فارسی
   // و به‌روزرسانی آن هنگامی که value از بیرون تغییر می‌کند
@@ -145,9 +150,14 @@ const AppTextInput: React.FC<AppTextInputProps> = ({
       ]}
     >
       {label && <Text style={[styles.inputLabel, labelStyle]}>{label}</Text>}
-
       {isLargeInput ? (
-        <View style={[styles.textInputContainer, inputContainerStyle, { height, alignItems: 'flex-start' }]}>
+        <View
+          style={[
+            styles.textInputContainer,
+            inputContainerStyle,
+            { height, alignItems: "flex-start" },
+          ]}
+        >
           {icon && (
             <MaterialIcons
               name={icon as any}
@@ -158,30 +168,22 @@ const AppTextInput: React.FC<AppTextInputProps> = ({
           )}
           <TextInput
             ref={(ref) => setInputRef(ref)}
-            style={[
-              styles.textInput,
-              { textAlignVertical: 'top' },
-              style
-            ]}
+            style={[styles.textInput, { textAlignVertical: "top" }, style]}
             placeholder={displayPlaceholder}
             placeholderTextColor={colors.darkGray}
             value={displayText}
             onChangeText={handleTextChange}
             multiline={true}
-
             // تنظیمات مختص راست به چپ
             textAlign="right"
             writingDirection="rtl"
-
             // تنظیمات سیستمی
             autoCapitalize="none"
             keyboardType="default"
             spellCheck={false}
             autoCorrect={false}
-
             // ویژگی‌های اضافی برای بهبود نمایش فارسی
             allowFontScaling={false}
-
             {...otherProps}
           />
         </View>
@@ -197,33 +199,27 @@ const AppTextInput: React.FC<AppTextInputProps> = ({
           )}
           <TextInput
             ref={(ref) => setInputRef(ref)}
-            style={[
-              styles.textInput,
-              style,
-              height ? { height } : undefined
-            ]}
+            style={[styles.textInput, style, height ? { height } : undefined]}
             placeholder={displayPlaceholder}
             placeholderTextColor={colors.darkGray}
             value={displayText}
             onChangeText={handleTextChange}
-
             // تنظیمات مختص راست به چپ
             textAlign="right"
             writingDirection="rtl"
-
             // تنظیمات سیستمی
             autoCapitalize="none"
             keyboardType="default"
             spellCheck={false}
             autoCorrect={false}
-
             // ویژگی‌های اضافی برای بهبود نمایش فارسی
             allowFontScaling={false}
-
             {...otherProps}
           />
         </View>
       )}
+      {error && <Text style={styles.errorText}>{error}</Text>}
+      {/* Render error */}
     </View>
   );
 };
@@ -258,7 +254,14 @@ const styles = StyleSheet.create({
     color: colors.dark,
     textAlign: "right",
     writingDirection: "rtl",
-  }
+  },
+  errorText: {
+    /* Added error text style */ color: colors.danger,
+    fontSize: 12,
+    marginTop: 5,
+    textAlign: "right",
+    fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
+  },
 });
 
 export default AppTextInput;

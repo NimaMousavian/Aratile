@@ -359,6 +359,7 @@ interface DatePickerFieldProps {
   onDateChange: (date: string) => void;
   datePickerProps?: Partial<PersianDatePickerProps>;
   customStyles?: CustomStyles;
+  error?: string;
 }
 
 export const DatePickerField: React.FC<DatePickerFieldProps> = ({
@@ -367,6 +368,7 @@ export const DatePickerField: React.FC<DatePickerFieldProps> = ({
   onDateChange,
   datePickerProps = {},
   customStyles = {},
+  error,
 }) => {
   const [isPickerVisible, setPickerVisible] = useState(false);
   const dateArray = date.split("/").map(Number);
@@ -414,33 +416,43 @@ export const DatePickerField: React.FC<DatePickerFieldProps> = ({
       padding: 4,
       ...customStyles.editButton,
     },
+    errorText: {
+      /* Added error text style */ color: colors.danger,
+      fontSize: 12,
+      marginTop: 5,
+      textAlign: "right",
+      fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
+    },
   });
 
   return (
-    <TouchableOpacity
-      style={styles.infoItem}
-      onPress={() => setPickerVisible(true)}
-    >
-      <MaterialIcons name="calendar-month" size={20} color="#6B7280" />
-      <Text style={styles.infoLabel}>
-        {date ? toPersianDigits(date) : label}
-      </Text>
-      <View style={styles.valueContainer}>
-        {/* <TouchableOpacity
+    <>
+      <TouchableOpacity
+        style={styles.infoItem}
+        onPress={() => setPickerVisible(true)}
+      >
+        <MaterialIcons name="calendar-month" size={20} color="#6B7280" />
+        <Text style={styles.infoLabel}>
+          {date ? toPersianDigits(date) : label}
+        </Text>
+        <View style={styles.valueContainer}>
+          {/* <TouchableOpacity
           onPress={() => setPickerVisible(true)}
           style={styles.editButton}
         ></TouchableOpacity> */}
-        {/* <Text style={styles.infoValue}>{toFarsiDigits(date)}</Text> */}
-      </View>
+          {/* <Text style={styles.infoValue}>{toFarsiDigits(date)}</Text> */}
+        </View>
 
-      <PersianDatePicker
-        isVisible={isPickerVisible}
-        onClose={() => setPickerVisible(false)}
-        onConfirm={handleConfirm}
-        // initialDate={dateArray}
-        {...datePickerProps}
-      />
-    </TouchableOpacity>
+        <PersianDatePicker
+          isVisible={isPickerVisible}
+          onClose={() => setPickerVisible(false)}
+          onConfirm={handleConfirm}
+          // initialDate={dateArray}
+          {...datePickerProps}
+        />
+      </TouchableOpacity>
+      {error && <Text style={styles.errorText}>{error}</Text>}
+    </>
   );
 };
 
