@@ -25,8 +25,8 @@ import axios from "axios";
 import appConfig from "../../../../config";
 import { Formik, FormikProps } from "formik";
 import * as Yup from "yup";
-import AppButton from "../../components/Button";
-import PersonManagementService from "../IssuingNewInvoice/api/PersonManagementService";
+import AppButton from "../../../components/Button";
+import PersonManagementService from "../../IssuingNewInvoice/api/PersonManagementService";
 
 export const InputContainer = ({
   title,
@@ -979,7 +979,7 @@ const styles = StyleSheet.create({
     position: "absolute", // Position absolutely
     left: 12, // Place on the left side with some padding
     zIndex: 1, // Ensure it's above other elements
-  }
+  },
 
   errorText: {
     color: colors.danger,
