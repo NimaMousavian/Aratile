@@ -40,6 +40,7 @@ import IssuedInvoices from "./screens/IssuedInvoices";
 import ChangePasswordScreen from "./screens/ChangePasswordScreen";
 import AddNewColleague from "./screens/IssuingNewInvoice/AddNewColleague";
 import { Colleague } from "./screens/IssuingNewInvoice/ColleagueSearchModal";
+import ShowRoom from "./screens/ShowRoom";
 
 export type RootStackParamList = {
   AppSelection: undefined;
@@ -81,6 +82,8 @@ export type RootStackParamList = {
   AddNewShop: undefined;
   VoiceRecording: undefined;
   AddNewProject: undefined;
+
+  ShowRoom: undefined;
 };
 export type AppNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -201,6 +204,7 @@ const StackNavigator: React.FC = () => {
       <Stack.Screen name="AddNewShop" component={AddNewShop} />
       <Stack.Screen name="VoiceRecording" component={VoiceRecordingScreen} />
       <Stack.Screen name="AddNewProject" component={AddNewProject} />
+      <Stack.Screen name="ShowRoom" component={ShowRoom} />
     </Stack.Navigator>
   );
 };

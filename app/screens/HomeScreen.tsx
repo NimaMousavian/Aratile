@@ -129,6 +129,7 @@ const initialItems: MenuItem[] = [
     name: "ماشین حساب",
     icon: "calculate",
     iconColor: "#1C3F64",
+    screenName: "ShowRoom",
   },
   {
     id: 5,
@@ -149,7 +150,14 @@ const initialItems: MenuItem[] = [
     name: "بازاریاب میدانی B2C",
     icon: "business-center",
     iconColor: "#1C3F64",
-    screenName: "B2CFieldMarketer",
+    screenName: "ShowRoom",
+  },
+  {
+    id: 8,
+    name: "شو روم",
+    icon: "business-center",
+    iconColor: "#1C3F64",
+    screenName: "ShowRoom",
   },
 ];
 
@@ -165,7 +173,7 @@ const itemWidth = (screenWidth - (numColumns + 1) * itemMargin) / numColumns;
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<AppNavigationProp>();
-  const [items, setItems] = useState(selectedItems);
+  const [items, setItems] = useState(initialItems);
   const [isDragging, setIsDragging] = useState(false);
   const [draggedItem, setDraggedItem] = useState<MenuItem | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -970,6 +978,7 @@ const HomeScreen: React.FC = () => {
               if (!isDragging && item.screenName) {
                 console.log("Navigating to:", item.screenName);
                 safeNavigate(navigation, item.screenName);
+                // navigation.navigate(item.screenName || "Home");
               }
             }}
           >

@@ -493,7 +493,7 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
 
   return (
     <>
-      <ScreenHeader title="ثبت فاکتور جدید" />
+      <ScreenHeader title="جزئیات فاکتور" />
 
       <SafeAreaView style={styles.safeAreaBottom}>
         <View style={styles.container}>

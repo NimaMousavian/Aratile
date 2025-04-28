@@ -186,7 +186,7 @@ export interface IAddShopToPost {
   OwnerFirstName: string;
   OwnerLastName: string;
   OwnerMobile: string;
-  HasWarehouse: true;
+  HasWarehouse: boolean;
   HasWarehouseStr: string;
   WarehouseOwnershipType: number;
   WarehouseOwnershipTypeStr: string;
