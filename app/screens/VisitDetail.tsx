@@ -1,55 +1,46 @@
-import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
-import {
-  Dimensions,
-  Platform,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
+import ScreenHeader from "../components/ScreenHeader";
 import colors from "../config/colors";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
 import AppText from "../components/Text";
-import { useNavigation } from "@react-navigation/native";
-import { AppNavigationProp } from "../StackNavigator";
 import ColleagueBottomSheet, {
   Colleague,
 } from "./IssuingNewInvoice/ColleagueSearchModal";
+import { AppNavigationProp } from "../StackNavigator";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { toPersianDigits } from "../utils/converters";
-import ScreenHeader from "../components/ScreenHeader";
 import Toast from "../components/Toast";
-import { MenuItem } from "./HomeScreen";
-import { getFontFamily } from "./IssuedInvoices";
-import { safeNavigate } from "./FieldMarketer/FieldMarketer";
+import { IVisitItem } from "./Visits";
+import AppTextInput from "../components/TextInput";
+import SelectionBottomSheet from "../components/SelectionDialog";
+import { TimePickerField } from "../components/PersianTimePicker";
+import { IconButton } from "react-native-paper";
+import AppButton from "../components/Button";
+import { InputContainer } from "./FieldMarketer/B2BFieldMarketer/AddNewShop";
 
-const showRoomItems: MenuItem[] = [
-  {
-    id: 1,
-    name: "بازدید ها",
-    icon: "business",
-    iconColor: "#1C3F64",
-    screenName: "Visits",
-  },
-  {
-    id: 2,
-    name: "درخواست برچسب",
-    icon: "business-center",
-    iconColor: "#1C3F64",
-    screenName: "LabelRequest",
-  },
-];
+type VisitDetailRouteParams = {
+  VisitDetail: {
+    visitItem: IVisitItem;
+  };
+};
 
-const screenWidth = Dimensions.get("window").width;
-const numColumns = 2;
-const itemMargin = 10;
-const itemWidth = (screenWidth - (numColumns + 1) * itemMargin) / numColumns;
+const VisitDetail = () => {
+  const route = useRoute<RouteProp<VisitDetailRouteParams, "VisitDetail">>();
+  const visitItem = route.params?.visitItem;
+  console.log(visitItem);
 
-const ShowRoom = () => {
   const navigation = useNavigation<AppNavigationProp>();
 
-  const [selectedColleague, setSelectedColleague] = useState<Colleague | null>(
-    null
-  );
+  const [fromTime, setFromTime] = useState(visitItem.fromTime);
+  const [toTime, setToTime] = useState(visitItem.toTime);
+
+  const [selectedColleague, setSelectedColleague] = useState<Colleague | null>({
+    id: visitItem.visitId.toString(),
+    name: visitItem.visitor,
+    phone: "",
+  });
   const [showColleagueSheet, setShowColleagueSheet] = useState<boolean>(false);
 
   const [toastVisible, setToastVisible] = useState<boolean>(false);
@@ -67,37 +58,9 @@ const ShowRoom = () => {
     setToastVisible(true);
   };
 
-  const renderItem = (item: MenuItem, index: number) => {
-    return (
-      <View key={item.id} style={[styles.gridItemContainer]}>
-        <TouchableOpacity
-          style={styles.gridItem}
-          activeOpacity={0.7}
-          onPress={() => {
-            if (item.screenName) {
-              console.log("Navigating to:", item.screenName);
-              safeNavigate(navigation, item.screenName);
-            }
-          }}
-        >
-          <MaterialIcons
-            name={item.icon}
-            size={40}
-            color={item.iconColor || colors.primary}
-          />
-          <AppText style={styles.gridText}>{item.name}</AppText>
-        </TouchableOpacity>
-      </View>
-    );
-  };
-
   return (
     <View style={styles.container}>
-      <ScreenHeader title="شو روم" />
-
-      <View style={styles.gridContainer}>
-        {showRoomItems.map((item, index) => renderItem(item, index))}
-      </View>
+      <ScreenHeader title="جزئیات بازدید" />
 
       <Toast
         visible={toastVisible}
@@ -105,8 +68,7 @@ const ShowRoom = () => {
         type={toastType}
         onDismiss={() => setToastVisible(false)}
       />
-
-      {/* <View style={styles.customerContainer}>
+      <View style={styles.customerContainer}>
         <LinearGradient
           colors={[colors.secondary, colors.primary]}
           start={{ x: 0, y: 0 }}
@@ -139,18 +101,6 @@ const ShowRoom = () => {
                   <MaterialIcons name="edit" size={22} color={colors.warning} />
                 </TouchableOpacity>
               )}
-              <TouchableOpacity
-                style={[styles.iconCircleSmall, { backgroundColor: "#e5f9ec" }]}
-                onPress={() => navigation.navigate("CustomerInfo", {})}
-              >
-                <MaterialIcons name="add" size={22} color={colors.success} />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.iconCircleSmall, { backgroundColor: "#e4edf8" }]}
-                onPress={() => setShowColleagueSheet(true)}
-              >
-                <MaterialIcons name="search" size={22} color={colors.primary} />
-              </TouchableOpacity>
             </View>
           </View>
         </LinearGradient>
@@ -166,9 +116,40 @@ const ShowRoom = () => {
             </AppText>
           )}
         </View>
-      </View> */}
+      </View>
+      <InputContainer title={"اطلاعات بازدید"}>
+        <TimePickerField
+          label="ساعت شروع"
+          time={fromTime}
+          onTimeChange={setFromTime}
+          error={fromTime ? undefined : "ساعت شروع الزامی است"}
+        />
+        <TimePickerField
+          label="ساعت پایان"
+          time={toTime}
+          onTimeChange={setToTime}
+          error={toTime ? undefined : "ساعت پایان الزامی است"}
+        />
+        <SelectionBottomSheet
+          placeholderText={"نتیجه"}
+          title="نتیجه"
+          iconName="question-mark"
+          options={["انصراف از خرید", "مراجعه بعدی"]}
+          onSelect={(value) => {}}
+        />
+        <AppTextInput
+          autoCorrect={false}
+          placeholder="توضیحات"
+          keyboardType="default"
+          multiline
+          numberOfLines={10}
+          height={200}
+          onChangeText={() => {}}
+          value={""}
+        />
+      </InputContainer>
 
-      {/* <ColleagueBottomSheet
+      <ColleagueBottomSheet
         title="انتخاب مشتری"
         visible={showColleagueSheet}
         onClose={() => setShowColleagueSheet(false)}
@@ -177,7 +158,8 @@ const ShowRoom = () => {
           setShowColleagueSheet(false);
           showToast(`مشتری ${colleague.name} انتخاب شد`, "success");
         }}
-      /> */}
+      />
+      <AppButton title="ثبت اطلاعات" onPress={() => {}} color="success" />
     </View>
   );
 };
@@ -258,46 +240,17 @@ const styles = StyleSheet.create({
     fontFamily: "Yekan_Bakh_Bold",
     textAlign: "center",
   },
-
-  gridContainer: {
-    flexDirection: "row-reverse",
-    flexWrap: "nowrap",
-    justifyContent: "center",
-    paddingHorizontal: 10,
-    alignItems: "center",
-  },
-  gridItemContainer: {
-    margin: 5,
-    paddingLeft: 5,
-    paddingRight: 5,
-    paddingBottom: 10,
-    marginTop: 20,
-    width: itemWidth,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 1,
-  },
-  gridItem: {
-    padding: 25,
-    height: 150,
-    flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 15,
-    backgroundColor: "#F2F2F2",
-    borderRadius: 15,
+  mainContent: {
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E4E4E4",
+    borderColor: colors.gray,
+    padding: 10,
   },
-  gridText: {
-    textAlign: "center",
-    fontSize: 16,
-    fontWeight: Platform.OS === "ios" ? "700" : "normal",
-    fontFamily: getFontFamily("Yekan_Bakh_Bold", "700"),
-    color: "#333333",
+  submitButton: {
+    height: 50,
+    marginTop: 10,
+    marginBottom: 30,
   },
 });
 
-export default ShowRoom;
+export default VisitDetail;

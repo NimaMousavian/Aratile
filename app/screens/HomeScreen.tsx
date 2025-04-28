@@ -19,7 +19,7 @@ import { getLoginResponse } from "./LogingScreen";
 import { ILoginResponse } from "../config/types";
 import { PanGestureHandler, State } from "react-native-gesture-handler";
 
-interface MenuItem {
+export interface MenuItem {
   id: number;
   name: string;
   icon: keyof typeof MaterialIcons.glyphMap;
@@ -63,6 +63,7 @@ const safeNavigate = (navigation: any, screenName: string, params?: any) => {
     ReceiveNewInvoic: "ReceiveNewInvoice",
     StatusFilterScree: "StatusFilterScreen",
     FieldMarketer: "FieldMarketer",
+    ShowRoom: "ShowRoom",
     // B2BFieldMarkete: "B2BFieldMarketer",
     // B2CFieldMarkete: "B2CFieldMarketer",
   };
@@ -146,6 +147,13 @@ const initialItems: MenuItem[] = [
     icon: "store",
     iconColor: "#1C3F64",
     screenName: "FieldMarketer",
+  },
+  {
+    id: 7,
+    name: "شو روم",
+    icon: "store",
+    iconColor: "#1C3F64",
+    screenName: "ShowRoom",
   },
 ];
 

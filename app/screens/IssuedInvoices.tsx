@@ -546,6 +546,52 @@ const IssuedInvoices: React.FC = () => {
     }
   };
 
+  const getInvoiceCountWithFilter = async () => {
+    try {
+      let queryString = "";
+
+      // Add filterParams if they exist
+      if (filterParams) {
+        if (filterParams.filterPersonId) {
+          queryString += `&filterPersonId=${encodeURIComponent(
+            filterParams.filterPersonId
+          )}`;
+        }
+        if (filterParams.filterInvoiceDateFrom) {
+          queryString += `&filterInvoiceDateFrom=${encodeURIComponent(
+            filterParams.filterInvoiceDateFrom
+          )}`;
+        }
+        if (filterParams.filterInvoiceDateTo) {
+          queryString += `&filterInvoiceDateTo=${encodeURIComponent(
+            filterParams.filterInvoiceDateTo
+          )}`;
+        }
+      }
+
+      const response = await axios.get(
+        `${appConfig.mobileApi}Invoice/GetCount?${queryString}`
+      );
+
+      if (response.status !== 200) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data: InvoiceCountItem[] = response.data;
+      console.log("data", data);
+
+      // Convert the array to a record for easier access
+      const countsRecord: Record<number, number> = {};
+      data.forEach((item) => {
+        countsRecord[item.State] = item.InvoiceCount;
+      });
+
+      setStatusCounts(countsRecord);
+    } catch (error) {
+      console.error("Error fetching invoice counts:", error);
+    }
+  };
+
   const handleRefresh = () => {
     setRefreshing(true);
     setCurrentPage(1);
@@ -724,7 +770,10 @@ const IssuedInvoices: React.FC = () => {
                 </TouchableOpacity>
                 <AppButton
                   title="فیلتر"
-                  onPress={() => getInvoicesWithFilter()}
+                  onPress={() => {
+                    getInvoicesWithFilter();
+                    getInvoiceCountWithFilter();
+                  }}
                   color="primary"
                 />
               </>

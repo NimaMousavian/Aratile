@@ -37,6 +37,9 @@ import AddNewColleague from "./screens/IssuingNewInvoice/AddNewColleague";
 import { Colleague } from "./screens/IssuingNewInvoice/ColleagueSearchModal";
 import { useAuth } from "./screens/AuthContext";
 import ShowRoom from "./screens/ShowRoom";
+import Visits from "./screens/Visits";
+import LabelRequest from "./screens/LabelRequest";
+import VisitDetail from "./screens/VisitDetail";
 
 export type RootStackParamList = {
   AppSelection: undefined;
@@ -79,6 +82,19 @@ export type RootStackParamList = {
   AddNewProject: undefined;
 
   ShowRoom: undefined;
+  Visits: undefined;
+  LabelRequest: undefined;
+  VisitDetail: {
+    visitItem: {
+      visitId: number;
+      visitor: string;
+      visitingOfficer: string;
+      date: string;
+      fromTime: string;
+      toTime: string;
+      result: string;
+    };
+  };
 };
 export type AppNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -223,6 +239,9 @@ const AppStack = () => {
       <Stack.Screen name="VoiceRecording" component={VoiceRecordingScreen} />
       <Stack.Screen name="AddNewProject" component={AddNewProject} />
       <Stack.Screen name="ShowRoom" component={ShowRoom} />
+      <Stack.Screen name="Visits" component={Visits} />
+      <Stack.Screen name="LabelRequest" component={LabelRequest} />
+      <Stack.Screen name="VisitDetail" component={VisitDetail} />
     </Stack.Navigator>
   );
 };

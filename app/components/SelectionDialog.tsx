@@ -63,18 +63,23 @@ const SelectionBottomSheet: React.FC<SelectionBottomSheetProps> = ({
   const loadingAnimation = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredOptions(options);
-      return;
-    }
+    console.log(filteredOptions);
+  });
 
-    const lowercasedQuery = searchQuery.toLowerCase().trim();
-    const filtered = options.filter((option) =>
-      option.toLowerCase().includes(lowercasedQuery)
-    );
+  // useEffect(() => {
+  //   if (!searchQuery.trim()) {
+  //     setFilteredOptions(options);
+  //     return;
+  //   }
 
-    setFilteredOptions(filtered);
-  }, [searchQuery, options]);
+  //   const lowercasedQuery = searchQuery.toLowerCase().trim();
+  //   const filtered = options.filter((option) =>
+  //     option.toLowerCase().includes(lowercasedQuery)
+  //   );
+  //   console.log(filtered);
+
+  //   setFilteredOptions(filtered);
+  // }, [searchQuery, options]);
 
   useEffect(() => {
     const keyboardWillShowListener = Keyboard.addListener(
@@ -238,18 +243,28 @@ const SelectionBottomSheet: React.FC<SelectionBottomSheetProps> = ({
     ],
   };
 
+  // const getContentHeight = () => {
+  //   if (loading) {
+  //     return height * 0.6;
+  //   } else if (filteredOptions.length <= 3) {
+  //     return "auto";
+  //   } else if (filteredOptions.length <= 5) {
+  //     return Math.min(height * 0.5, height * 0.8);
+  //   } else if (filteredOptions.length <= 8) {
+  //     return Math.min(height * 0.6, height * 0.8);
+  //   } else {
+  //     return height * 0.8;
+  //   }
+  // };
+
   const getContentHeight = () => {
     if (loading) {
       return height * 0.6;
-    } else if (filteredOptions.length <= 3) {
-      return "auto";
-    } else if (filteredOptions.length <= 5) {
-      return Math.min(height * 0.5, height * 0.8);
-    } else if (filteredOptions.length <= 8) {
-      return Math.min(height * 0.6, height * 0.8);
-    } else {
-      return height * 0.8;
     }
+    return Math.min(
+      height * 0.8,
+      Math.max(height * 0.4, filteredOptions.length * 60)
+    ); // Adjust based on option count
   };
 
   const getPlaceholderStyle = () => {

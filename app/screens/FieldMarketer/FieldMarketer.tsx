@@ -41,7 +41,11 @@ const getFontFamily = (baseFont: string, weight: FontWeight): string => {
   return baseFont;
 };
 
-const safeNavigate = (navigation: any, screenName: string, params?: any) => {
+export const safeNavigate = (
+  navigation: any,
+  screenName: string,
+  params?: any
+) => {
   console.log(`Attempting to navigate to: ${screenName}`);
 
   try {
@@ -84,12 +88,7 @@ const FieldMarketer: React.FC = () => {
 
   const renderItem = (item: MenuItem, index: number) => {
     return (
-      <View
-        key={item.id}
-        style={[
-          styles.gridItemContainer,
-        ]}
-      >
+      <View key={item.id} style={[styles.gridItemContainer]}>
         <TouchableOpacity
           style={styles.gridItem}
           activeOpacity={0.7}
@@ -163,7 +162,7 @@ const styles = StyleSheet.create({
     paddingLeft: 5,
     paddingRight: 5,
     paddingBottom: 10,
-    marginTop:20,
+    marginTop: 20,
     width: itemWidth,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },

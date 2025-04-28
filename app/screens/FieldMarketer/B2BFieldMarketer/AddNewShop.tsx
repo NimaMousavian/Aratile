@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { ScrollView, StyleSheet, View, Alert, TouchableOpacity } from "react-native";
+import {
+  ScrollView,
+  StyleSheet,
+  View,
+  Alert,
+  TouchableOpacity,
+} from "react-native";
 import AppText from "../../../components/Text";
 import AppTextInput from "../../../components/TextInput";
 
@@ -28,13 +34,22 @@ import * as Yup from "yup";
 import AppButton from "../../../components/Button";
 import PersonManagementService from "../../IssuingNewInvoice/api/PersonManagementService";
 
-export const InputContainer = ({
+interface IInputContainerProps {
+  title: string;
+  children: React.ReactNode[];
+  showAddIcon?: boolean;
+  onAddIconPress?: () => {};
+  showClearIcon?: boolean;
+  onClearIconPress?: () => {};
+}
+
+export const InputContainer: React.FC<IInputContainerProps> = ({
   title,
   children,
   showAddIcon = false,
   onAddIconPress,
   showClearIcon = false,
-  onClearIconPress
+  onClearIconPress,
 }) => {
   return (
     <View style={styles.inputContainer}>
@@ -68,9 +83,6 @@ export const InputContainer = ({
     </View>
   );
 };
-
-
-
 
 // Define the route params type
 type AddNewShopRouteParams = {
