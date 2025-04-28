@@ -2,13 +2,13 @@ import React, { useState, useEffect } from "react";
 import { View, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { Audio } from "expo-av";
 import { FontAwesome5 } from "@expo/vector-icons";
-import AppText from "../../components/Text";
-import colors from "../../config/colors";
+import AppText from "../../../components/Text";
+import colors from "../../../config/colors";
 import { LinearGradient } from "expo-linear-gradient";
-import IconButton from "../../components/NewIconButton";
+import IconButton from "../../../components/NewIconButton";
 import { useNavigation } from "@react-navigation/native";
-import { AppNavigationProp } from "../../StackNavigator";
-import { toPersianDigits } from "../../utils/converters";
+import { AppNavigationProp } from "../../../StackNavigator";
+import { toPersianDigits } from "../../../utils/converters";
 
 const VoiceRecordingScreen = () => {
   const navigation = useNavigation<AppNavigationProp>();

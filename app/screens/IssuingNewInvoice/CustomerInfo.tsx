@@ -19,11 +19,12 @@ import PersonGroupService, { PersonGroup } from "./api/PersonGroupService";
 import PersonManagementService, {
   CreatePersonDTO,
 } from "./api/PersonManagementService";
-import { InputContainer } from "../B2BFieldMarketer/AddNewShop";
+import { InputContainer } from "../FieldMarketer/B2BFieldMarketer/AddNewShop";
 import axios from "axios";
 import appConfig from "../../../config";
 import { useRoute } from "@react-navigation/native";
-import { IPerson, IPersonToEdit } from "../../config/types";
+import { IPerson, IPersonToEdit, ILoginResponse } from "../../config/types";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type ToastType = "success" | "error" | "warning" | "info";
 
@@ -34,6 +35,17 @@ interface Province {
   Active: boolean;
   ActiveStr: string;
 }
+
+// تابع دریافت اطلاعات ورود کاربر از AsyncStorage
+const getLoginResponse = async (): Promise<ILoginResponse | null> => {
+  try {
+    const jsonValue = await AsyncStorage.getItem("loginResponse");
+    return jsonValue != null ? JSON.parse(jsonValue) : null;
+  } catch (error) {
+    console.error("Error retrieving login response:", error);
+    return null;
+  }
+};
 
 const CustomerInfo = () => {
   const route = useRoute();
@@ -65,6 +77,8 @@ const CustomerInfo = () => {
 
   const [selectedProvince, setSelectedProvince] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
+  const [defaultProvinceId, setDefaultProvinceId] = useState<number | null>(null);
+  const [defaultCityId, setDefaultCityId] = useState<number | null>(null);
 
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
@@ -81,6 +95,43 @@ const CustomerInfo = () => {
   const [loadingCities, setLoadingCities] = useState(false);
   const [loadingCustomerTypes, setLoadingCustomerTypes] = useState(true);
   const [loadingCustomerJob, setLoadingCustomerJob] = useState(true);
+
+  // دریافت مقادیر پیش‌فرض استان و شهر از اطلاعات ورود کاربر
+  useEffect(() => {
+    const loadDefaultLocation = async () => {
+      try {
+        const loginResponse = await getLoginResponse();
+        if (loginResponse) {
+          const provinceId = loginResponse.ProvinceId;
+          const cityId = loginResponse.CityId;
+          const provinceName = loginResponse.ProvinceName;
+          const cityName = loginResponse.CityName;
+
+          if (provinceId && provinceName) {
+            setDefaultProvinceId(provinceId);
+            setSelectedProvince(provinceName);
+          }
+
+          if (cityId && cityName) {
+            setDefaultCityId(cityId);
+            setSelectedCity(cityName);
+          }
+
+          // اگر استان انتخاب شده است، شهرهای مربوط به آن را بارگذاری کنید
+          if (provinceName) {
+            fetchCitiesByProvince(provinceName);
+          }
+        }
+      } catch (error) {
+        console.error("خطا در دریافت مقادیر پیش‌فرض:", error);
+      }
+    };
+
+    if (!customerID) {
+      // فقط در حالت اضافه کردن جدید، مقادیر پیش‌فرض را اعمال کنید
+      loadDefaultLocation();
+    }
+  }, [provinces.length]);
 
   useEffect(() => {
     if (customerID) {
@@ -124,7 +175,12 @@ const CustomerInfo = () => {
         name: person.IntroducerPersonFullName,
         phone: person.IntroducerPersonMobile,
       });
-    } catch (error) {}
+
+      // بارگذاری شهرهای استان انتخاب شده
+      if (person.ProvinceName) {
+        fetchCitiesByProvince(person.ProvinceName);
+      }
+    } catch (error) { }
   };
 
   useEffect(() => {
@@ -181,7 +237,6 @@ const CustomerInfo = () => {
 
     setLoadingCities(true);
     setCities([]);
-    setSelectedCity("");
 
     try {
       const cityNames = await LocationService.getCityNamesByProvinceName(
@@ -436,12 +491,24 @@ const CustomerInfo = () => {
         setAlias("");
         setAddress("");
         setDescription("");
-        setSelectedProvince("");
-        setSelectedCity("");
+
+        // بعد از ثبت موفق، مقادیر پیش‌فرض استان و شهر دوباره تنظیم شوند
+        const loginResponse = await getLoginResponse();
+        if (loginResponse && loginResponse.ProvinceName) {
+          setSelectedProvince(loginResponse.ProvinceName);
+          if (loginResponse.CityName) {
+            setSelectedCity(loginResponse.CityName);
+          } else {
+            setSelectedCity("");
+          }
+        } else {
+          setSelectedProvince("");
+          setSelectedCity("");
+        }
+
         setSelectedCustomerTypes([]);
         setSelectedCustomerTypesString("");
         setSelectedColleague({ id: "", name: "", phone: "" });
-        setCities([]);
       } catch (error) {
         console.error("خطا در ثبت مشتری:", error);
         showToast("خطا در ثبت مشتری. لطفاً دوباره تلاش کنید", "error");
@@ -545,7 +612,7 @@ const CustomerInfo = () => {
                     ? `${selectedColleague.name} (${selectedColleague.phone})`
                     : ""
                 }
-                onChangeText={() => {}}
+                onChangeText={() => { }}
                 editable={false}
               />
             </TouchableOpacity>

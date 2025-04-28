@@ -98,8 +98,14 @@ export interface IPersonToEdit {
 }
 
 export interface ILoginResponse {
+  UserId: number;
+  DisplayName: string;
   UserName: string;
   UserMobile: string;
+  CityId: number;
+  CityName: string;
+  ProvinceId: number;
+  ProvinceName: string;
   Token: string;
   USerRoleList: {
     UserId: number;
@@ -205,4 +211,28 @@ export interface IAddShopToPost {
     Value: string;
     InsertDate: string;
   }[];
+}
+export interface IPersonProjectCustomField {
+  PersonProjectId: number;
+  PersonProjectCustomFieldId: number;
+  Value: string;
+  InsertDate: string;
+  LastUpdateDate: string | null;
+}
+
+export interface IPersonProject {
+  PersonProjectId: number;
+  PersonId: number | null;
+  PersonFullName: string;
+  CityId: number;
+  CityName: string;
+  ProvinceId: number;
+  ProvinceName: string;
+  ProjectName: string;
+  ApplicationUserId: number;
+  ApplicationUserName: string | null;
+  Description: string;
+  InsertDate: string;
+  LastUpdateDate: string | null;
+  PersonProjectCustomFieldList: IPersonProjectCustomField[] | null;
 }

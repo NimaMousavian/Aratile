@@ -13,7 +13,7 @@ import IssuingNewInvoice from "./app/screens/IssuingNewInvoice/IssuingNewInvoice
 import StackNavigator from "./app/StackNavigator";
 import { PaperProvider } from "react-native-paper";
 import navigationTheme from "./app/config/navigationTheme";
-
+import { AuthProvider } from "./app/screens/AuthContext";
 
 
 SplashScreen.preventAutoHideAsync();
@@ -57,14 +57,16 @@ export default function App(): JSX.Element {
   }
 
   return (
-    <PaperProvider>
-      <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
-        <NavigationContainer theme={navigationTheme}>
-          <StackNavigator />
-        </NavigationContainer>
-        <StatusBar style="auto" />
-      </View>
-    </PaperProvider>
+    <AuthProvider>
+      <PaperProvider>
+        <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+          <NavigationContainer theme={navigationTheme}>
+            <StackNavigator />
+          </NavigationContainer>
+          <StatusBar style="auto" />
+        </View>
+      </PaperProvider>
+    </AuthProvider>
   );
 }
 

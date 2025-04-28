@@ -1,37 +1,41 @@
 import React, { useState, useEffect } from "react";
-import { ScrollView, StyleSheet, View, Alert } from "react-native";
-import AppText from "../../components/Text";
-import AppTextInput from "../../components/TextInput";
+import { ScrollView, StyleSheet, View, Alert, TouchableOpacity } from "react-native";
+import AppText from "../../../components/Text";
+import AppTextInput from "../../../components/TextInput";
 
-import colors from "../../config/colors";
+import colors from "../../../config/colors";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   DatePickerField,
   PersianDatePicker,
-} from "../../components/PersianDatePicker";
-import IconButton from "../../components/IconButton";
+} from "../../../components/PersianDatePicker";
+import IconButton from "../../../components/IconButton";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
-import { AppNavigationProp } from "../../StackNavigator";
+import { AppNavigationProp } from "../../../StackNavigator";
 import { MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
-import IconButtonSquare from "../../components/IconButtonSquare";
-import SelectionDialog from "../../components/SelectionDialog";
-import AppModal from "../../components/AppModal";
-import ScreenHeader from "../../components/ScreenHeader";
-import SelectionBottomSheet from "../../components/SelectionDialog";
-import LocationService from "../IssuingNewInvoice/api/LocationService";
-import Toast from "../../components/Toast";
-import { IShopCustomField } from "../../config/types";
+import IconButtonSquare from "../../../components/IconButtonSquare";
+import SelectionDialog from "../../../components/SelectionDialog";
+import AppModal from "../../../components/AppModal";
+import ScreenHeader from "../../../components/ScreenHeader";
+import SelectionBottomSheet from "../../../components/SelectionDialog";
+import LocationService from "../../IssuingNewInvoice/api/LocationService";
+import Toast from "../../../components/Toast";
+import { IShopCustomField } from "../../../config/types";
 import axios from "axios";
-import appConfig from "../../../config";
+import appConfig from "../../../../config";
 import { Formik, FormikProps } from "formik";
 import * as Yup from "yup";
-import AppButton from "../../components/Button";
-import PersonManagementService from "../IssuingNewInvoice/api/PersonManagementService";
+import AppButton from "../../../components/Button";
+import PersonManagementService from "../../IssuingNewInvoice/api/PersonManagementService";
 
-export const InputContainer: React.FC<{
-  title: string;
-  children: React.ReactNode;
-}> = ({ title, children }) => {
+export const InputContainer = ({
+  title,
+  children,
+  showAddIcon = false,
+  onAddIconPress,
+  showClearIcon = false,
+  onClearIconPress
+}) => {
   return (
     <View style={styles.inputContainer}>
       <View style={styles.titleContainer}>
@@ -41,6 +45,18 @@ export const InputContainer: React.FC<{
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
         >
+          {(showAddIcon || showClearIcon) && (
+            <TouchableOpacity
+              style={styles.headerIconContainer}
+              onPress={showClearIcon ? onClearIconPress : onAddIconPress}
+            >
+              <MaterialIcons
+                name={showClearIcon ? "clear" : "search"}
+                size={20}
+                color="black"
+              />
+            </TouchableOpacity>
+          )}
           <AppText style={styles.title}>{title}</AppText>
         </LinearGradient>
       </View>
@@ -52,6 +68,9 @@ export const InputContainer: React.FC<{
     </View>
   );
 };
+
+
+
 
 // Define the route params type
 type AddNewShopRouteParams = {
@@ -888,14 +907,16 @@ const styles = StyleSheet.create({
     fontSize: 20,
     textAlign: "center",
     color: colors.white,
+    flex: 1, // Allow the title to take the available space
   },
   inputHeader: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     padding: 12,
     justifyContent: "center",
     borderTopRightRadius: 12,
     borderTopLeftRadius: 12,
+    position: "relative", // Add position relative to allow absolute positioning
   },
   voiceButton: {
     height: 60,
@@ -948,6 +969,18 @@ const styles = StyleSheet.create({
   halfWidth: {
     width: "48%",
   },
+  headerIconContainer: {
+    backgroundColor: colors.light,
+    width: 35,
+    height: 35,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 12,
+    position: "absolute", // Position absolutely
+    left: 12, // Place on the left side with some padding
+    zIndex: 1, // Ensure it's above other elements
+  },
+
   errorText: {
     color: colors.danger,
     fontSize: 12,

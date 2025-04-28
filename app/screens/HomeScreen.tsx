@@ -62,8 +62,9 @@ const safeNavigate = (navigation: any, screenName: string, params?: any) => {
     SupplyRequestLis: "SupplyRequestList",
     ReceiveNewInvoic: "ReceiveNewInvoice",
     StatusFilterScree: "StatusFilterScreen",
-    B2BFieldMarkete: "B2BFieldMarketer",
-    B2CFieldMarkete: "B2CFieldMarketer",
+    FieldMarketer: "FieldMarketer",
+    // B2BFieldMarkete: "B2BFieldMarketer",
+    // B2CFieldMarkete: "B2CFieldMarketer",
   };
 
   if (commonScreens[screenName]) {
@@ -133,35 +134,21 @@ const initialItems: MenuItem[] = [
   },
   {
     id: 5,
-    name: "درخواست تامین محصول",
+    name: "درخواست تامین",
     icon: "shopping-cart",
     iconColor: "#1C3F64",
     screenName: "SupplyRequest",
   },
+
   {
     id: 6,
-    name: "بازاریاب میدانی B2B",
-    icon: "business",
+    name: "بازاریابی میدانی",
+    icon: "store",
     iconColor: "#1C3F64",
-    screenName: "B2BFieldMarketer",
-  },
-  {
-    id: 7,
-    name: "بازاریاب میدانی B2C",
-    icon: "business-center",
-    iconColor: "#1C3F64",
-    screenName: "ShowRoom",
-  },
-  {
-    id: 8,
-    name: "شو روم",
-    icon: "business-center",
-    iconColor: "#1C3F64",
-    screenName: "ShowRoom",
+    screenName: "FieldMarketer",
   },
 ];
 
-// Use all initial items directly instead of filtering
 const selectedItems = initialItems;
 
 const LAYOUT_STORAGE_KEY = "home_screen_items_layout";
@@ -1017,7 +1004,7 @@ const HomeScreen: React.FC = () => {
           <View style={styles.avatarCircle}>
             <MaterialIcons name="person" size={26} color="#666666" />
           </View>
-          <Text style={styles.userName}>{userData?.UserName}</Text>
+          <Text style={styles.userName}>{userData?.DisplayName}</Text>
         </TouchableOpacity>
       </View>
 

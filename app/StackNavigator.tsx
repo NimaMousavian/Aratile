@@ -1,17 +1,11 @@
-import React from "react";
-import { View, Text } from "react-native";
-import { NavigationContainer } from "@react-navigation/native";
+import React, { useEffect } from "react";
+import { View, ActivityIndicator } from "react-native";
 import {
   createStackNavigator,
   CardStyleInterpolators,
-  StackNavigationOptions,
   StackScreenProps,
 } from "@react-navigation/stack";
-import {
-  createNativeStackNavigator,
-  NativeStackNavigationProp,
-} from "@react-navigation/native-stack";
-import { Ionicons } from "@expo/vector-icons";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
 
 import AppSelectionScreen from "./screens/AppSelectionScreen";
@@ -21,11 +15,12 @@ import { IProduct } from "./config/types";
 import AppText from "./components/Text";
 import LogingScreen from "./screens/LogingScreen";
 import ProfileScreen from "./screens/ProfileScreen";
-import B2BFieldMarketer from "./screens/B2BFieldMarketer/B2BFieldMarketer";
-import B2CFieldMarketer from "./screens/B2CFieldMarketer/B2CFieldMarketer";
-import AddNewShop from "./screens/B2BFieldMarketer/AddNewShop";
-import VoiceRecordingScreen from "./screens/B2BFieldMarketer/VoiceRecording";
-import AddNewProject from "./screens/B2CFieldMarketer/AddNewProject";
+import B2BFieldMarketer from "./screens/FieldMarketer/B2BFieldMarketer/B2BFieldMarketer";
+import B2CFieldMarketer from "./screens/FieldMarketer/B2CFieldMarketer/B2CFieldMarketer";
+import FieldMarketer from "./screens/FieldMarketer/FieldMarketer";
+import AddNewShop from "./screens/FieldMarketer/B2BFieldMarketer/AddNewShop";
+import VoiceRecordingScreen from "./screens/FieldMarketer/B2BFieldMarketer/VoiceRecording";
+import AddNewProject from "./screens/FieldMarketer/B2CFieldMarketer/AddNewProject";
 import ReceiveNewInvoiceScreen from "./screens/ReceiveNewInvoiceScreen/ReceiveNewInvoiceScreen";
 import StatusFilterScreen from "./screens/ReceiveNewInvoiceScreen/StatusFilterScreen";
 import HomeScreen from "./screens/HomeScreen";
@@ -40,6 +35,7 @@ import IssuedInvoices from "./screens/IssuedInvoices";
 import ChangePasswordScreen from "./screens/ChangePasswordScreen";
 import AddNewColleague from "./screens/IssuingNewInvoice/AddNewColleague";
 import { Colleague } from "./screens/IssuingNewInvoice/ColleagueSearchModal";
+import { useAuth } from "./screens/AuthContext";
 import ShowRoom from "./screens/ShowRoom";
 
 export type RootStackParamList = {
@@ -50,13 +46,11 @@ export type RootStackParamList = {
 
   Home: undefined;
 
-  // اصلاح شده برای صفحه صدور فاکتور
   IssuingNewInvoice: {
     scannedCode?: string;
     scannedProduct?: Product;
   };
 
-  // اضافه کردن پارامتر onReturn به صفحه بارکد اسکنر
   BarCodeScanner: {
     onReturn?: (product: Product) => void;
   };
@@ -77,6 +71,7 @@ export type RootStackParamList = {
   StatusFilterScreen: undefined;
 
   MarketerHome: undefined;
+  FieldMarketer: undefined;
   B2BFieldMarketer: undefined;
   B2CFieldMarketer: undefined;
   AddNewShop: undefined;
@@ -89,9 +84,34 @@ export type AppNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const Stack = createStackNavigator<RootStackParamList>();
 
-const StackNavigator: React.FC = () => {
+const AuthStack = () => (
+  <Stack.Navigator
+    screenOptions={{
+      headerShown: false,
+      cardStyle: { backgroundColor: "#FFFFFF" },
+      gestureEnabled: true,
+      gestureDirection: "horizontal-inverted",
+      cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+      transitionSpec: {
+        open: {
+          animation: "timing",
+          config: { duration: 350 },
+        },
+        close: {
+          animation: "timing",
+          config: { duration: 350 },
+        },
+      },
+    }}
+  >
+    <Stack.Screen name="Login" component={LogingScreen} />
+  </Stack.Navigator>
+);
+
+const AppStack = () => {
   type NavigationProps = StackScreenProps<RootStackParamList>;
   const navigation = useNavigation<NavigationProps["navigation"]>();
+
   return (
     <Stack.Navigator
       initialRouteName="Home"
@@ -118,11 +138,9 @@ const StackNavigator: React.FC = () => {
         component={AppSelectionScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen name="Login" component={LogingScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
 
       {/* Seller Screens */}
-
       <Stack.Screen
         name="Home"
         component={HomeScreen}
@@ -170,7 +188,6 @@ const StackNavigator: React.FC = () => {
       />
 
       {/* Cashier Screens */}
-
       <Stack.Screen
         name="ReceiveNewInvoice"
         component={ReceiveNewInvoiceScreen}
@@ -199,6 +216,7 @@ const StackNavigator: React.FC = () => {
         }}
       />
       {/* FieldMarketing Screens */}
+      <Stack.Screen name="FieldMarketer" component={FieldMarketer} />
       <Stack.Screen name="B2BFieldMarketer" component={B2BFieldMarketer} />
       <Stack.Screen name="B2CFieldMarketer" component={B2CFieldMarketer} />
       <Stack.Screen name="AddNewShop" component={AddNewShop} />
@@ -209,7 +227,19 @@ const StackNavigator: React.FC = () => {
   );
 };
 
-// Temporary placeholder component for screens not yet implemented
+const LoadingScreen = () => (
+  <View
+    style={{
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: colors.primary,
+    }}
+  >
+    <ActivityIndicator size="large" color={colors.white} />
+  </View>
+);
+
 const PlaceholderScreen: React.FC = () => {
   return (
     <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -218,6 +248,16 @@ const PlaceholderScreen: React.FC = () => {
       </AppText>
     </View>
   );
+};
+
+const StackNavigator: React.FC = () => {
+  const { isLoggedIn, loading } = useAuth();
+
+  if (loading) {
+    return <LoadingScreen />;
+  }
+
+  return isLoggedIn() ? <AppStack /> : <AuthStack />;
 };
 
 export default StackNavigator;
