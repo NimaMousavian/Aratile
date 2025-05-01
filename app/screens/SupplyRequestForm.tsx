@@ -23,6 +23,8 @@ import axios from "axios";
 import appConfig from "../../config";
 import Toast from "../components/Toast";
 import { ISupplyRequest } from "../config/types";
+import { ActivityIndicator } from "react-native-paper";
+import AppText from "../components/Text";
 
 interface ISupplyRequestToPost {
   ProductSupplyRequestId: number;
@@ -54,6 +56,7 @@ interface IProps {
   description_?: string;
   getAllSupplyRequest: () => void;
   supplyRequestId?: number;
+  mode: "add" | "edit";
 }
 
 const SupplyRequestForm: React.FC<IProps> = ({
@@ -64,6 +67,7 @@ const SupplyRequestForm: React.FC<IProps> = ({
   description_,
   getAllSupplyRequest,
   supplyRequestId,
+  mode,
 }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [supplyRequest, setSupplyRequest] = useState<ISupplyRequest | null>(
@@ -74,9 +78,11 @@ const SupplyRequestForm: React.FC<IProps> = ({
   const [requestedValue, setRequestedValue] = useState<number | undefined>(
     requestedValue_
   );
-  const [description, setDedcription] = useState<string | undefined>(
+  const [description, setDescription] = useState<string | undefined>(
     description_
   );
+
+  const [screenLoading, setScreenLoading] = useState<boolean>(false);
 
   const [toastVisible, setToastVisible] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string>("");
@@ -94,12 +100,36 @@ const SupplyRequestForm: React.FC<IProps> = ({
   };
 
   useEffect(() => {
-    if (supplyRequestId) {
+    console.log(mode);
+
+    if (mode === "edit" && supplyRequestId) {
       getSupplyRequest(supplyRequestId);
+    }
+    if (mode === "add" && product) {
+      setProductName(product.title);
+      setRequestedValue(undefined);
+      setDescription("");
+      console.log("here");
+    }
+
+    if (visible === false) {
+      setProductName("");
+      setRequestedValue(undefined);
+      setDescription("");
     }
   }, [visible]);
 
+  const validateForm = () => {
+    if (!requestedValue) {
+      showToast("مقدار مورد درخواست وارد نشده است", "error");
+      return false;
+    } else {
+      return true;
+    }
+  };
+
   const getSupplyRequest = async (SId: number) => {
+    setScreenLoading(true);
     try {
       const response = await axios.get<ISupplyRequest>(
         `${appConfig.mobileApi}ProductSupplyRequest/Get?id=${SId}`
@@ -109,11 +139,17 @@ const SupplyRequestForm: React.FC<IProps> = ({
       setSupplyRequest(response.data);
       setProductName(response.data.ProductName);
       setRequestedValue(response.data.RequestedValue);
-      setDedcription(response.data.Description);
-    } catch (error) {}
+      setDescription(response.data.Description);
+    } catch (error) {
+    } finally {
+      setScreenLoading(false);
+    }
   };
 
-  const postSupplyRequest = async (reqValu: string, desc: string) => {
+  const postSupplyRequest = async () => {
+    if (!validateForm()) {
+      return;
+    }
     setIsLoading(true);
     try {
       const supReqToPost: ISupplyRequestToPost = {
@@ -124,10 +160,10 @@ const SupplyRequestForm: React.FC<IProps> = ({
         ProductName: null,
         ProductVariationId: null,
         ProductVariationName: null,
-        RequestedValue: Number(reqValu),
+        RequestedValue: Number(requestedValue),
         RequestState: 1,
         RequestStateStr: null,
-        Description: desc,
+        Description: description || "",
         InsertDate: "2025-04-14T15:41:13.631Z",
       };
 
@@ -140,6 +176,9 @@ const SupplyRequestForm: React.FC<IProps> = ({
 
       if (response.status === 200) {
         showToast("درخواست با موفقیت ثبت شد", "success");
+        setProductName("");
+        setRequestedValue(undefined);
+        setDescription("");
         getAllSupplyRequest();
         closeDrawer();
       }
@@ -150,7 +189,7 @@ const SupplyRequestForm: React.FC<IProps> = ({
       setIsLoading(false);
     }
   };
-  const editSupplyRequest = async (reqValu: string, desc: string) => {
+  const editSupplyRequest = async () => {
     setIsLoading(true);
     try {
       const supReqToPost: ISupplyRequestToPost = {
@@ -161,10 +200,10 @@ const SupplyRequestForm: React.FC<IProps> = ({
         ProductName: null,
         ProductVariationId: null,
         ProductVariationName: null,
-        RequestedValue: Number(reqValu),
+        RequestedValue: Number(requestedValue),
         RequestState: 1,
         RequestStateStr: null,
-        Description: desc,
+        Description: description || "",
         InsertDate: "2025-04-14T15:41:13.631Z",
       };
 
@@ -185,6 +224,14 @@ const SupplyRequestForm: React.FC<IProps> = ({
       showToast("خطا در ویرایش اطلاعات", "error");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSubmit = () => {
+    if (mode === "edit") {
+      editSupplyRequest();
+    } else {
+      postSupplyRequest();
     }
   };
 
@@ -249,90 +296,84 @@ const SupplyRequestForm: React.FC<IProps> = ({
               </TouchableOpacity>
             </LinearGradient>
             <View style={styles.contentContainer}>
-              <Formik
-                initialValues={{ requestedValue: "", description: "" }}
-                onSubmit={(values) => {
-                  console.log("values: ", values);
-                  if (supplyRequestId) {
-                    editSupplyRequest(
-                      values.requestedValue,
-                      values.description
-                    );
-                  } else {
-                    postSupplyRequest(
-                      values.requestedValue,
-                      values.description
-                    );
-                  }
-                }}
-                validationSchema={validationSchema}
+              <ScrollView
+                style={styles.scrollView}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.scrollViewContent}
               >
-                {({ handleChange, handleSubmit, errors }) => (
-                  <>
-                    <ScrollView
-                      style={styles.scrollView}
-                      showsVerticalScrollIndicator={false}
-                      contentContainerStyle={styles.scrollViewContent}
+                {screenLoading ? (
+                  <View style={styles.centerContainer}>
+                    <ActivityIndicator size="large" color={colors.primary} />
+                    <AppText
+                      style={{
+                        marginTop: 15,
+                        fontSize: 20,
+                        color: colors.primary,
+                      }}
                     >
-                      <View style={styles.productContainer}>
-                        <Text style={styles.productTitle}>{productName}</Text>
-                      </View>
-                      <View style={styles.productContainer}>
-                        {/* <AppTextInput
+                      در حال بارگذاری اطلاعات
+                    </AppText>
+                  </View>
+                ) : (
+                  <>
+                    <View style={styles.productContainer}>
+                      <Text style={styles.productTitle}>{productName}</Text>
+                    </View>
+                    <View style={styles.productContainer}>
+                      {/* <AppTextInput
                           autoCapitalize="none"
                           autoCorrect={false}
                           keyboardType="default"
                           placeholder="تنوع محصول"
                           onChangeText={() => {}}
                         ></AppTextInput> */}
-                        <AppTextInput
-                          autoCapitalize="none"
-                          autoCorrect={false}
-                          keyboardType="number-pad"
-                          icon="10k"
-                          placeholder={`مقدار مورد درخواست ${""}`}
-                          onChangeText={handleChange("requestedValue")}
-                          value={requestedValue?.toString()}
-                        ></AppTextInput>
-                        <AppTextInput
-                          autoCapitalize="none"
-                          autoCorrect={false}
-                          keyboardType="default"
-                          icon="text-snippet"
-                          placeholder="توضیحات"
-                          onChangeText={handleChange("description")}
-                          multiline
-                          numberOfLines={5}
-                          height={150}
-                          textAlign="right"
-                          isLargeInput={true}
-                          value={description}
-                        ></AppTextInput>
-                      </View>
-                    </ScrollView>
-                    <View style={styles.buttonContainer}>
-                      <AppButton
-                        title={
-                          isLoading
-                            ? "در حال ارسال"
-                            : supplyRequestId
-                            ? "ویرایش"
-                            : "ثبت درخواست"
-                        }
-                        onPress={handleSubmit}
-                        color={supplyRequestId ? "warning" : "success"}
-                        style={styles.actionButton}
-                      />
-                      <AppButton
-                        title="انصراف"
-                        onPress={closeDrawer}
-                        color="danger"
-                        style={styles.actionButton}
-                      />
+                      <AppTextInput
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        keyboardType="number-pad"
+                        icon="10k"
+                        placeholder={`مقدار مورد درخواست ${""}`}
+                        onChangeText={(val) => setRequestedValue(Number(val))}
+                        value={requestedValue ? requestedValue?.toString() : ""}
+                      ></AppTextInput>
+                      <AppTextInput
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        keyboardType="default"
+                        icon="text-snippet"
+                        placeholder="توضیحات"
+                        onChangeText={setDescription}
+                        multiline
+                        numberOfLines={5}
+                        height={150}
+                        textAlign="right"
+                        isLargeInput={true}
+                        value={description}
+                      ></AppTextInput>
                     </View>
                   </>
                 )}
-              </Formik>
+              </ScrollView>
+              <View style={styles.buttonContainer}>
+                <AppButton
+                  title={
+                    isLoading
+                      ? "در حال ارسال"
+                      : mode === "edit"
+                      ? "ویرایش"
+                      : "ثبت درخواست"
+                  }
+                  onPress={handleSubmit}
+                  color={mode === "edit" ? "warning" : "success"}
+                  style={styles.actionButton}
+                />
+                <AppButton
+                  title="انصراف"
+                  onPress={closeDrawer}
+                  color="danger"
+                  style={styles.actionButton}
+                />
+              </View>
             </View>
           </Animated.View>
         </KeyboardAvoidingView>
@@ -468,6 +509,12 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 40,
   },
 });
 

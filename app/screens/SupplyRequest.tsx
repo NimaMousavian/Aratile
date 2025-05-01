@@ -17,14 +17,14 @@ import ProductSearchDrawer from "./IssuingNewInvoice/ProductSearchDrawer";
 import useProductScanner from "../Hooks/useProductScanner";
 import { Product } from "./IssuingNewInvoice/IssuingNewInvoice";
 import SupplyRequestForm from "./SupplyRequestForm";
-import {
-  DatePickerField,
-} from "../components/PersianDatePicker";
+import { DatePickerField } from "../components/PersianDatePicker";
 import SupplyRequestCard from "../components/SupplyRequestCard";
 import axios from "axios";
 import appConfig from "../../config";
 import SelectionBottomSheet from "../components/SelectionDialog";
 import Toast from "../components/Toast";
+import { getFontFamily } from "./IssuedInvoices";
+import { Feather } from "@expo/vector-icons";
 
 const statusStr = [
   "بررسی نشده",
@@ -38,8 +38,10 @@ const statusStr = [
 const SupplyRequest = () => {
   const [supplyRequests, setSupplyRequests] = useState<ISupplyRequest[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
-  const [showProductSearchDrawer, setShowProductSearchDrawer] = useState<boolean>(false);
-  const [showSupplyRequestForm, setShowSupplyRequestForm] = useState<boolean>(false);
+  const [showProductSearchDrawer, setShowProductSearchDrawer] =
+    useState<boolean>(false);
+  const [showSupplyRequestForm, setShowSupplyRequestForm] =
+    useState<boolean>(false);
 
   const [fromDate, setFromDate] = useState<string>("");
   const [toDate, setToDate] = useState<string>("");
@@ -56,6 +58,8 @@ const SupplyRequest = () => {
     undefined
   );
 
+  const [formMode, setFormMode] = useState<"add" | "edit">("add");
+
   const [searchText, setSearchText] = useState<string>("");
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
@@ -71,13 +75,14 @@ const SupplyRequest = () => {
   const {
     isLoading,
     selectedProducts,
-    handleProductSearch,
+    searchProduct,
     removeProduct,
     addProduct,
   } = useProductScanner();
 
   const handleProductSelected = (product: Product) => {
     setSelectedProduct(product);
+    setFormMode("add");
     setShowSupplyRequestForm(true);
   };
 
@@ -145,6 +150,7 @@ const SupplyRequest = () => {
 
   const handleSupplyRequestPress = (srID: number) => {
     setSupplyRequestId(srID);
+    setFormMode("edit");
     setShowSupplyRequestForm(true);
   };
 
@@ -152,9 +158,19 @@ const SupplyRequest = () => {
     getSupplyRequestWithFilter();
   };
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setRefreshing(true);
-    getSupplyRequest();
+    await getSupplyRequest();
+    setRefreshing(false);
+  };
+
+  const renderFooter = () => {
+    if (!screenLoading) return null;
+    return (
+      <View style={styles.footer}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
   };
 
   return (
@@ -164,20 +180,22 @@ const SupplyRequest = () => {
         rightComponent={
           <TouchableOpacity
             style={styles.addIconContainer}
-            onPress={() => setShowProductSearchDrawer(true)}
+            onPress={() => {
+              setFormMode("add");
+              setShowProductSearchDrawer(true);
+            }}
           >
             <MaterialIcons name="add" size={24} color="white" />
           </TouchableOpacity>
         }
       />
+      <Toast
+        visible={toastVisible}
+        message={toastMessage}
+        type={toastType}
+        onDismiss={() => setToastVisible(false)}
+      />
       <View style={styles.container}>
-        <Toast
-          visible={toastVisible}
-          message={toastMessage}
-          type={toastType}
-          onDismiss={() => setToastVisible(false)}
-        />
-
         <SearchInput
           placeholder="نام محصول را جستجو کنید..."
           value={searchText}
@@ -254,7 +272,7 @@ const SupplyRequest = () => {
               در حال بارگذاری اطلاعات
             </AppText>
           </View>
-        ) : (
+        ) : supplyRequests.length > 0 ? (
           <FlatList
             data={supplyRequests}
             keyExtractor={(item) => item.ProductSupplyRequestId.toString()}
@@ -270,14 +288,28 @@ const SupplyRequest = () => {
             onRefresh={handleRefresh}
             refreshing={refreshing}
             showsVerticalScrollIndicator={true}
+            ListHeaderComponent={
+              refreshing ? (
+                <View style={styles.refreshIndicator}>
+                  <ActivityIndicator size="large" color={colors.primary} />
+                </View>
+              ) : null
+            }
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={renderFooter}
           />
+        ) : (
+          <View style={styles.emptyContainer}>
+            <Feather name="clipboard" size={64} color="#9CA3AF" />
+            <AppText style={styles.emptyText}>موردی یافت نشد</AppText>
+          </View>
         )}
 
         <ProductSearchDrawer
           visible={showProductSearchDrawer}
           onClose={() => setShowProductSearchDrawer(false)}
           onProductSelect={handleProductSelected}
-          searchProduct={handleProductSearch}
+          searchProduct={searchProduct}
           onError={showToast}
         />
 
@@ -287,6 +319,7 @@ const SupplyRequest = () => {
           product={selectedProduct}
           getAllSupplyRequest={() => getSupplyRequest()}
           supplyRequestId={supplyRequestId}
+          mode={formMode}
         />
       </View>
     </>
@@ -297,7 +330,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: colors.background
+    backgroundColor: colors.background,
   },
   addIconContainer: {
     backgroundColor: colors.success,
@@ -314,6 +347,28 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingVertical: 40,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 50,
+  },
+  emptyText: {
+    fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
+    fontSize: 16,
+    color: "#6B7280",
+    marginTop: 12,
+    textAlign: "center",
+  },
+  refreshIndicator: {
+    paddingVertical: 10,
+    alignItems: "center",
+  },
+  footer: {
+    padding: 10,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 

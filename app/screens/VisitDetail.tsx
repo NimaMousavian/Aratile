@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import ScreenHeader from "../components/ScreenHeader";
 import colors from "../config/colors";
@@ -16,13 +16,16 @@ import { IVisitItem } from "./Visits";
 import AppTextInput from "../components/TextInput";
 import SelectionBottomSheet from "../components/SelectionDialog";
 import { TimePickerField } from "../components/PersianTimePicker";
-import { IconButton } from "react-native-paper";
 import AppButton from "../components/Button";
 import { InputContainer } from "./FieldMarketer/B2BFieldMarketer/AddNewShop";
+import IconButton from "../components/IconButton";
+import { IShowRoomVisitItem, IVisitResult } from "../config/types";
+import axios from "axios";
+import appConfig from "../../config";
 
 type VisitDetailRouteParams = {
   VisitDetail: {
-    visitItem: IVisitItem;
+    visitItem: IShowRoomVisitItem;
   };
 };
 
@@ -33,15 +36,23 @@ const VisitDetail = () => {
 
   const navigation = useNavigation<AppNavigationProp>();
 
-  const [fromTime, setFromTime] = useState(visitItem.fromTime);
-  const [toTime, setToTime] = useState(visitItem.toTime);
+  const [fromTime, setFromTime] = useState(visitItem.StartTime || "");
+  const [toTime, setToTime] = useState(visitItem.FinishTime || "");
+  const [resultString, setResultString] = useState<string>(
+    visitItem.ShowroomVisitResultTitle || ""
+  );
+  const [description, setDescription] = useState<string>("");
 
   const [selectedColleague, setSelectedColleague] = useState<Colleague | null>({
-    id: visitItem.visitId.toString(),
-    name: visitItem.visitor,
+    id: visitItem.ShowroomVisitId.toString(),
+    name: visitItem.PersonList[0].PersonFullName,
     phone: "",
   });
   const [showColleagueSheet, setShowColleagueSheet] = useState<boolean>(false);
+  const [showRoomVisitResults, setShowRoomVisitResult] = useState<
+    IVisitResult[]
+  >([]);
+  const [visitResultsLoading, setVisitResultLoading] = useState<boolean>(false);
 
   const [toastVisible, setToastVisible] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string>("");
@@ -57,6 +68,68 @@ const VisitDetail = () => {
     setToastType(type);
     setToastVisible(true);
   };
+  const validateForm = () => {
+    if (fromTime === "") {
+      showToast("ساعت شروع انتخاب نشده است", "error");
+      return false;
+    }
+    if (toTime === "") {
+      showToast("ساعت پایان انتخاب نشده است", "error");
+      return false;
+    }
+    return true;
+  };
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      return;
+    } else {
+      try {
+        const objToEdit = {
+          ShowroomVisitId: visitItem.ShowroomVisitId,
+          ShowroomVisitResultId:
+            showRoomVisitResults.find(
+              (visitResult) => visitResult.Title === resultString
+            )?.ShowroomVisitResultId || 0,
+          Description: description,
+          VisitDate: visitItem.VisitDate,
+          StartTime: fromTime,
+          FinishTime: toTime,
+          PersonIdList: visitItem.PersonList.map((person) => person.PersonId),
+        };
+
+        console.log(objToEdit);
+
+        const response = await axios.put(
+          `${appConfig.mobileApi}ShowroomVisit/Edit`,
+          objToEdit
+        );
+
+        if (response.status === 200) {
+          showToast("بازدید با موفقیت ثبت شد", "success");
+        }
+      } catch (error) {
+        showToast("خطا در ثبت بازدید");
+      }
+    }
+  };
+
+  const getVisitResults = async () => {
+    setVisitResultLoading(true);
+    try {
+      const response = await axios.get<{ Items: IVisitResult[] }>(
+        `${appConfig.mobileApi}ShowroomVisitResult/GetAllActive?page=1&pageSize=1000`
+      );
+      setShowRoomVisitResult(response.data.Items);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setVisitResultLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    getVisitResults();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -83,7 +156,7 @@ const VisitDetail = () => {
                 color="white"
                 style={styles.customerIcon}
               />
-              <AppText style={styles.customerLabel}>مشتری</AppText>
+              <AppText style={styles.customerLabel}>بازدید کننده</AppText>
             </View>
             <View style={styles.customerButtonsContainer}>
               {selectedColleague && (
@@ -95,6 +168,7 @@ const VisitDetail = () => {
                   onPress={() =>
                     navigation.navigate("CustomerInfo", {
                       customer: selectedColleague,
+                      mode: "visitor",
                     })
                   }
                 >
@@ -108,7 +182,9 @@ const VisitDetail = () => {
         <View style={styles.selectedCustomerContainer}>
           {selectedColleague ? (
             <AppText style={styles.selectedCustomerName}>
-              {toPersianDigits(selectedColleague.name)}
+              {visitItem.PersonList.map((person) => person.PersonFullName).join(
+                "، "
+              )}
             </AppText>
           ) : (
             <AppText style={styles.noCustomerText}>
@@ -117,35 +193,50 @@ const VisitDetail = () => {
           )}
         </View>
       </View>
-      <InputContainer title={"اطلاعات بازدید"}>
-        <TimePickerField
-          label="ساعت شروع"
-          time={fromTime}
-          onTimeChange={setFromTime}
-          error={fromTime ? undefined : "ساعت شروع الزامی است"}
-        />
-        <TimePickerField
-          label="ساعت پایان"
-          time={toTime}
-          onTimeChange={setToTime}
-          error={toTime ? undefined : "ساعت پایان الزامی است"}
-        />
-        <SelectionBottomSheet
-          placeholderText={"نتیجه"}
-          title="نتیجه"
-          iconName="question-mark"
-          options={["انصراف از خرید", "مراجعه بعدی"]}
-          onSelect={(value) => {}}
-        />
+      <InputContainer title="شرح بازدید">
         <AppTextInput
           autoCorrect={false}
           placeholder="توضیحات"
           keyboardType="default"
+          icon="notes"
           multiline
           numberOfLines={10}
           height={200}
-          onChangeText={() => {}}
-          value={""}
+          onChangeText={setDescription}
+          value={description}
+        />
+        <View></View>
+      </InputContainer>
+
+      <InputContainer title={"اطلاعات بازدید"}>
+        <View
+          style={{
+            flexDirection: "row-reverse",
+            justifyContent: "space-between",
+            gap: 10,
+          }}
+        >
+          <TimePickerField
+            label="ساعت شروع"
+            time={fromTime}
+            onTimeChange={setFromTime}
+            customStyles={{ infoItem: { width: "48%" } }}
+          />
+          <TimePickerField
+            label="ساعت پایان"
+            time={toTime}
+            onTimeChange={setToTime}
+            customStyles={{ infoItem: { width: "48%" } }}
+          />
+        </View>
+        <SelectionBottomSheet
+          placeholderText={resultString === "" ? "نتیجه" : resultString}
+          title="نتیجه"
+          iconName="question-mark"
+          options={showRoomVisitResults.map((visitResult) => visitResult.Title)}
+          onSelect={(value) => setResultString(value[0])}
+          loading={visitResultsLoading}
+          initialValues={[visitItem.ShowroomVisitResultTitle]}
         />
       </InputContainer>
 
@@ -159,7 +250,14 @@ const VisitDetail = () => {
           showToast(`مشتری ${colleague.name} انتخاب شد`, "success");
         }}
       />
-      <AppButton title="ثبت اطلاعات" onPress={() => {}} color="success" />
+      <IconButton
+        text="ثبت"
+        onPress={handleSubmit}
+        iconName="done"
+        iconSize={28}
+        backgroundColor={colors.success}
+        style={styles.submitButton}
+      />
     </View>
   );
 };
@@ -247,9 +345,11 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   submitButton: {
-    height: 50,
-    marginTop: 10,
-    marginBottom: 30,
+    position: "absolute",
+    bottom: 10,
+    right: 0,
+    left: 0,
+    marginHorizontal: 15,
   },
 });
 

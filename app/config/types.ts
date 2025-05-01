@@ -107,6 +107,8 @@ export interface ILoginResponse {
   ProvinceId: number;
   ProvinceName: string;
   Token: string;
+  CompanyBranchId: number;
+  CompanyBranchName: string;
   USerRoleList: {
     UserId: number;
     RoleId: number;
@@ -235,4 +237,64 @@ export interface IPersonProject {
   InsertDate: string;
   LastUpdateDate: string | null;
   PersonProjectCustomFieldList: IPersonProjectCustomField[] | null;
+}
+
+export interface IShowRoomVisitItem {
+  ShowroomVisitId: number;
+  CompanyBranchId: number;
+  CompanyBranchName: string;
+  ApplicationUserId: number;
+  ApplicationUserName: string;
+  ShowroomVisitResultId: number;
+  ShowroomVisitResultTitle: string;
+  Description: string;
+  VisitDate: string;
+  ShamsiVisitDate: string;
+  StartTime: string;
+  FinishTime: string;
+  PersonCount: number;
+  PersonList: {
+    ShowroomVisitId: number;
+    PersonId: number;
+    PersonFullName: string;
+    PersonMobile: string;
+    InsertDate: string;
+  }[];
+  InsertDate: string;
+  LastUpdateDate: string;
+}
+
+export interface IVisitResult {
+  ShowroomVisitResultId: number;
+  Title: string;
+}
+
+export interface IShopItem {
+  ShopId: number;
+  ShopName: string;
+  CityId: number;
+  CityName: string;
+  ProvinceId: number;
+  ProvinceName: string;
+  ShopAddress: string;
+  ShopAreaInMeters: number;
+  ShopHistoryInYears: number;
+  ShopOwnershipType: number;
+  ShopOwnershipTypeStr: string;
+  OwnerFirstName: string;
+  OwnerLastName: string;
+  OwnerMobile: string;
+  HasWarehouse: boolean;
+  HasWarehouseStr: string;
+  WarehouseOwnershipType: number;
+  WarehouseOwnershipTypeStr: string;
+  WarehouseAreaInMeters: number;
+  WarehouseAddress: string;
+  Description: string;
+  ApplicationUserId: number;
+  ApplicationUserName: string;
+  InsertDate: string;
+  ShamsiInsertDate: string;
+  LastUpdateDate: string;
+  ShopCustomFieldList: string;
 }

@@ -87,13 +87,17 @@ const IssuingNewInvoice: React.FC = () => {
     renderModal,
     showModal,
     showRemoveConfirmation,
-    editProduct
+    editProduct,
   } = useProductScanner();
 
-  const [showProductSearchDrawer, setShowProductSearchDrawer] = useState<boolean>(false);
-  const [showProductProperties, setShowProductProperties] = useState<boolean>(false);
+  const [showProductSearchDrawer, setShowProductSearchDrawer] =
+    useState<boolean>(false);
+  const [showProductProperties, setShowProductProperties] =
+    useState<boolean>(false);
   const [productToShow, setProductToShow] = useState<Product | null>(null);
-  const [selectedColleague, setSelectedColleague] = useState<Colleague | null>(null);
+  const [selectedColleague, setSelectedColleague] = useState<Colleague | null>(
+    null
+  );
   const [showColleagueSheet, setShowColleagueSheet] = useState<boolean>(false);
   const [invoiceNote, setInvoiceNote] = useState<string>("");
   const [isEditing, setIsEditing] = useState<boolean>(false);
@@ -101,7 +105,9 @@ const IssuingNewInvoice: React.FC = () => {
 
   const [toastVisible, setToastVisible] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string>("");
-  const [toastType, setToastType] = useState<"success" | "error" | "warning" | "info">("error");
+  const [toastType, setToastType] = useState<
+    "success" | "error" | "warning" | "info"
+  >("error");
 
   const showToast = (
     message: string,
@@ -123,7 +129,9 @@ const IssuingNewInvoice: React.FC = () => {
   };
 
   const handleEditProduct = (productId: number) => {
-    const productToEdit = selectedProducts.find(prod => prod.id === productId);
+    const productToEdit = selectedProducts.find(
+      (prod) => prod.id === productId
+    );
     if (productToEdit) {
       editProduct(productId);
       setProductToShow(productToEdit);
@@ -153,11 +161,14 @@ const IssuingNewInvoice: React.FC = () => {
       note: note,
       manualCalculation: manualCalculation,
       boxCount: boxCount,
-      totalArea: totalArea
+      totalArea: totalArea,
     };
 
     if (addProduct(productWithProps)) {
-      showToast(isEditing ? "محصول با موفقیت ویرایش شد" : "محصول با موفقیت اضافه شد", "success");
+      showToast(
+        isEditing ? "محصول با موفقیت ویرایش شد" : "محصول با موفقیت اضافه شد",
+        "success"
+      );
       return true;
     } else {
       return false;
@@ -194,14 +205,16 @@ const IssuingNewInvoice: React.FC = () => {
         discount: 0, // در صورت نیاز، تخفیف را از کامپوننت InvoiceTotalCalculator دریافت کنید
         extra: 0, // در صورت نیاز، هزینه اضافی را از کامپوننت InvoiceTotalCalculator دریافت کنید
         description: invoiceNote,
-        items: selectedProducts.map(product => ({
+        items: selectedProducts.map((product) => ({
           id: product.id,
-          variationId: product.hasColorSpectrum ? product.selectedVariation?.id : 0,
+          variationId: product.hasColorSpectrum
+            ? product.selectedVariation?.id
+            : 0,
           quantity: product.quantity,
           note: product.note,
           discount: 0,
-          extra: 0
-        }))
+          extra: 0,
+        })),
       };
 
       // ارسال فاکتور به سرور
@@ -211,15 +224,11 @@ const IssuingNewInvoice: React.FC = () => {
 
       if (result.success) {
         // نمایش پیام موفقیت با مدال اصلی
-        showModal(
-          "موفقیت",
-          "فاکتور با موفقیت ثبت شد.",
-          "check-circle"
-        );
+        showModal("موفقیت", "فاکتور با موفقیت ثبت شد.", "check-circle");
 
         // بازگشت به صفحه قبل پس از چند ثانیه
         setTimeout(() => {
-          navigation.navigate('IssuedInvoices', { refresh: true });
+          navigation.navigate("IssuedInvoices", { refresh: true });
         }, 2000);
       } else {
         // نمایش پیام خطا
@@ -227,7 +236,10 @@ const IssuingNewInvoice: React.FC = () => {
       }
     } catch (error) {
       setIsSubmitting(false);
-      showToast("خطایی در فرآیند ثبت فاکتور رخ داد. لطفاً دوباره تلاش کنید.", "error");
+      showToast(
+        "خطایی در فرآیند ثبت فاکتور رخ داد. لطفاً دوباره تلاش کنید.",
+        "error"
+      );
       console.error("خطا در ارسال فاکتور:", error);
     }
   };
@@ -250,15 +262,17 @@ const IssuingNewInvoice: React.FC = () => {
         icon: "straighten",
         iconColor: colors.secondary,
         label: "مقدار:",
-        value: toPersianDigits(product.quantity) + (product.measurementUnitName ? ` ${product.measurementUnitName}` : ""),
+        value:
+          toPersianDigits(product.quantity) +
+          (product.measurementUnitName
+            ? ` ${product.measurementUnitName}`
+            : ""),
       },
       {
         icon: "attach-money",
         iconColor: colors.secondary,
         label: "قیمت هر واحد:",
-        value:
-          toPersianDigits((product.price || 0).toLocaleString()) +
-          " ریال",
+        value: toPersianDigits((product.price || 0).toLocaleString()) + " ریال",
       },
     ];
 
@@ -267,8 +281,11 @@ const IssuingNewInvoice: React.FC = () => {
       if (product.rectifiedValue) {
         const rectifiedValue = parseFloat(product.rectifiedValue);
         if (!isNaN(rectifiedValue) && rectifiedValue > 0) {
-          const totalArea = product.totalArea || (product.boxCount * rectifiedValue);
-          totalAreaText = ` (${toPersianDigits(totalArea.toFixed(2))}${product.measurementUnitName ? ` ${product.measurementUnitName}` : ""})`;
+          const totalArea =
+            product.totalArea || product.boxCount * rectifiedValue;
+          totalAreaText = ` (${toPersianDigits(totalArea.toFixed(2))}${
+            product.measurementUnitName ? ` ${product.measurementUnitName}` : ""
+          })`;
         }
       }
 
@@ -276,7 +293,8 @@ const IssuingNewInvoice: React.FC = () => {
         icon: "shopping-bag",
         iconColor: colors.secondary,
         label: "تعداد کارتن:",
-        value: toPersianDigits(product.boxCount.toString()) + " عدد" + totalAreaText,
+        value:
+          toPersianDigits(product.boxCount.toString()) + " عدد" + totalAreaText,
       });
 
       // اصلاح محاسبه قیمت نهایی
@@ -297,7 +315,7 @@ const IssuingNewInvoice: React.FC = () => {
           fontSize: 18,
           color: colors.primary,
         },
-        isPriceField: true
+        isPriceField: true,
       });
     }
 
@@ -535,17 +553,22 @@ const IssuingNewInvoice: React.FC = () => {
                         // افزودن محصول اسکن شده به لیست محصولات
                         const success = addProduct(scannedProduct);
                         if (success) {
-                          showToast(`محصول "${scannedProduct.title}" با موفقیت به فاکتور اضافه شد`, "success");
+                          showToast(
+                            `محصول "${scannedProduct.title}" با موفقیت به فاکتور اضافه شد`,
+                            "success"
+                          );
 
                           // اسکرول به پایین برای نمایش محصول جدید
                           setTimeout(() => {
                             if (scrollViewRef.current) {
-                              scrollViewRef.current.scrollToEnd({ animated: true });
+                              scrollViewRef.current.scrollToEnd({
+                                animated: true,
+                              });
                             }
                           }, 500);
                         }
                       }
-                    }
+                    },
                   });
                 }}
               >
@@ -790,7 +813,7 @@ const styles = StyleSheet.create({
     marginBottom: 0,
   },
   submitButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.success,
     flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",

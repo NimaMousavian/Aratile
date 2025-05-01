@@ -22,9 +22,10 @@ import PersonManagementService, {
 import { InputContainer } from "../FieldMarketer/B2BFieldMarketer/AddNewShop";
 import axios from "axios";
 import appConfig from "../../../config";
-import { useRoute } from "@react-navigation/native";
+import { RouteProp, useRoute } from "@react-navigation/native";
 import { IPerson, IPersonToEdit, ILoginResponse } from "../../config/types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import IconButton from "../../components/IconButton";
 
 type ToastType = "success" | "error" | "warning" | "info";
 
@@ -47,9 +48,17 @@ const getLoginResponse = async (): Promise<ILoginResponse | null> => {
   }
 };
 
-const CustomerInfo = () => {
-  const route = useRoute();
+type CustomerInfoRouteParams = {
+  customerInfo: {
+    customer?: Colleague;
+    mode?: "customer" | "colleague" | "visitor";
+  };
+};
+
+const CustomerInfo: React.FC = () => {
+  const route = useRoute<RouteProp<CustomerInfoRouteParams, "customerInfo">>();
   const customerID = route.params?.customer?.id;
+  const mode = route.params?.mode;
 
   const [person, setPerson] = useState<IPerson>();
   const [firstName, setFirstName] = useState("");
@@ -77,7 +86,9 @@ const CustomerInfo = () => {
 
   const [selectedProvince, setSelectedProvince] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
-  const [defaultProvinceId, setDefaultProvinceId] = useState<number | null>(null);
+  const [defaultProvinceId, setDefaultProvinceId] = useState<number | null>(
+    null
+  );
   const [defaultCityId, setDefaultCityId] = useState<number | null>(null);
 
   const [toastVisible, setToastVisible] = useState(false);
@@ -135,7 +146,7 @@ const CustomerInfo = () => {
 
   useEffect(() => {
     if (customerID) {
-      getCustomer(customerID);
+      getCustomer(Number(customerID));
     }
   }, []);
 
@@ -180,7 +191,7 @@ const CustomerInfo = () => {
       if (person.ProvinceName) {
         fetchCitiesByProvince(person.ProvinceName);
       }
-    } catch (error) { }
+    } catch (error) {}
   };
 
   useEffect(() => {
@@ -392,7 +403,7 @@ const CustomerInfo = () => {
         // }
 
         const personToEdit: IPersonToEdit = {
-          PersonId: customerID,
+          PersonId: Number(customerID),
           FirstName: firstName,
           LastName: lastName,
           NickName: alias,
@@ -520,7 +531,9 @@ const CustomerInfo = () => {
 
   return (
     <>
-      <ScreenHeader title="ثبت خریدار جدید" />
+      <ScreenHeader
+        title={mode === "visitor" ? "اطلاعات بازدید کننده" : "ثبت خریدار جدید"}
+      />
 
       <Toast
         visible={toastVisible}
@@ -583,6 +596,7 @@ const CustomerInfo = () => {
               onSelect={handleCustomerTypeSelection}
               multiSelect={false}
               loading={loadingCustomerTypes}
+              initialValues={[selectedCustomerTypesString]}
             />
             <SelectionBottomSheet
               placeholderText={
@@ -612,10 +626,22 @@ const CustomerInfo = () => {
                     ? `${selectedColleague.name} (${selectedColleague.phone})`
                     : ""
                 }
-                onChangeText={() => { }}
+                onChangeText={() => {}}
                 editable={false}
               />
             </TouchableOpacity>
+
+            {mode === "visitor" && (
+              <SelectionBottomSheet
+                placeholderText={"نحوه ی آشنایی با شرکت"}
+                title="نحوه ی آشنایی با شرکت"
+                iconName="business"
+                options={customerJobs.map((job: any) => job.label)}
+                onSelect={handleCustomerJobSelection}
+                multiSelect={false}
+                loading={loadingCustomerJob}
+              />
+            )}
 
             <View style={styles.rowContainer}>
               <View style={styles.halfWidth}>
@@ -675,11 +701,12 @@ const CustomerInfo = () => {
             <View style={{ height: 0 }} />
           </InputContainer>
 
-          <AppButton
-            title={isSubmitting ? "در حال ثبت..." : "ثبت"}
+          <IconButton
+            text={isSubmitting ? "در حال ثبت..." : "ثبت"}
             onPress={handleSubmit}
+            iconName="done"
             style={{ width: "100%" }}
-            color="success"
+            backgroundColor={colors.success}
             disabled={isSubmitting}
           />
           {isSubmitting && (
@@ -694,7 +721,7 @@ const CustomerInfo = () => {
         visible={isColleagueBottomSheetVisible}
         onClose={() => setIsColleagueBottomSheetVisible(false)}
         onSelectColleague={handleSelectColleague}
-        isCustomer={false}
+        // isCustomer={false}
       />
     </>
   );

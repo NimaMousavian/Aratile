@@ -11,7 +11,7 @@ import { useNavigation } from "@react-navigation/native";
 import AppSelectionScreen from "./screens/AppSelectionScreen";
 import styles from "./config/styles";
 import colors from "./config/colors";
-import { IProduct } from "./config/types";
+import { IProduct, IShowRoomVisitItem } from "./config/types";
 import AppText from "./components/Text";
 import LogingScreen from "./screens/LogingScreen";
 import ProfileScreen from "./screens/ProfileScreen";
@@ -58,7 +58,10 @@ export type RootStackParamList = {
     onReturn?: (product: Product) => void;
   };
 
-  CustomerInfo: { customer?: Colleague };
+  CustomerInfo: {
+    customer?: Colleague;
+    mode?: "customer" | "colleague" | "visitor";
+  };
   AddNewColleague: undefined;
   ProductProperties: undefined;
   SupplyRequest: undefined;
@@ -85,15 +88,7 @@ export type RootStackParamList = {
   Visits: undefined;
   LabelRequest: undefined;
   VisitDetail: {
-    visitItem: {
-      visitId: number;
-      visitor: string;
-      visitingOfficer: string;
-      date: string;
-      fromTime: string;
-      toTime: string;
-      result: string;
-    };
+    visitItem: IShowRoomVisitItem;
   };
 };
 export type AppNavigationProp = NativeStackNavigationProp<RootStackParamList>;

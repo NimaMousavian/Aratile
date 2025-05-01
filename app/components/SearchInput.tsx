@@ -31,6 +31,7 @@ interface SearchInputProps {
   value: string;
   onChangeText: (text: string) => void;
   onSearch: () => void;
+  onClear?: () => void;
   containerStyle?: ViewStyle;
   inputStyle?: TextStyle;
   buttonStyle?: ViewStyle;
@@ -63,6 +64,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
   value,
   onChangeText,
   onSearch,
+  onClear,
   containerStyle,
   inputStyle,
   buttonStyle,
@@ -118,7 +120,10 @@ const SearchInput: React.FC<SearchInputProps> = ({
 
         {value ? (
           <TouchableOpacity
-            onPress={() => onChangeText("")}
+            onPress={() => {
+              onClear?.();
+              onChangeText("");
+            }}
             style={styles.clearButton}
           >
             <Feather name="x" size={20} color="#999" />
@@ -129,7 +134,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
           style={[styles.searchButton, buttonStyle]}
           onPress={onSearch}
         >
-          <Feather name="search" size={20} color="#fff" />
+          <Feather name="search" size={22} color="#fff" />
         </TouchableOpacity>
         {hasFilter && (
           <TouchableOpacity
@@ -190,6 +195,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginLeft: 8,
+    width: 42,
+    height: 42,
   },
   header: {
     flexDirection: "row-reverse",

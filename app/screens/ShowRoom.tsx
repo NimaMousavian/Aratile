@@ -26,14 +26,14 @@ const showRoomItems: MenuItem[] = [
   {
     id: 1,
     name: "بازدید ها",
-    icon: "business",
+    icon: "groups",
     iconColor: "#1C3F64",
     screenName: "Visits",
   },
   {
     id: 2,
     name: "درخواست برچسب",
-    icon: "business-center",
+    icon: "new-label",
     iconColor: "#1C3F64",
     screenName: "LabelRequest",
   },
@@ -93,7 +93,7 @@ const ShowRoom = () => {
 
   return (
     <View style={styles.container}>
-      <ScreenHeader title="شو روم" />
+      <ScreenHeader title="شوروم" />
 
       <View style={styles.gridContainer}>
         {showRoomItems.map((item, index) => renderItem(item, index))}
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     gap: 15,
-    backgroundColor: "#F2F2F2",
+    backgroundColor: "#f2f2f2",
     borderRadius: 15,
     borderWidth: 1,
     borderColor: "#E4E4E4",

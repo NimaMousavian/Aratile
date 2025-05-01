@@ -242,7 +242,7 @@ export const PersianDatePicker: React.FC<PersianDatePickerProps> = ({
     <Modal
       visible={isVisible}
       transparent={true}
-      animationType="slide"
+      animationType="fade"
       onRequestClose={onClose}
     >
       <View style={styles.modalOverlay}>

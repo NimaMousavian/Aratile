@@ -7,7 +7,7 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
-  ScrollView
+  ScrollView,
 } from "react-native";
 import AppButton from "../components/Button";
 import colors from "../config/colors";
@@ -80,7 +80,7 @@ const LoginScreen = () => {
 
       try {
         const response = await axios.post<ILoginResponse>(
-          `${appConfig.mobileApi}Account/login`,
+          `${appConfig.mobileApi}Account/MobileAppLogin`,
           loginInfo
         );
 
@@ -140,9 +140,7 @@ const LoginScreen = () => {
               source={require("../../assets/logo-01.png")}
               resizeMode="contain"
             />
-            <AppText style={styles.headerTitle}>
-              ورود به حساب کاربری
-            </AppText>
+            <AppText style={styles.headerTitle}>ورود به حساب کاربری</AppText>
           </View>
 
           <View style={styles.formContainer}>
@@ -239,7 +237,7 @@ const styles = StyleSheet.create({
     fontFamily: "Yekan_Bakh_Bold",
     fontSize: 32,
     textAlign: "center",
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowColor: "rgba(0, 0, 0, 0.2)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
@@ -251,11 +249,11 @@ const styles = StyleSheet.create({
   glassForm: {
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.18)',
+    borderColor: "rgba(255, 255, 255, 0.18)",
     paddingTop: 25,
     paddingHorizontal: 25,
     paddingBottom: 0,
-    backgroundColor: 'rgba(55, 88, 133, 0.15)',
+    backgroundColor: "rgba(55, 88, 133, 0.15)",
     overflow: "hidden",
     position: "relative",
     maxHeight: 700,
@@ -287,7 +285,7 @@ const styles = StyleSheet.create({
   inputText: {
     fontSize: 18,
     textAlign: "right",
-  }
+  },
 });
 
 export default LoginScreen;

@@ -21,6 +21,9 @@ import {
   toEnglishDigits,
 } from "../../utils/numberConversions";
 import SearchInput from "../../components/SearchInput";
+import AppButton from "../../components/Button";
+import { useNavigation } from "@react-navigation/native";
+import { AppNavigationProp } from "../../StackNavigator";
 
 export interface Colleague {
   id: string;
@@ -36,6 +39,7 @@ interface ColleagueBottomSheetProps {
   onSelectColleague: (colleague: Colleague) => void;
   title?: string;
   pageSize?: number;
+  isCustomer?: boolean;
 }
 
 const { height } = Dimensions.get("window");
@@ -48,7 +52,10 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
   onSelectColleague,
   title = "انتخاب شخص معرف",
   pageSize = DEFAULT_PAGE_SIZE,
+  isCustomer = false,
 }) => {
+  const navigation = useNavigation<AppNavigationProp>();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [colleagues, setColleagues] = useState<Colleague[]>([]);
   const [filteredColleagues, setFilteredColleagues] = useState<Colleague[]>([]);
@@ -391,6 +398,12 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
               />
               <Text style={styles.noResultsText}>نتیجه‌ای یافت نشد</Text>
               {/* All buttons have been removed here */}
+              <AppButton
+                title="ثبت خریدار جدید"
+                onPress={() => navigation.navigate("CustomerInfo", {})}
+                color="success"
+                style={{ width: "100%", marginTop: 15 }}
+              />
             </View>
           ) : (
             <View style={styles.initialStateContainer}>
@@ -574,7 +587,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontFamily: "Yekan_Bakh_Regular",
     textAlign: "center",
-  }
+  },
 });
 
 export default ColleagueBottomSheet;

@@ -785,7 +785,7 @@ const IssuedInvoices: React.FC = () => {
           visible={isColleagueBottomSheetVisible}
           onClose={() => setIsColleagueBottomSheetVisible(false)}
           onSelectColleague={handleSelectColleague}
-          isCustomer
+          // isCustomer
           title="انتخاب خریدار"
         />
 
@@ -965,7 +965,7 @@ const styles = StyleSheet.create({
   },
 
   searchOuterContainer: {
-    margin: 15,
+    margin: 20,
     marginBottom: 5,
   },
 
@@ -973,7 +973,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     backgroundColor: "#FFFFFF",
     borderRadius: 15,
-    marginHorizontal: 15,
+    marginHorizontal: 20,
     marginTop: 5,
     marginBottom: 5,
     padding: 6,

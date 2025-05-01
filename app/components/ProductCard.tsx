@@ -88,6 +88,7 @@ interface ProductCardProps {
   // New action icons configuration
   editIcon?: ActionIconConfig;
   deleteIcon?: ActionIconConfig;
+  callIcon?: ActionIconConfig;
 
   containerStyle?: StyleProp<ViewStyle>;
   titleContainerStyle?: StyleProp<ViewStyle>;
@@ -123,6 +124,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   // New action icons with default values
   editIcon,
   deleteIcon,
+  callIcon,
 
   containerStyle,
   titleContainerStyle,
@@ -201,6 +203,26 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     name={deleteIcon.name || "delete"}
                     size={deleteIcon.size || 22}
                     color={deleteIcon.color || colors.danger}
+                  />
+                </TouchableOpacity>
+              )}
+              {callIcon && (
+                <TouchableOpacity
+                  onPress={callIcon.onPress}
+                  style={[
+                    styles.iconCircle,
+                    {
+                      backgroundColor: "#ffffff",
+                      borderColor: colors.success,
+                      borderWidth: 2,
+                    },
+                    callIcon.containerStyle,
+                  ]}
+                >
+                  <MaterialIcons
+                    name={callIcon.name || "call"}
+                    size={callIcon.size || 22}
+                    color={callIcon.color || colors.success}
                   />
                 </TouchableOpacity>
               )}

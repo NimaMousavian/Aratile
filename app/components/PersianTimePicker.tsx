@@ -193,7 +193,7 @@ export const PersianTimePicker: React.FC<PersianTimePickerProps> = ({
     <Modal
       visible={isVisible}
       transparent={true}
-      animationType="slide"
+      animationType="fade"
       onRequestClose={onClose}
     >
       <View style={styles.modalOverlay}>
@@ -296,7 +296,12 @@ export const TimePickerField: React.FC<TimePickerFieldProps> = ({
   error,
 }) => {
   const [isPickerVisible, setPickerVisible] = useState(false);
-  const timeArray = time ? time.split(":").map(Number) : [10, 0]; // Default to 10:00 if no time
+  const timeArray = time
+    ? time.split(":").map(Number)
+    : [
+        Number(new Date().getHours().toString().padStart(2, "0")),
+        Number(new Date().getMinutes().toString().padStart(2, "0")),
+      ]; // Default to 10:00 if no time
 
   const handleConfirm = (selectedTime: number[]) => {
     const formattedTime = `${selectedTime[0]
@@ -318,7 +323,7 @@ export const TimePickerField: React.FC<TimePickerFieldProps> = ({
       ...customStyles.infoItem,
     },
     infoLabel: {
-      color: colors.medium,
+      color: colors.dark,
       fontSize: 15,
       fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
       textAlign: "right",

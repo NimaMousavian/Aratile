@@ -63,23 +63,19 @@ const SelectionBottomSheet: React.FC<SelectionBottomSheetProps> = ({
   const loadingAnimation = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    console.log(filteredOptions);
-  });
+    if (!searchQuery.trim()) {
+      setFilteredOptions(options);
+      return;
+    }
 
-  // useEffect(() => {
-  //   if (!searchQuery.trim()) {
-  //     setFilteredOptions(options);
-  //     return;
-  //   }
+    const lowercasedQuery = searchQuery.toLowerCase().trim();
+    const filtered = options.filter((option) =>
+      option.toLowerCase().includes(lowercasedQuery)
+    );
+    console.log(filtered);
 
-  //   const lowercasedQuery = searchQuery.toLowerCase().trim();
-  //   const filtered = options.filter((option) =>
-  //     option.toLowerCase().includes(lowercasedQuery)
-  //   );
-  //   console.log(filtered);
-
-  //   setFilteredOptions(filtered);
-  // }, [searchQuery, options]);
+    setFilteredOptions(filtered);
+  }, [searchQuery, options]);
 
   useEffect(() => {
     const keyboardWillShowListener = Keyboard.addListener(
@@ -263,7 +259,7 @@ const SelectionBottomSheet: React.FC<SelectionBottomSheetProps> = ({
     }
     return Math.min(
       height * 0.8,
-      Math.max(height * 0.4, filteredOptions.length * 60)
+      Math.max(height * 0.6, filteredOptions.length * 60)
     ); // Adjust based on option count
   };
 

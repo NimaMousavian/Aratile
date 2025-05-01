@@ -42,7 +42,6 @@ interface APIProduct {
   ActiveStr: string;
   Quantity?: string;
   ProductMeasurementUnitName?: string;
-  ProductMeasurementUnitName?: string;
 }
 
 interface ProductSearchDrawerProps {
@@ -189,6 +188,7 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
         }
       } catch (error) {
         showToast("خطا در جستجوی محصول", "error");
+        console.log(error);
       } finally {
         setSearching(false);
       }
@@ -219,26 +219,34 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
         let inventory = null;
 
         // دریافت مقدار رکتیفای از پاسخ API
-        if (response.data && response.data.Product_ProductPropertyValue_List &&
-          response.data.Product_ProductPropertyValue_List.length > 0) {
-
+        if (
+          response.data &&
+          response.data.Product_ProductPropertyValue_List &&
+          response.data.Product_ProductPropertyValue_List.length > 0
+        ) {
           // جستجو برای یافتن ویژگی رکتیفای
-          const rectifiedProperty = response.data.Product_ProductPropertyValue_List.find(
-            prop => prop.ProductPropertyName === "رکتیفای"
-          );
+          const rectifiedProperty =
+            response.data.Product_ProductPropertyValue_List.find(
+              (prop: any) => prop.ProductPropertyName === "رکتیفای"
+            );
 
           if (rectifiedProperty) {
             rectifiedValue = rectifiedProperty.Value;
             console.log("مقدار رکتیفای یافت شد:", rectifiedValue);
           } else {
-            console.log("ویژگی رکتیفای یافت نشد. استفاده از مقدار پیش‌فرض 1.44");
+            console.log(
+              "ویژگی رکتیفای یافت نشد. استفاده از مقدار پیش‌فرض 1.44"
+            );
             rectifiedValue = "1.44"; // مقدار پیش‌فرض اگر ویژگی رکتیفای یافت نشد
           }
 
           // برای سازگاری با کد قبلی، مقدار اولین ویژگی را هم ذخیره می‌کنیم
-          propertyValue = response.data.Product_ProductPropertyValue_List[0].Value;
+          propertyValue =
+            response.data.Product_ProductPropertyValue_List[0].Value;
         } else {
-          console.log("هیچ ویژگی برای محصول یافت نشد. استفاده از مقدار پیش‌فرض 1.44");
+          console.log(
+            "هیچ ویژگی برای محصول یافت نشد. استفاده از مقدار پیش‌فرض 1.44"
+          );
           rectifiedValue = "1.44"; // مقدار پیش‌فرض اگر هیچ ویژگی یافت نشد
         }
 
@@ -258,9 +266,11 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
           price: item.Price !== null ? item.Price : 0,
           hasColorSpectrum: false,
           note: "",
-          measurementUnitName: item.ProductMeasurementUnitName || response.data?.MeasurementUnit?.MeasurementUnitName,
+          measurementUnitName:
+            item.ProductMeasurementUnitName ||
+            response.data?.MeasurementUnit?.MeasurementUnitName,
           propertyValue: inventory, // موجودی به عنوان مقدار اصلی
-          rectifiedValue: rectifiedValue // مقدار رکتیفای برای محاسبه تعداد کارتن
+          rectifiedValue: rectifiedValue, // مقدار رکتیفای برای محاسبه تعداد کارتن
         };
 
         console.log("محصول ارسال شده به ProductPropertiesDrawer:", product);
@@ -279,7 +289,7 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
           hasColorSpectrum: false,
           note: "",
           measurementUnitName: item.ProductMeasurementUnitName,
-          rectifiedValue: "1.44" // مقدار پیش‌فرض در صورت خطا
+          rectifiedValue: "1.44", // مقدار پیش‌فرض در صورت خطا
         };
 
         onProductSelect(product);
@@ -406,7 +416,7 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
                     style={[
                       styles.searchInput,
                       Platform.OS === "android" &&
-                      keyboardOpen && { height: 40 },
+                        keyboardOpen && { height: 40 },
                     ]}
                     placeholder="جستجوی نام یا کد محصول"
                     placeholderTextColor="#999"

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Platform, ScrollView, StyleSheet, View } from "react-native";
 import colors from "../config/colors";
 import ProductCard from "../components/ProductCard";
@@ -6,6 +6,14 @@ import { toPersianDigits } from "../utils/converters";
 import ScreenHeader from "../components/ScreenHeader";
 import { useNavigation } from "@react-navigation/native";
 import { AppNavigationProp } from "../StackNavigator";
+import axios from "axios";
+import appConfig from "../../config";
+import { IShowRoomVisitItem } from "../config/types";
+import Toast from "../components/Toast";
+import AppText from "../components/Text";
+import { ActivityIndicator } from "react-native-paper";
+import { getFontFamily } from "./IssuedInvoices";
+import { Feather } from "@expo/vector-icons";
 
 export interface IVisitItem {
   visitId: number;
@@ -17,7 +25,7 @@ export interface IVisitItem {
   result: string;
 }
 
-const visits: IVisitItem[] = [
+const visits_: IVisitItem[] = [
   {
     visitId: 1,
     visitor: "بازدید کننده ۱",
@@ -67,84 +75,153 @@ const visits: IVisitItem[] = [
 
 const Visits = () => {
   const navigation = useNavigation<AppNavigationProp>();
+
+  const [visits, setVisits] = useState<IShowRoomVisitItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const [toastVisible, setToastVisible] = useState<boolean>(false);
+  const [toastMessage, setToastMessage] = useState<string>("");
+  const [toastType, setToastType] = useState<
+    "success" | "error" | "warning" | "info"
+  >("error");
+
+  const showToast = (
+    message: string,
+    type: "success" | "error" | "warning" | "info" = "error"
+  ) => {
+    setToastMessage(message);
+    setToastType(type);
+    setToastVisible(true);
+  };
+
+  const getShowRoomVisits = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get<{ Items: IShowRoomVisitItem[] }>(
+        `${appConfig.mobileApi}ShowroomVisit/GetAll?page=1&pageSize=1000`
+      );
+
+      setVisits(response.data.Items);
+    } catch (error) {
+      showToast("خطا در دریافت اطلاعات", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    getShowRoomVisits();
+  }, []);
+
   return (
     <View style={styles.container}>
-      <ScreenHeader title="بازدید ها" />
-      <ScrollView>
-        {visits.map((visit) => (
-          <ProductCard
-            key={visit.visitId}
-            title={toPersianDigits(visit.visitor || "")}
-            fields={[
-              {
-                icon: "person-4",
+      <ScreenHeader title="بازدید ها" />\
+      <Toast
+        visible={toastVisible}
+        message={toastMessage}
+        type={toastType}
+        onDismiss={() => setToastVisible(false)}
+      />
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        {loading ? (
+          <View style={styles.centerContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <AppText
+              style={{ marginTop: 15, fontSize: 20, color: colors.primary }}
+            >
+              در حال بارگذاری اطلاعات
+            </AppText>
+          </View>
+        ) : visits.length > 0 ? (
+          visits?.map((visit) => (
+            <ProductCard
+              key={visit.ShowroomVisitId}
+              title={toPersianDigits(
+                visit.PersonList.map((person) => person.PersonFullName).join(
+                  "،  "
+                ) || ""
+              )}
+              fields={[
+                {
+                  icon: "person-4",
+                  iconColor: colors.secondary,
+                  label: "مسئول بازدید:",
+                  value: toPersianDigits(visit.ApplicationUserName),
+                },
+                {
+                  icon: "calendar-month",
+                  iconColor: colors.secondary,
+                  label: "تاریخ:",
+                  value: toPersianDigits(visit.ShamsiVisitDate),
+                },
+                {
+                  icon: "access-time",
+                  iconColor: colors.secondary,
+                  label: "ساعت:",
+                  value: visit.StartTime
+                    ? ` از ${toPersianDigits(
+                        visit.StartTime || ""
+                      )} تا ${toPersianDigits(visit.FinishTime || "")}`
+                    : "-",
+                },
+                {
+                  icon: "question-mark",
+                  iconColor: colors.secondary,
+                  label: "نتیجه:",
+                  value: toPersianDigits(visit.ShowroomVisitResultTitle || "-"),
+                },
+              ]}
+              note={visit.Description ? toPersianDigits(visit.Description) : ""}
+              noteConfig={{
+                show: visit.Description !== null,
+                icon: "notes",
                 iconColor: colors.secondary,
-                label: "مسئول بازدید:",
-                value: toPersianDigits(visit.visitingOfficer),
-              },
-              {
-                icon: "calendar-month",
+                label: "توضیحات:",
+              }}
+              qrConfig={{
+                show: false,
+                icon: "camera", // تغییر آیکون به دوربین/عکس
+                iconSize: 36,
                 iconColor: colors.secondary,
-                label: "تاریخ:",
-                value: toPersianDigits(visit.date),
-              },
-              {
-                icon: "timer",
-                iconColor: colors.secondary,
-                label: "از ساعت:",
-                value: toPersianDigits(visit.fromTime),
-              },
-              {
-                icon: "timer",
-                iconColor: colors.secondary,
-                label: "تا ساعت:",
-                value: toPersianDigits(visit.toTime),
-              },
-            ]}
-            note={visit.result ? toPersianDigits(visit.result) : ""}
-            noteConfig={{
-              show: true,
-              icon: "notes",
-              iconColor: colors.secondary,
-              label: "نتیجه:",
-            }}
-            qrConfig={{
-              show: false,
-              icon: "camera", // تغییر آیکون به دوربین/عکس
-              iconSize: 36,
-              iconColor: colors.secondary,
-            }}
-            //   editIcon={{
-            //     name: "edit",
-            //     size: 22,
-            //     color: colors.warning,
-            //     onPress: () => handleEditProduct(product.id),
-            //     containerStyle: styles.iconCircleSmall, // اضافه کردن استایل دایره
-            //   }}
-            //   deleteIcon={{
-            //     name: "delete",
-            //     size: 22,
-            //     color: colors.danger,
-            //     onPress: () => {
-            //       showRemoveConfirmation(product.id, () => {
-            //         showToast("محصول با موفقیت حذف شد", "info");
-            //       });
-            //     },
-            //     containerStyle: styles.iconCircleSmall, // اضافه کردن استایل دایره
-            //   }}
-            containerStyle={
-              Platform.OS === "android" ? styles.androidCardAdjustment : {}
-            }
-            //   onLongPress={() => {
-            //     showRemoveConfirmation(product.id, () => {
-            //       showToast("محصول با موفقیت حذف شد", "info");
-            //     });
-            //   }}
-            onPress={() =>
-              navigation.navigate("VisitDetail", { visitItem: visit })
-            }
-          />
-        ))}
+              }}
+              titleStyle={{ fontSize: 20 }}
+              //   editIcon={{
+              //     name: "edit",
+              //     size: 22,
+              //     color: colors.warning,
+              //     onPress: () => handleEditProduct(product.id),
+              //     containerStyle: styles.iconCircleSmall, // اضافه کردن استایل دایره
+              //   }}
+              //   deleteIcon={{
+              //     name: "delete",
+              //     size: 22,
+              //     color: colors.danger,
+              //     onPress: () => {
+              //       showRemoveConfirmation(product.id, () => {
+              //         showToast("محصول با موفقیت حذف شد", "info");
+              //       });
+              //     },
+              //     containerStyle: styles.iconCircleSmall, // اضافه کردن استایل دایره
+              //   }}
+              containerStyle={
+                Platform.OS === "android" ? styles.androidCardAdjustment : {}
+              }
+              //   onLongPress={() => {
+              //     showRemoveConfirmation(product.id, () => {
+              //       showToast("محصول با موفقیت حذف شد", "info");
+              //     });
+              //   }}
+              onPress={() =>
+                navigation.navigate("VisitDetail", { visitItem: visit })
+              }
+            />
+          ))
+        ) : (
+          <View style={styles.emptyContainer}>
+            <Feather name="clipboard" size={64} color="#9CA3AF" />
+            <AppText style={styles.emptyText}>موردی یافت نشد</AppText>
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -164,6 +241,25 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: "#e0e0e0",
     marginVertical: 8,
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 40,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 50,
+  },
+  emptyText: {
+    fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
+    fontSize: 16,
+    color: "#6B7280",
+    marginTop: 12,
+    textAlign: "center",
   },
 });
 

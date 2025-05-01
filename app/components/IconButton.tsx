@@ -1,6 +1,7 @@
 import React from "react";
 import { TouchableOpacity, Text, StyleSheet, Platform } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import colors from "../config/colors";
 
 type FontWeight = "700" | "600" | "500" | "bold" | "semi-bold" | string;
 
@@ -31,26 +32,24 @@ type IconButtonProps = {
   onPress: () => void;
   style?: object;
   flex?: number;
+  disabled?: boolean;
 };
 
 const IconButton: React.FC<IconButtonProps> = ({
   text,
   iconName,
-  backgroundColor,
+  backgroundColor = colors.primary,
   textColor = "#FFFFFF",
   iconColor = "#FFFFFF",
-  iconSize = 20,
+  iconSize = 28,
   onPress,
   style,
   flex = 0.49,
+  disabled = false,
 }) => {
   return (
     <TouchableOpacity
-      style={[
-        styles.actionBtn,
-        { backgroundColor: backgroundColor, flex: flex },
-        style,
-      ]}
+      style={[styles.actionBtn, { backgroundColor: backgroundColor }, style]}
       onPress={onPress}
     >
       <MaterialIcons name={iconName} size={iconSize} color={iconColor} />
@@ -62,13 +61,15 @@ const IconButton: React.FC<IconButtonProps> = ({
 const styles = StyleSheet.create({
   actionBtn: {
     flexDirection: "row-reverse",
-    alignItems: "center",
-    justifyContent: "center",
     borderRadius: 9,
+    justifyContent: "center",
+    alignItems: "center",
     padding: 12,
+    // width: "100%",
+    marginVertical: 8,
   },
   actionBtnText: {
-    fontSize: 15,
+    fontSize: 20,
     fontFamily: getFontFamily("Yekan_Bakh_Bold", "600"),
     marginRight: 8,
   },

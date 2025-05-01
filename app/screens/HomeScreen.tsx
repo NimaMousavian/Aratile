@@ -150,8 +150,8 @@ const initialItems: MenuItem[] = [
   },
   {
     id: 7,
-    name: "شو روم",
-    icon: "store",
+    name: "شوروم",
+    icon: "filter-frames",
     iconColor: "#1C3F64",
     screenName: "ShowRoom",
   },
