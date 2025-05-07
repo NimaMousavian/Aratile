@@ -474,7 +474,10 @@ const AddNewShop = () => {
       case 4:
         return (
           <DynamicSelectionBottomSheet<FormValues>
-            customField={customField}
+            customFieldId={customField.ShopCustomFieldId}
+            customFieldName={customField.FieldName}
+            customIconName={customField.IconName}
+            url={`${appConfig.mobileApi}ShopCustomFieldSelectiveValue/GetAll?customFieldId=${customField.ShopCustomFieldId}&page=1&pageSize=1000`}
             formikProps={formikProps}
           />
         );
@@ -523,6 +526,8 @@ const AddNewShop = () => {
             multiline
             numberOfLines={10}
             height={200}
+            textAlign="right"
+            isLargeInput={true}
             placeholder={customField.FieldName}
             onChangeText={formikProps.handleChange(fieldName)}
             value={formikProps.values[fieldName]}
@@ -936,9 +941,12 @@ const AddNewShop = () => {
                       autoCorrect={false}
                       placeholder="یادداشت متنی"
                       keyboardType="default"
+                      icon="notes"
                       multiline
                       numberOfLines={10}
                       height={200}
+                      textAlign="right"
+                      isLargeInput={true}
                       onChangeText={formikProps.handleChange("notes")}
                       value={formikProps.values.notes}
                       error={

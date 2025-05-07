@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Platform, ScrollView, StyleSheet, View } from "react-native";
 import colors from "../config/colors";
 import ProductCard from "../components/ProductCard";
 import { toPersianDigits } from "../utils/converters";
 import ScreenHeader from "../components/ScreenHeader";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { AppNavigationProp } from "../StackNavigator";
 import axios from "axios";
 import appConfig from "../../config";
@@ -113,9 +113,21 @@ const Visits = () => {
     getShowRoomVisits();
   }, []);
 
+  // Your function to call when the screen is focused
+  const onScreenFocus = useCallback(() => {
+    getShowRoomVisits();
+  }, []);
+
+  // Use useFocusEffect to run the function when the screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      onScreenFocus();
+    }, [onScreenFocus])
+  );
+
   return (
     <View style={styles.container}>
-      <ScreenHeader title="بازدید ها" />\
+      <ScreenHeader title="بازدید ها" />
       <Toast
         visible={toastVisible}
         message={toastMessage}
@@ -160,8 +172,10 @@ const Visits = () => {
                   label: "ساعت:",
                   value: visit.StartTime
                     ? ` از ${toPersianDigits(
-                        visit.StartTime || ""
-                      )} تا ${toPersianDigits(visit.FinishTime || "")}`
+                        visit.StartTime.slice(0, 5) || ""
+                      )} تا ${toPersianDigits(
+                        visit.FinishTime.slice(0, 5) || ""
+                      )}`
                     : "-",
                 },
                 {

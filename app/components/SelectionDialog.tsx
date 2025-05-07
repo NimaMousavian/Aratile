@@ -63,6 +63,10 @@ const SelectionBottomSheet: React.FC<SelectionBottomSheetProps> = ({
   const loadingAnimation = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    console.log("initialValues", initialValues);
+  }, [modalVisible]);
+
+  useEffect(() => {
     if (!searchQuery.trim()) {
       setFilteredOptions(options);
       return;

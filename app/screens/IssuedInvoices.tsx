@@ -26,6 +26,7 @@ import ColleagueBottomSheet, {
 } from "./IssuingNewInvoice/ColleagueSearchModal";
 import AppText from "../components/Text";
 import axios from "axios";
+import Toast from "../components/Toast";
 
 type FontWeight = "700" | "600" | "500" | "bold" | "semi-bold" | string;
 type StatusType = "صادر شده" | "ارجاع از صندوق" | "پیش فاکتور" | "لغو شده";
@@ -589,6 +590,7 @@ const IssuedInvoices: React.FC = () => {
       setStatusCounts(countsRecord);
     } catch (error) {
       console.error("Error fetching invoice counts:", error);
+      showToast("خطا در دریافت اطلاعات فاکتور ها", "error");
     }
   };
 
@@ -709,7 +711,12 @@ const IssuedInvoices: React.FC = () => {
   return (
     <>
       <ScreenHeader title="فاکتورها" />
-
+      <Toast
+        visible={toastVisible}
+        message={toastMessage}
+        type={toastType}
+        onDismiss={() => setToastVisible(false)}
+      />
       <View style={styles.container}>
         <View style={styles.searchOuterContainer}>
           <SearchInput

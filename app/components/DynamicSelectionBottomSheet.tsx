@@ -8,15 +8,21 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { FormikProps, FormikValues } from "formik";
 
 interface DynamicSelectionBottomSheetProps<T extends object> {
-  customField: IShopCustomField;
+  customFieldId: number;
+  customFieldName: string;
+  customIconName?: string;
+  url: string;
   formikProps: FormikProps<T>;
 }
 
 const DynamicSelectionBottomSheet = <T extends object>({
-  customField,
+  customFieldId,
+  customFieldName,
+  customIconName,
+  url,
   formikProps,
 }: DynamicSelectionBottomSheetProps<T>) => {
-  const fieldName = `custom_${customField.ShopCustomFieldId}`;
+  const fieldName = `custom_${customFieldId}`;
   const [options, setOptions] = useState<
     { Item: string; Value: string | number }[]
   >([]);
@@ -28,16 +34,14 @@ const DynamicSelectionBottomSheet = <T extends object>({
       setLoading(true);
       setError(null);
       try {
-        const response = await axios.get(
-          `${appConfig.mobileApi}ShopCustomFieldSelectiveValue/GetAll?customFieldId=${customField.ShopCustomFieldId}&page=1&pageSize=1000`
-        );
+        const response = await axios.get(url);
         const fetchedOptions = response.data;
         console.log(fetchedOptions);
 
         setOptions(fetchedOptions);
       } catch (err) {
         console.error(
-          `Error fetching options for customFieldId ${customField.ShopCustomFieldId}:`,
+          `Error fetching options for customFieldId ${customFieldId}:`,
           err
         );
 
@@ -48,19 +52,16 @@ const DynamicSelectionBottomSheet = <T extends object>({
     };
 
     fetchOptions();
-  }, [customField.ShopCustomFieldId]);
+  }, [customFieldId]);
 
   return (
     <SelectionBottomSheet
       placeholderText={
-        (formikProps.values[fieldName] as string | undefined) ||
-        customField.FieldName
+        (formikProps.values[fieldName] as string | undefined) || customFieldName
       }
-      title={customField.FieldName}
+      title={customFieldName}
       iconName={
-        customField.IconName as React.ComponentProps<
-          typeof MaterialIcons
-        >["name"]
+        customIconName as React.ComponentProps<typeof MaterialIcons>["name"]
       }
       options={options.map((option) => option.Item)}
       onSelect={(value) =>

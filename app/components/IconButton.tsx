@@ -33,6 +33,7 @@ type IconButtonProps = {
   style?: object;
   flex?: number;
   disabled?: boolean;
+  textStyle?: object;
 };
 
 const IconButton: React.FC<IconButtonProps> = ({
@@ -46,6 +47,7 @@ const IconButton: React.FC<IconButtonProps> = ({
   style,
   flex = 0.49,
   disabled = false,
+  textStyle,
 }) => {
   return (
     <TouchableOpacity
@@ -53,7 +55,9 @@ const IconButton: React.FC<IconButtonProps> = ({
       onPress={onPress}
     >
       <MaterialIcons name={iconName} size={iconSize} color={iconColor} />
-      <Text style={[styles.actionBtnText, { color: textColor }]}>{text}</Text>
+      <Text style={[styles.actionBtnText, { color: textColor }, textStyle]}>
+        {text}
+      </Text>
     </TouchableOpacity>
   );
 };

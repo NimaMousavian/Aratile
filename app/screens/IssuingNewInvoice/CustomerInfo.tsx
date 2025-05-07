@@ -26,6 +26,7 @@ import { RouteProp, useRoute } from "@react-navigation/native";
 import { IPerson, IPersonToEdit, ILoginResponse } from "../../config/types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import IconButton from "../../components/IconButton";
+import * as Yup from "yup";
 
 type ToastType = "success" | "error" | "warning" | "info";
 
@@ -53,6 +54,129 @@ type CustomerInfoRouteParams = {
     customer?: Colleague;
     mode?: "customer" | "colleague" | "visitor";
   };
+};
+
+// Generate initial values for Formik
+const generateInitialValues = (
+  person: IPerson | undefined,
+  customFieldType1: IPersonCustomField[],
+  customFieldType2: IPersonCustomField[],
+  customFieldType3: IPersonCustomField[]
+) => {
+  const initialValues: any = {
+    firstName: person?.FirstName || "",
+    lastName: person?.LastName || "",
+    alias: person?.NickName || "",
+    mobile: person?.Mobile || "",
+    customerType: person?.Person_PersonGroup_List[0]?.PersonGroupName || "",
+    customerJob: person?.PersonJobName || "",
+    province: person?.ProvinceName || "",
+    city: person?.CityName || "",
+    address: person?.Address || "",
+    description: person?.Description || "",
+    colleague: {
+      id: person?.IntroducerPersonId?.toString() || "",
+      name: person?.IntroducerPersonFullName || "",
+      phone: person?.IntroducerPersonMobile || "",
+    },
+  };
+
+  // Add dynamic fields for customFieldType1, customFieldType2, customFieldType3
+  [...customFieldType1, ...customFieldType2, ...customFieldType3].forEach(
+    (field) => {
+      initialValues[`custom_${field.PersonCustomFieldId}`] = "";
+    }
+  );
+
+  return initialValues;
+};
+
+// Generate initial values for Formik
+const generateInitialValues = (
+  person: IPerson | undefined,
+  customFieldType1: IPersonCustomField[],
+  customFieldType2: IPersonCustomField[],
+  customFieldType3: IPersonCustomField[]
+) => {
+  const initialValues: any = {
+    firstName: person?.FirstName || "",
+    lastName: person?.LastName || "",
+    alias: person?.NickName || "",
+    mobile: person?.Mobile || "",
+    customerType: person?.Person_PersonGroup_List[0]?.PersonGroupName || "",
+    customerJob: person?.PersonJobName || "",
+    province: person?.ProvinceName || "",
+    city: person?.CityName || "",
+    address: person?.Address || "",
+    description: person?.Description || "",
+    colleague: {
+      id: person?.IntroducerPersonId?.toString() || "",
+      name: person?.IntroducerPersonFullName || "",
+      phone: person?.IntroducerPersonMobile || "",
+    },
+  };
+
+  // Add dynamic fields for customFieldType1, customFieldType2, customFieldType3
+  [...customFieldType1, ...customFieldType2, ...customFieldType3].forEach(
+    (field) => {
+      initialValues[`custom_${field.PersonCustomFieldId}`] = "";
+    }
+  );
+
+  return initialValues;
+};
+
+// Generate Yup validation schema
+const generateValidationSchema = (
+  customFieldType1: IPersonCustomField[],
+  customFieldType2: IPersonCustomField[],
+  customFieldType3: IPersonCustomField[]
+) => {
+  const shape: { [key: string]: any } = {
+    firstName: Yup.string().required("لطفاً نام را وارد کنید"),
+    lastName: Yup.string().required("لطفاً نام خانوادگی را وارد کنید"),
+    alias: Yup.string().required("لطفاً نام مستعار را وارد کنید"),
+    mobile: Yup.string()
+      .matches(/^09\d{9}$/, "شماره موبایل باید ۱۱ رقم و با ۰۹ شروع شود")
+      .required("لطفاً شماره موبایل را وارد کنید"),
+    customerType: Yup.string().required("لطفاً گروه مشتری را انتخاب کنید"),
+    customerJob: Yup.string().required("لطفاً شغل مشتری را انتخاب کنید"),
+    province: Yup.string().required("لطفاً استان را انتخاب کنید"),
+    city: Yup.string().required("لطفاً شهر را انتخاب کنید"),
+    address: Yup.string(),
+    description: Yup.string(),
+    colleague: Yup.object().shape({
+      id: Yup.string(),
+      name: Yup.string(),
+      phone: Yup.string(),
+    }),
+  };
+
+  // Add validation for dynamic fields
+  [...customFieldType1, ...customFieldType2, ...customFieldType3].forEach(
+    (field) => {
+      if (field.IsRequired) {
+        if (field.FieldType === 2 || field.FieldType === 5) {
+          // Numeric field
+          shape[`custom_${field.PersonCustomFieldId}`] = Yup.string()
+            .matches(/^\d+$/, `${field.FieldName} باید عدد باشد`)
+            .required(`${field.FieldName} الزامی است`);
+        } else if (field.FieldType === 3) {
+          // Date field
+          shape[`custom_${field.PersonCustomFieldId}`] = Yup.string().required(
+            `${field.FieldName} الزامی است`
+          );
+        } else {
+          // Text or multi-select field
+          shape[`custom_${field.PersonCustomFieldId}`] = Yup.string().required(
+            `${field.FieldName} الزامی است`
+          );
+        }
+      }
+    }
+  );
+
+  return Yup.object().shape(shape);
 };
 
 const CustomerInfo: React.FC = () => {
@@ -596,7 +720,9 @@ const CustomerInfo: React.FC = () => {
               onSelect={handleCustomerTypeSelection}
               multiSelect={false}
               loading={loadingCustomerTypes}
-              initialValues={[selectedCustomerTypesString]}
+              initialValues={customerTypes
+                .map((group: PersonGroup) => group.PersonGroupName)
+                .filter((customer) => customer === selectedCustomerTypesString)}
             />
             <SelectionBottomSheet
               placeholderText={
@@ -608,6 +734,9 @@ const CustomerInfo: React.FC = () => {
               onSelect={handleCustomerJobSelection}
               multiSelect={false}
               loading={loadingCustomerJob}
+              initialValues={customerJobs
+                .map((job: any) => job.label)
+                .filter((customer) => customer === selectedCustomerJobString)}
             />
 
             <TouchableOpacity

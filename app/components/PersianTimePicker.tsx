@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   StyleSheet,
   View,
@@ -9,6 +9,7 @@ import {
   Modal,
   ViewStyle,
   TextStyle,
+  ScrollView as ScrollViewType,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from "../config/colors";
@@ -68,6 +69,36 @@ export const PersianTimePicker: React.FC<PersianTimePickerProps> = ({
 
   const hours = Array.from({ length: 24 }, (_, i) => i); // 0 to 23
   const minutes = Array.from({ length: 60 }, (_, i) => i); // 0 to 59
+
+  // Refs for ScrollView components
+  const hourScrollRef = useRef<ScrollViewType>(null);
+  const minuteScrollRef = useRef<ScrollViewType>(null);
+
+  // Item height for calculating scroll position (matches pickerItem padding)
+  const ITEM_HEIGHT = 40; // Adjust based on pickerItem style (padding: 10 * 2 + text height)
+
+  // Scroll to selected hour and minute when modal opens
+  useEffect(() => {
+    if (isVisible) {
+      // Scroll to selected hour
+      if (hourScrollRef.current) {
+        const hourIndex = hours.indexOf(selectedHour);
+        hourScrollRef.current.scrollTo({
+          y: hourIndex * ITEM_HEIGHT,
+          animated: true,
+        });
+      }
+
+      // Scroll to selected minute
+      if (minuteScrollRef.current) {
+        const minuteIndex = minutes.indexOf(selectedMinute);
+        minuteScrollRef.current.scrollTo({
+          y: minuteIndex * ITEM_HEIGHT,
+          animated: true,
+        });
+      }
+    }
+  }, [isVisible, selectedHour, selectedMinute]);
 
   const handleConfirm = () => {
     onConfirm([selectedHour, selectedMinute]);
@@ -135,6 +166,7 @@ export const PersianTimePicker: React.FC<PersianTimePickerProps> = ({
       padding: 10,
       alignItems: "center",
       justifyContent: "center",
+      height: ITEM_HEIGHT, // Ensure consistent item height
       ...customStyles.pickerItem,
     },
     selectedItem: {
@@ -206,7 +238,7 @@ export const PersianTimePicker: React.FC<PersianTimePickerProps> = ({
             <View style={styles.timeSelectors}>
               <View style={styles.pickerColumn}>
                 <Text style={styles.pickerLabel}>ساعت</Text>
-                <ScrollView style={styles.pickerScroll}>
+                <ScrollView style={styles.pickerScroll} ref={hourScrollRef}>
                   {hours.map((hour) => (
                     <TouchableOpacity
                       key={hour}
@@ -231,7 +263,7 @@ export const PersianTimePicker: React.FC<PersianTimePickerProps> = ({
 
               <View style={styles.pickerColumn}>
                 <Text style={styles.pickerLabel}>دقیقه</Text>
-                <ScrollView style={styles.pickerScroll}>
+                <ScrollView style={styles.pickerScroll} ref={minuteScrollRef}>
                   {minutes.map((minute) => (
                     <TouchableOpacity
                       key={minute}
