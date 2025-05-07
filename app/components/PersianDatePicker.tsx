@@ -457,6 +457,7 @@ interface DatePickerFieldProps {
   datePickerProps?: Partial<PersianDatePickerProps>;
   customStyles?: CustomStyles;
   error?: string;
+  onClearDate?: () => void;
 }
 
 export const DatePickerField: React.FC<DatePickerFieldProps> = ({
@@ -466,9 +467,15 @@ export const DatePickerField: React.FC<DatePickerFieldProps> = ({
   datePickerProps = {},
   customStyles = {},
   error,
+  onClearDate,
 }) => {
   const [isPickerVisible, setPickerVisible] = useState(false);
   const dateArray = date.split("/").map(Number);
+  // const [currentDate, setCurrentDate] = useState(date);
+
+  // useEffect(() => {
+  //   setCurrentDate(date);
+  // }, [date]);
 
   const handleConfirm = (selectedDate: number[]) => {
     onDateChange(selectedDate.join("/"));
@@ -482,6 +489,7 @@ export const DatePickerField: React.FC<DatePickerFieldProps> = ({
       borderColor: colors.gray,
       flexDirection: "row-reverse",
       alignItems: "center",
+      justifyContent: "space-between",
       marginBottom: 16,
       padding: 12,
       ...customStyles.infoItem,
@@ -528,10 +536,23 @@ export const DatePickerField: React.FC<DatePickerFieldProps> = ({
         style={styles.infoItem}
         onPress={() => setPickerVisible(true)}
       >
-        <MaterialIcons name="calendar-month" size={20} color="#6B7280" />
-        <Text style={styles.infoLabel}>
-          {date ? toPersianDigits(date) : label}
-        </Text>
+        <View style={{ flexDirection: "row-reverse" }}>
+          <MaterialIcons name="calendar-month" size={20} color="#6B7280" />
+          <Text style={styles.infoLabel}>
+            {date ? toPersianDigits(date) : label}
+          </Text>
+        </View>
+        {date && (
+          <TouchableOpacity
+            onPress={() => {
+              onClearDate?.();
+              onDateChange("");
+            }}
+            style={{ marginLeft: -40 }}
+          >
+            <MaterialIcons name="close" size={18} color="#b64e4e" />
+          </TouchableOpacity>
+        )}
         <View style={styles.valueContainer}>
           {/* <TouchableOpacity
           onPress={() => setPickerVisible(true)}

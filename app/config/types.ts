@@ -298,3 +298,36 @@ export interface IShopItem {
   LastUpdateDate: string;
   ShopCustomFieldList: string;
 }
+
+export interface IProjectCustomField {
+  ProjectCustomFieldId: number;
+  ProjectCustomFieldGroupId: number;
+  ProjectCustomFieldGroupName: string;
+  FieldName: string;
+  FieldType: number; // 1: Text, 2: Number, 3: Date, 4: Selection, 7: Multiline Text
+  IsRequired: boolean;
+  IconName?: string;
+  Form_ShowOrder: number;
+}
+
+export interface IShowRoomVisitCustomField {
+  ShowroomVisitCustomFieldId: number;
+  ShowroomVisitCustomFieldGroupId: number;
+  ShowroomVisitCustomFieldGroupName: string;
+  FieldName: string;
+  FieldType: number; // 1: Text, 2: Number, 3: Date, 4: Selection, 7: Multiline Text
+  IsRequired: boolean;
+  IconName?: string;
+  Form_ShowOrder: number;
+}
+
+export interface IPersonCustomField {
+  PersonCustomFieldId: number;
+  FieldName: string;
+  FieldType: number; // 1: text, 2: number, 3: date, 4: multi-select, 5: number, 6: location, 7: multiline text
+  IsRequired: boolean;
+  IconName: string;
+  PersonCustomFieldGroupId: number;
+  PersonCustomFieldGroupName: string;
+  Form_ShowOrder: number;
+}

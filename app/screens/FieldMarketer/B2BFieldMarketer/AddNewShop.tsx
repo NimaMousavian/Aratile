@@ -474,7 +474,10 @@ const AddNewShop = () => {
       case 4:
         return (
           <DynamicSelectionBottomSheet<FormValues>
-            customField={customField}
+            customFieldId={customField.ShopCustomFieldId}
+            customFieldName={customField.FieldName}
+            customIconName={customField.IconName}
+            url={`${appConfig.mobileApi}ShopCustomFieldSelectiveValue/GetAll?customFieldId=${customField.ShopCustomFieldId}&page=1&pageSize=1000`}
             formikProps={formikProps}
           />
         );
