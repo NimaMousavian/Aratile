@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Linking,
@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { AppNavigationProp } from "../../../StackNavigator";
 import colors from "../../../config/colors";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -83,6 +83,17 @@ const B2BFieldMarketer = () => {
       Linking.openURL(`tel:${phoneNumber}`);
     }
   };
+
+  const onScreenFocus = useCallback(() => {
+    getShopItems();
+  }, []);
+
+  // Use useFocusEffect to run the function when the screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      onScreenFocus();
+    }, [onScreenFocus])
+  );
 
   return (
     <>

@@ -32,12 +32,13 @@ type VisitDetailRouteParams = {
 const VisitDetail = () => {
   const route = useRoute<RouteProp<VisitDetailRouteParams, "VisitDetail">>();
   const visitItem = route.params?.visitItem;
-  console.log(visitItem);
 
   const navigation = useNavigation<AppNavigationProp>();
 
-  const [fromTime, setFromTime] = useState(visitItem.StartTime || "");
-  const [toTime, setToTime] = useState(visitItem.FinishTime || "");
+  const [fromTime, setFromTime] = useState(
+    visitItem.StartTime.slice(0, 5) || ""
+  );
+  const [toTime, setToTime] = useState(visitItem.FinishTime.slice(0, 5) || "");
   const [resultString, setResultString] = useState<string>(
     visitItem.ShowroomVisitResultTitle || ""
   );
@@ -97,7 +98,7 @@ const VisitDetail = () => {
           PersonIdList: visitItem.PersonList.map((person) => person.PersonId),
         };
 
-        console.log(objToEdit);
+        console.log("objToEdit", objToEdit);
 
         const response = await axios.put(
           `${appConfig.mobileApi}ShowroomVisit/Edit`,
@@ -108,6 +109,8 @@ const VisitDetail = () => {
           showToast("بازدید با موفقیت ثبت شد", "success");
         }
       } catch (error) {
+        console.log(error);
+
         showToast("خطا در ثبت بازدید");
       }
     }
@@ -202,6 +205,8 @@ const VisitDetail = () => {
           multiline
           numberOfLines={10}
           height={200}
+          textAlign="right"
+          isLargeInput={true}
           onChangeText={setDescription}
           value={description}
         />

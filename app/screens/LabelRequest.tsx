@@ -147,6 +147,8 @@ const LabelRequest = () => {
           multiline
           numberOfLines={10}
           height={200}
+          textAlign="right"
+          isLargeInput={true}
           onChangeText={setDescription}
           value={description}
         />

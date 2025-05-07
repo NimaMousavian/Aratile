@@ -523,6 +523,8 @@ const AddNewShop = () => {
             multiline
             numberOfLines={10}
             height={200}
+            textAlign="right"
+            isLargeInput={true}
             placeholder={customField.FieldName}
             onChangeText={formikProps.handleChange(fieldName)}
             value={formikProps.values[fieldName]}
@@ -936,9 +938,12 @@ const AddNewShop = () => {
                       autoCorrect={false}
                       placeholder="یادداشت متنی"
                       keyboardType="default"
+                      icon="notes"
                       multiline
                       numberOfLines={10}
                       height={200}
+                      textAlign="right"
+                      isLargeInput={true}
                       onChangeText={formikProps.handleChange("notes")}
                       value={formikProps.values.notes}
                       error={

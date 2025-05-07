@@ -596,7 +596,9 @@ const CustomerInfo: React.FC = () => {
               onSelect={handleCustomerTypeSelection}
               multiSelect={false}
               loading={loadingCustomerTypes}
-              initialValues={[selectedCustomerTypesString]}
+              initialValues={customerTypes
+                .map((group: PersonGroup) => group.PersonGroupName)
+                .filter((customer) => customer === selectedCustomerTypesString)}
             />
             <SelectionBottomSheet
               placeholderText={
@@ -608,6 +610,9 @@ const CustomerInfo: React.FC = () => {
               onSelect={handleCustomerJobSelection}
               multiSelect={false}
               loading={loadingCustomerJob}
+              initialValues={customerJobs
+                .map((job: any) => job.label)
+                .filter((customer) => customer === selectedCustomerJobString)}
             />
 
             <TouchableOpacity

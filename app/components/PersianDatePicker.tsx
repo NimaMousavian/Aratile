@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   StyleSheet,
   View,
@@ -13,6 +13,56 @@ import {
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from "../config/colors";
 import { toPersianDigits } from "../utils/converters";
+
+// Jalali date conversion utility
+const toJalali = (gregorianDate: Date) => {
+  // Simplified Jalali conversion (for demonstration)
+  // In a real app, use a library like 'moment-jalaali' or 'date-fns-jalali'
+  const gy = gregorianDate.getFullYear();
+  const gm = gregorianDate.getMonth() + 1;
+  const gd = gregorianDate.getDate();
+
+  let jy = gy - 621;
+  const leap = (gy % 4 === 0 && gy % 100 !== 0) || gy % 400 === 0;
+  const daysInMonth = [
+    31,
+    leap ? 29 : 28,
+    31,
+    30,
+    31,
+    30,
+    31,
+    31,
+    30,
+    31,
+    30,
+    31,
+  ];
+  let jd = gd;
+  for (let i = 0; i < gm - 1; i++) {
+    jd += daysInMonth[i];
+  }
+
+  if (jd > 79) {
+    // jy += 1;
+    jd -= 79;
+  } else {
+    jd += 286;
+  }
+
+  let jm = 1;
+  let jdInMonth = jd;
+  const jalaliDaysInMonth = [31, 31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 29];
+  for (let i = 0; i < 12; i++) {
+    if (jdInMonth <= jalaliDaysInMonth[i]) {
+      jm = i + 1;
+      break;
+    }
+    jdInMonth -= jalaliDaysInMonth[i];
+  }
+
+  return [jy, jm, jdInMonth];
+};
 
 const getFontFamily = (baseFont: string, weight: string): string => {
   if (Platform.OS === "android") {
@@ -94,22 +144,32 @@ interface PersianDatePickerProps {
   cancelButtonText?: string;
   headerTitle?: string;
 }
+const ITEM_HEIGHT = 40;
 
 export const PersianDatePicker: React.FC<PersianDatePickerProps> = ({
   isVisible,
   onClose,
   onConfirm,
-  initialDate = [1404, 1, 1],
-  startYear = 1390,
-  yearCount = 21,
+  initialDate,
+  startYear = 1300,
+  yearCount = 120,
   customStyles = {},
   confirmButtonText = "تأیید",
   cancelButtonText = "انصراف",
   headerTitle = "انتخاب تاریخ",
 }) => {
-  const [selectedYear, setSelectedYear] = useState(initialDate[0]);
-  const [selectedMonth, setSelectedMonth] = useState(initialDate[1]);
-  const [selectedDay, setSelectedDay] = useState(initialDate[2]);
+  // Get current Jalali date
+  const currentDate = toJalali(new Date());
+  const defaultDate =
+    initialDate && initialDate.length === 3 ? initialDate : currentDate;
+
+  const [selectedYear, setSelectedYear] = useState(defaultDate[0]);
+  const [selectedMonth, setSelectedMonth] = useState(defaultDate[1]);
+  const [selectedDay, setSelectedDay] = useState(defaultDate[2]);
+  // Refs for ScrollViews
+  const yearScrollRef = useRef<ScrollView>(null);
+  const monthScrollRef = useRef<ScrollView>(null);
+  const dayScrollRef = useRef<ScrollView>(null);
 
   const years = Array.from({ length: yearCount }, (_, i) => startYear + i);
   const months = Array.from({ length: 12 }, (_, i) => ({
@@ -117,6 +177,42 @@ export const PersianDatePicker: React.FC<PersianDatePickerProps> = ({
     name: persianMonths[i],
   }));
   const days = Array.from({ length: 31 }, (_, i) => i + 1);
+
+  // Scroll to selected items when picker opens
+  useEffect(() => {
+    if (isVisible) {
+      // setSelectedYear(currentDate[0]);
+      // setSelectedMonth(currentDate[1]);
+      // setSelectedDay(currentDate[2]);
+
+      // Scroll to selected year
+      const yearIndex = years.indexOf(selectedYear);
+      if (yearIndex !== -1 && yearScrollRef.current) {
+        yearScrollRef.current.scrollTo({
+          y: yearIndex * ITEM_HEIGHT, // Assuming each item is 44px tall (10px padding + 24px text + 10px padding)
+          animated: true,
+        });
+      }
+
+      // Scroll to selected month
+      const monthIndex = selectedMonth - 1;
+      if (monthIndex !== -1 && monthScrollRef.current) {
+        monthScrollRef.current.scrollTo({
+          y: monthIndex * ITEM_HEIGHT,
+          animated: true,
+        });
+      }
+
+      // Scroll to selected day
+      const dayIndex = days.indexOf(selectedDay);
+      if (dayIndex !== -1 && dayScrollRef.current) {
+        dayScrollRef.current.scrollTo({
+          y: dayIndex * ITEM_HEIGHT,
+          animated: true,
+        });
+      }
+    }
+  }, [isVisible, initialDate, selectedDay, selectedMonth, selectedYear]);
 
   const handleConfirm = () => {
     onConfirm([selectedYear, selectedMonth, selectedDay]);
@@ -184,6 +280,7 @@ export const PersianDatePicker: React.FC<PersianDatePickerProps> = ({
       padding: 10,
       alignItems: "center",
       justifyContent: "center",
+      height: ITEM_HEIGHT,
       ...customStyles.pickerItem,
     },
     selectedItem: {
@@ -255,7 +352,7 @@ export const PersianDatePicker: React.FC<PersianDatePickerProps> = ({
             <View style={styles.dateSelectors}>
               <View style={styles.pickerColumn}>
                 <Text style={styles.pickerLabel}>سال</Text>
-                <ScrollView style={styles.pickerScroll}>
+                <ScrollView style={styles.pickerScroll} ref={yearScrollRef}>
                   {years.map((year) => (
                     <TouchableOpacity
                       key={year}
@@ -280,7 +377,7 @@ export const PersianDatePicker: React.FC<PersianDatePickerProps> = ({
 
               <View style={styles.pickerColumn}>
                 <Text style={styles.pickerLabel}>ماه</Text>
-                <ScrollView style={styles.pickerScroll}>
+                <ScrollView style={styles.pickerScroll} ref={monthScrollRef}>
                   {months.map((month) => (
                     <TouchableOpacity
                       key={month.number}
@@ -306,7 +403,7 @@ export const PersianDatePicker: React.FC<PersianDatePickerProps> = ({
 
               <View style={styles.pickerColumn}>
                 <Text style={styles.pickerLabel}>روز</Text>
-                <ScrollView style={styles.pickerScroll}>
+                <ScrollView style={styles.pickerScroll} ref={dayScrollRef}>
                   {days.map((day) => (
                     <TouchableOpacity
                       key={day}
