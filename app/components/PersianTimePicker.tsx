@@ -12,8 +12,8 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from "../config/colors";
-import { getFontFamily } from "./PersianDatePicker"; // Reuse utilities from PersianDatePicker
-import { toPersianDigits } from "../utils/converters";
+import { getFontFamily } from "./PersianDatePicker"; 
+import { toPersianDigits } from "../utils/numberConversions";
 
 interface CustomStyles {
   modalOverlay?: ViewStyle;
