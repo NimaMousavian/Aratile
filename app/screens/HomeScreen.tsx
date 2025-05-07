@@ -280,7 +280,7 @@ const HomeScreen: React.FC = () => {
       }
     }
 
-    return () => {};
+    return () => { };
   }, [isDragging]);
 
   useEffect(() => {
@@ -620,7 +620,7 @@ const HomeScreen: React.FC = () => {
 
       const distance = Math.sqrt(
         Math.pow(position.x - currentPosition.x, 2) +
-          Math.pow(position.y - currentPosition.y, 2)
+        Math.pow(position.y - currentPosition.y, 2)
       );
 
       if (distance < minDistance) {
@@ -1014,6 +1014,16 @@ const HomeScreen: React.FC = () => {
           </View>
           <Text style={styles.userName}>{userData?.DisplayName}</Text>
         </TouchableOpacity>
+
+
+        <TouchableOpacity
+          style={styles.calendarIconContainer}
+          onPress={() => {
+            safeNavigate(navigation, "PersianCalendar");
+          }}
+        >
+          <MaterialIcons name="calendar-month" size={30} color={colors.primary} />
+        </TouchableOpacity>
       </View>
 
       {renderSaveButton()}
@@ -1114,6 +1124,15 @@ const styles = StyleSheet.create({
     flex: 1,
     width: "100%",
   },
+  calendarIconContainer: {
+
+
+
+    justifyContent: "center",
+    alignItems: "center",
+marginLeft: -6,
+
+  },
   list: {
     paddingHorizontal: 10,
     paddingVertical: 10,
@@ -1192,6 +1211,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1,
     borderColor: "#e0e0e0",
+    marginRight: -6,
   },
   columnWrapper: {
     flexDirection: "row-reverse",

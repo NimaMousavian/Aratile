@@ -40,12 +40,16 @@ import ShowRoom from "./screens/ShowRoom";
 import Visits from "./screens/Visits";
 import LabelRequest from "./screens/LabelRequest";
 import VisitDetail from "./screens/VisitDetail";
+import PersianCalendarScreen from './screens/Calendar/PersianCalendarScreen';
+
 
 export type RootStackParamList = {
   AppSelection: undefined;
   Login: undefined;
   Profile: undefined;
   ChangePassword: undefined;
+  PersianCalendar: undefined;
+
 
   Home: undefined;
 
@@ -150,6 +154,11 @@ const AppStack = () => {
         options={{ headerShown: false }}
       />
       <Stack.Screen name="Profile" component={ProfileScreen} />
+      <Stack.Screen
+        name="PersianCalendar"
+        component={PersianCalendarScreen}
+        options={{ headerShown: false }}
+      />
 
       {/* Seller Screens */}
       <Stack.Screen
