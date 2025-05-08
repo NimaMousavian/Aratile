@@ -19,7 +19,6 @@ import { getLoginResponse } from "./LogingScreen";
 import { ILoginResponse } from "../config/types";
 import { PanGestureHandler, State } from "react-native-gesture-handler";
 import * as FileSystem from "expo-file-system";
-import { Form } from "formik";
 
 export interface MenuItem {
   id: number;

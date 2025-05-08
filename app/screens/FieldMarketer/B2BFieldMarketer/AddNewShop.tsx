@@ -44,6 +44,7 @@ interface IInputContainerProps {
   onAddIconPress?: () => void;
   showClearIcon?: boolean;
   onClearIconPress?: () => void;
+  headerIcon?: React.ComponentProps<typeof MaterialIcons>["name"];
 }
 
 export const InputContainer: React.FC<IInputContainerProps> = ({
@@ -53,6 +54,7 @@ export const InputContainer: React.FC<IInputContainerProps> = ({
   onAddIconPress,
   showClearIcon = false,
   onClearIconPress,
+  headerIcon,
 }) => {
   return (
     <View style={styles.inputContainer}>
@@ -75,7 +77,19 @@ export const InputContainer: React.FC<IInputContainerProps> = ({
               />
             </TouchableOpacity>
           )}
-          <AppText style={styles.title}>{title}</AppText>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginLeft: -10,
+            }}
+          >
+            <AppText style={styles.title}>{title}</AppText>
+            {headerIcon && (
+              <MaterialIcons name={headerIcon} size={22} color={colors.white} />
+            )}
+          </View>
         </LinearGradient>
       </View>
       <View style={styles.gridContainer}>
@@ -1005,8 +1019,11 @@ const styles = StyleSheet.create({
   },
   gridContainer: {
     padding: 15,
+    paddingBottom: 0,
   },
-  titleContainer: {},
+  titleContainer: {
+    justifyContent: "center",
+  },
   title: {
     fontFamily: "Yekan_Bakh_Bold",
     fontSize: 20,

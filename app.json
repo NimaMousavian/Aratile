@@ -27,9 +27,7 @@
         "backgroundColor": "#ffffff"
       },
       "permissions": [
-        "READ_CALL_LOG",
-        "READ_CONTACTS",
-        "READ_PHONE_STATE",
+
         "android.permission.READ_CONTACTS",
         "android.permission.READ_CALL_LOG",
         "android.permission.READ_PHONE_STATE",
@@ -50,9 +48,7 @@
           "android": {
             "usesCleartextTraffic": true,
             "permissions": [
-              "READ_CALL_LOG",
-              "READ_CONTACTS",
-              "READ_PHONE_STATE",
+   
               "android.permission.READ_CONTACTS",
               "android.permission.READ_CALL_LOG",
               "android.permission.READ_PHONE_STATE",
@@ -60,13 +56,8 @@
             ]
           }
         }
-      ],
-      [
-        "expo-contacts",
-        {
-          "contactsPermission": "این برنامه برای نمایش نام مخاطبین در لیست تماس‌ها به مخاطبین شما نیاز دارد."
-        }
       ]
+
     ],
     "extra": {
       "eas": {
