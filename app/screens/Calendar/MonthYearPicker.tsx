@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   StyleSheet,
   View,
@@ -8,7 +8,7 @@ import {
   Platform,
   Modal,
 } from "react-native";
-import colors from "../../config/colors"; 
+import colors from "../../config/colors";
 import { toPersianDigits } from "../../utils/numberConversions";
 
 
@@ -46,13 +46,15 @@ const persianMonths = [
   "اسفند",
 ];
 
+const ITEM_HEIGHT = 40; 
+
 const MonthYearPicker = ({
   isVisible,
   onClose,
   onConfirm,
   initialDate = [1404, 1],
-  startYear = 1390,
-  yearCount = 21,
+  startYear = 1300,
+  yearCount = 200,
   confirmButtonText = "تأیید",
   cancelButtonText = "انصراف",
   headerTitle = "انتخاب ماه و سال",
@@ -60,11 +62,41 @@ const MonthYearPicker = ({
   const [selectedYear, setSelectedYear] = useState(initialDate[0]);
   const [selectedMonth, setSelectedMonth] = useState(initialDate[1]);
 
+  useEffect(() => {
+    setSelectedYear(initialDate[0]);
+    setSelectedMonth(initialDate[1]);
+  }, [initialDate]);
+
+  const yearScrollRef = useRef(null);
+  const monthScrollRef = useRef(null);
+
   const years = Array.from({ length: yearCount }, (_, i) => startYear + i);
   const months = Array.from({ length: 12 }, (_, i) => ({
     number: i + 1,
     name: persianMonths[i],
   }));
+
+  useEffect(() => {
+    if (isVisible) {
+      setTimeout(() => {
+        const yearIndex = years.indexOf(selectedYear);
+        if (yearIndex !== -1 && yearScrollRef.current) {
+          yearScrollRef.current.scrollTo({
+            y: yearIndex * ITEM_HEIGHT,
+            animated: true,
+          });
+        }
+
+        const monthIndex = selectedMonth - 1;
+        if (monthIndex !== -1 && monthScrollRef.current) {
+          monthScrollRef.current.scrollTo({
+            y: monthIndex * ITEM_HEIGHT,
+            animated: true,
+          });
+        }
+      }, 100); 
+    }
+  }, [isVisible]); 
 
   const handleConfirm = () => {
     onConfirm([selectedYear, selectedMonth]);
@@ -123,6 +155,7 @@ const MonthYearPicker = ({
       padding: 10,
       alignItems: "center",
       justifyContent: "center",
+      height: ITEM_HEIGHT, 
     },
     selectedItem: {
       backgroundColor: "#F3F4F6",
@@ -184,7 +217,10 @@ const MonthYearPicker = ({
             <View style={styles.dateSelectors}>
               <View style={styles.pickerColumn}>
                 <Text style={styles.pickerLabel}>سال</Text>
-                <ScrollView style={styles.pickerScroll}>
+                <ScrollView
+                  style={styles.pickerScroll}
+                  ref={yearScrollRef}
+                >
                   {years.map((year) => (
                     <TouchableOpacity
                       key={year}
@@ -209,7 +245,10 @@ const MonthYearPicker = ({
 
               <View style={styles.pickerColumn}>
                 <Text style={styles.pickerLabel}>ماه</Text>
-                <ScrollView style={styles.pickerScroll}>
+                <ScrollView
+                  style={styles.pickerScroll}
+                  ref={monthScrollRef}
+                >
                   {months.map((month) => (
                     <TouchableOpacity
                       key={month.number}
@@ -256,7 +295,5 @@ const MonthYearPicker = ({
     </Modal>
   );
 };
-
-
 
 export default MonthYearPicker;

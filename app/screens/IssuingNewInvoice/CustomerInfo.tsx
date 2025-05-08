@@ -23,7 +23,7 @@ import { InputContainer } from "../FieldMarketer/B2BFieldMarketer/AddNewShop";
 import axios from "axios";
 import appConfig from "../../../config";
 import { RouteProp, useRoute } from "@react-navigation/native";
-import { IPerson, IPersonToEdit, ILoginResponse } from "../../config/types";
+import { IPerson, IPersonToEdit, ILoginResponse, IPersonCustomField } from "../../config/types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import IconButton from "../../components/IconButton";
 import * as Yup from "yup";
@@ -56,40 +56,7 @@ type CustomerInfoRouteParams = {
   };
 };
 
-// Generate initial values for Formik
-const generateInitialValues = (
-  person: IPerson | undefined,
-  customFieldType1: IPersonCustomField[],
-  customFieldType2: IPersonCustomField[],
-  customFieldType3: IPersonCustomField[]
-) => {
-  const initialValues: any = {
-    firstName: person?.FirstName || "",
-    lastName: person?.LastName || "",
-    alias: person?.NickName || "",
-    mobile: person?.Mobile || "",
-    customerType: person?.Person_PersonGroup_List[0]?.PersonGroupName || "",
-    customerJob: person?.PersonJobName || "",
-    province: person?.ProvinceName || "",
-    city: person?.CityName || "",
-    address: person?.Address || "",
-    description: person?.Description || "",
-    colleague: {
-      id: person?.IntroducerPersonId?.toString() || "",
-      name: person?.IntroducerPersonFullName || "",
-      phone: person?.IntroducerPersonMobile || "",
-    },
-  };
 
-  // Add dynamic fields for customFieldType1, customFieldType2, customFieldType3
-  [...customFieldType1, ...customFieldType2, ...customFieldType3].forEach(
-    (field) => {
-      initialValues[`custom_${field.PersonCustomFieldId}`] = "";
-    }
-  );
-
-  return initialValues;
-};
 
 // Generate initial values for Formik
 const generateInitialValues = (
@@ -315,7 +282,7 @@ const CustomerInfo: React.FC = () => {
       if (person.ProvinceName) {
         fetchCitiesByProvince(person.ProvinceName);
       }
-    } catch (error) {}
+    } catch (error) { }
   };
 
   useEffect(() => {
@@ -755,7 +722,7 @@ const CustomerInfo: React.FC = () => {
                     ? `${selectedColleague.name} (${selectedColleague.phone})`
                     : ""
                 }
-                onChangeText={() => {}}
+                onChangeText={() => { }}
                 editable={false}
               />
             </TouchableOpacity>
@@ -850,7 +817,7 @@ const CustomerInfo: React.FC = () => {
         visible={isColleagueBottomSheetVisible}
         onClose={() => setIsColleagueBottomSheetVisible(false)}
         onSelectColleague={handleSelectColleague}
-        // isCustomer={false}
+      // isCustomer={false}
       />
     </>
   );

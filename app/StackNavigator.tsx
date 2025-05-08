@@ -41,6 +41,8 @@ import Visits from "./screens/Visits";
 import LabelRequest from "./screens/LabelRequest";
 import VisitDetail from "./screens/VisitDetail";
 import PersianCalendarScreen from './screens/Calendar/PersianCalendarScreen';
+import Forms from "./screens/Forms";
+
 
 
 export type RootStackParamList = {
@@ -49,6 +51,7 @@ export type RootStackParamList = {
   Profile: undefined;
   ChangePassword: undefined;
   PersianCalendar: undefined;
+
 
 
   Home: undefined;
@@ -71,6 +74,7 @@ export type RootStackParamList = {
   SupplyRequest: undefined;
   SupplyRequestList: undefined;
   IssuedInvoices: undefined;
+  Forms: undefined;
 
   CashierHome: undefined;
   ReceiveNewInvoice: { invoicId: number };
@@ -246,6 +250,10 @@ const AppStack = () => {
       <Stack.Screen name="Visits" component={Visits} />
       <Stack.Screen name="LabelRequest" component={LabelRequest} />
       <Stack.Screen name="VisitDetail" component={VisitDetail} />
+      <Stack.Screen name="Forms" component={Forms} />
+ 
+
+
     </Stack.Navigator>
   );
 };

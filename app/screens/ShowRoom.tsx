@@ -92,8 +92,9 @@ const ShowRoom = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <>
       <ScreenHeader title="شوروم" />
+    <View style={styles.container}>
 
       <View style={styles.gridContainer}>
         {showRoomItems.map((item, index) => renderItem(item, index))}
@@ -178,7 +179,8 @@ const ShowRoom = () => {
           showToast(`مشتری ${colleague.name} انتخاب شد`, "success");
         }}
       /> */}
-    </View>
+      </View>
+    </>
   );
 };
 
