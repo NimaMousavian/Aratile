@@ -102,11 +102,13 @@ export interface ILoginResponse {
   DisplayName: string;
   UserName: string;
   UserMobile: string;
+  Token: string;
   CityId: number;
   CityName: string;
   ProvinceId: number;
   ProvinceName: string;
-  Token: string;
+  AvatarImageFileName: string;
+  AvatarImageURL: string;
   CompanyBranchId: number;
   CompanyBranchName: string;
   USerRoleList: {

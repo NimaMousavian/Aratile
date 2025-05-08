@@ -95,9 +95,8 @@ const LoginScreen = () => {
         const axiosError = error as AxiosError;
         console.log(axiosError);
 
-        // نمایش پیام خطای مستقیم از بک‌اند
-        if (axiosError.response?.data?.message) {
-          showToast(axiosError.response.data.message, "error");
+        if (axiosError.response?.data.message) {
+          showToast(axiosError.response?.data.message, "error");
         } else {
           showToast("خطا در ارتباط با سرور", "error");
         }

@@ -43,6 +43,8 @@ interface AppTextInputProps extends TextInputProps {
   containerStyle?: any;
   inputContainerStyle?: any;
   labelStyle?: any;
+  inputStyle?: any;
+  placeholderTextAlign: "left" | "right" | "center" | undefined;
 }
 
 const BlurTextInput: React.FC<AppTextInputProps> = ({
@@ -58,6 +60,8 @@ const BlurTextInput: React.FC<AppTextInputProps> = ({
   containerStyle,
   inputContainerStyle,
   labelStyle,
+  inputStyle,
+  placeholderTextAlign,
   ...otherProps
 }) => {
   return (
@@ -84,7 +88,12 @@ const BlurTextInput: React.FC<AppTextInputProps> = ({
           />
         )}
         <TextInput
-          style={[styles.textInput, style, { height: height }]}
+          style={[
+            styles.textInput,
+            style,
+            { height: height },
+            { ...inputStyle },
+          ]}
           placeholder={placeholder}
           placeholderTextColor={colors.white}
           value={value}
@@ -93,7 +102,7 @@ const BlurTextInput: React.FC<AppTextInputProps> = ({
               onChangeInput(inputId, newValue);
             }
           }}
-          textAlign="center"
+          textAlign={placeholderTextAlign}
           {...otherProps}
         />
       </BlurView>

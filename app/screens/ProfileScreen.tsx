@@ -1,5 +1,11 @@
-import React, { useState } from "react";
-import { StyleSheet, View, TouchableOpacity } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  Image,
+  Dimensions,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import ScreenHeader from "../components/ScreenHeader";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -12,6 +18,13 @@ import { toPersianDigits } from "../utils/converters";
 import { useAuth } from "./AuthContext";
 import ReusableModal from "../components/Modal";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as FileSystem from "expo-file-system";
+
+const { width, height } = Dimensions.get("window");
+const calculateImageHeight = () => {
+  const imageRatio = 520 / 1000;
+  return width * imageRatio;
+};
 
 type RootStackParamList = {
   Profile: undefined;
@@ -28,6 +41,62 @@ const ProfileScreen = () => {
   const { user, logout } = useAuth();
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [avatarUri, setAvatarUri] = useState<string | null>(
+    user?.AvatarImageURL || ""
+  );
+  const avatarCacheKey = "@AvatarImage";
+  const avatarLocalPath = FileSystem.documentDirectory
+    ? `${FileSystem.documentDirectory}avatar.jpg`
+    : null;
+
+  // Load or cache avatar image
+  useEffect(() => {
+    const loadAvatar = async () => {
+      try {
+        if (!user?.AvatarImageURL) {
+          setAvatarUri(null);
+          return;
+        }
+
+        if (!avatarLocalPath || !FileSystem.getInfoAsync) {
+          console.warn(
+            "FileSystem is not available, falling back to default icon"
+          );
+          setAvatarUri(null);
+          return;
+        }
+
+        // Check if image exists in AsyncStorage
+        const cachedUri = await AsyncStorage.getItem(avatarCacheKey);
+        if (cachedUri) {
+          const fileInfo = await FileSystem.getInfoAsync(avatarLocalPath);
+          if (fileInfo.exists) {
+            setAvatarUri(cachedUri);
+            return;
+          }
+        }
+
+        // If online, download and cache the image
+        const downloadResult = await FileSystem.downloadAsync(
+          user.AvatarImageURL,
+          avatarLocalPath
+        );
+
+        if (downloadResult.status === 200) {
+          const uri = `${avatarLocalPath}`;
+          await AsyncStorage.setItem(avatarCacheKey, uri);
+          setAvatarUri(uri);
+        } else {
+          setAvatarUri(null);
+        }
+      } catch (error) {
+        console.error("Error loading avatar:", error);
+        setAvatarUri(null);
+      }
+    };
+
+    loadAvatar();
+  }, [user?.AvatarImageURL]);
 
   const handleLogout = async () => {
     setLogoutModalVisible(true);
@@ -47,6 +116,20 @@ const ProfileScreen = () => {
       //   tx.executeSql('DELETE FROM table2');
       //   // ... other tables
       // });
+
+      // Delete cached avatar image if FileSystem is available
+      if (
+        avatarLocalPath &&
+        FileSystem.getInfoAsync &&
+        FileSystem.deleteAsync
+      ) {
+        const fileInfo = await FileSystem.getInfoAsync(avatarLocalPath).catch(
+          () => ({ exists: false })
+        );
+        if (fileInfo.exists) {
+          await FileSystem.deleteAsync(avatarLocalPath);
+        }
+      }
 
       console.log("All database data has been cleared");
       return true;
@@ -96,7 +179,11 @@ const ProfileScreen = () => {
       <View style={styles.container}>
         <View style={styles.profileSection}>
           <View style={styles.avatarCircle}>
-            <MaterialIcons name="person" size={100} color="#666666" />
+            {avatarUri ? (
+              <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
+            ) : (
+              <MaterialIcons name="person" size={100} color="#666666" />
+            )}
           </View>
           <View style={{ marginVertical: 30 }}>
             <AppText style={styles.nameText}>{user?.DisplayName}</AppText>
@@ -230,6 +317,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 12,
     borderColor: "#F8F8F8",
+  },
+  avatarImage: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "contain",
+    borderRadius: 100,
+    borderWidth: 1,
+    borderColor: "#ccc",
   },
   nameText: {
     fontFamily: "Yekan_Bakh_Bold",
