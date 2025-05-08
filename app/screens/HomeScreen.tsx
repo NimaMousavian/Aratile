@@ -19,6 +19,7 @@ import { getLoginResponse } from "./LogingScreen";
 import { ILoginResponse } from "../config/types";
 import { PanGestureHandler, State } from "react-native-gesture-handler";
 import * as FileSystem from "expo-file-system";
+import { Form } from "formik";
 
 export interface MenuItem {
   id: number;
@@ -65,6 +66,8 @@ const safeNavigate = (navigation: any, screenName: string, params?: any) => {
     StatusFilterScree: "StatusFilterScreen",
     FieldMarketer: "FieldMarketer",
     ShowRoom: "ShowRoom",
+    Forms: "Forms",
+
     // B2BFieldMarkete: "B2BFieldMarketer",
     // B2CFieldMarkete: "B2CFieldMarketer",
   };
@@ -156,6 +159,14 @@ const initialItems: MenuItem[] = [
     iconColor: "#1C3F64",
     screenName: "ShowRoom",
   },
+  {
+    id: 8,
+    name: "فرم ها",
+    icon: "edit-note",
+    iconColor: "#1C3F64",
+    screenName: "Forms",
+  },
+
 ];
 
 const selectedItems = initialItems;

@@ -38,12 +38,13 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: colors.background,
+  
   },
   addIconContainer: {
    backgroundColor: colors.success,
       width: 40,
       height: 40,
-      marginLeft: 8,
+      marginLeft: 10,
       marginTop:-4,
       justifyContent: "center",
       alignItems: "center",

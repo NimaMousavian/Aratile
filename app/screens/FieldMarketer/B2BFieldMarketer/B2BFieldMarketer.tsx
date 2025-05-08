@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.success,
     width: 40,
     height: 40,
-    marginLeft: 10,
+    marginLeft: 6,
     marginTop: -4,
     justifyContent: "center",
     alignItems: "center",
@@ -248,6 +248,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingVertical: 40,
+
   },
   emptyContainer: {
     flex: 1,

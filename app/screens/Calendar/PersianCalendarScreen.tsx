@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -8,16 +8,18 @@ import {
   FlatList,
   Dimensions,
   Image,
+  ScrollView,
+  ActivityIndicator,
+  Animated,
 } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import colors from "../../config/colors";
 import { useNavigation } from "@react-navigation/native";
-import ScreenHeader from "../../components/ScreenHeader";
 import { toPersianDigits } from "../../utils/numberConversions";
 import MonthYearPicker from "./MonthYearPicker";
 import { LinearGradient } from "expo-linear-gradient";
-
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import HolidayService from "./HolidayService";
 
 const { width, height } = Dimensions.get("window");
 
@@ -55,7 +57,6 @@ const persianMonths = [
 
 const weekDays = ["ش", "ی", "د", "س", "چ", "پ", "ج"];
 
-// Define Persian seasons
 const persianSeasons = {
   SPRING: "بهار",
   SUMMER: "تابستان",
@@ -63,7 +64,6 @@ const persianSeasons = {
   WINTER: "زمستان",
 };
 
-// Function to determine season based on month
 const getSeason = (month) => {
   if (month >= 0 && month <= 2) return persianSeasons.SPRING;
   if (month >= 3 && month <= 5) return persianSeasons.SUMMER;
@@ -71,7 +71,6 @@ const getSeason = (month) => {
   return persianSeasons.WINTER;
 };
 
-// Function to get seasonal image path
 const getSeasonalImage = (season) => {
   switch (season) {
     case persianSeasons.SPRING:
@@ -82,8 +81,6 @@ const getSeasonalImage = (season) => {
       return require("../../../assets/seasons/autumn.webp");
     case persianSeasons.WINTER:
       return require("../../../assets/seasons/winter.webp");
-    // default:
-    //   return require("../../../assets/seasons/default.jpg");
   }
 };
 
@@ -236,22 +233,73 @@ const PersianCalendarScreen = () => {
   const [currentMonth, setCurrentMonth] = useState(jalaliToday.month);
   const [selectedDay, setSelectedDay] = useState(jalaliToday.day);
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
+  const [holidays, setHolidays] = useState([]);
+  const [occasions, setOccasions] = useState([]);
+  const [loadingOccasions, setLoadingOccasions] = useState(false);
 
-  // New state to track which month and year the selected day belongs to
   const [selectedDayMonth, setSelectedDayMonth] = useState(jalaliToday.month);
   const [selectedDayYear, setSelectedDayYear] = useState(jalaliToday.year);
 
-  // State for current season
   const [currentSeason, setCurrentSeason] = useState(
     getSeason(jalaliToday.month)
   );
 
-  // Update current season when month changes
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const drawerAnimation = useRef(new Animated.Value(0)).current;
+  const [lastSelectedDay, setLastSelectedDay] = useState(null);
+
   useEffect(() => {
     setCurrentSeason(getSeason(currentMonth));
   }, [currentMonth]);
 
-  // Calculate cell size with better spacing
+  useEffect(() => {
+    loadHolidays(currentYear, currentMonth + 1);
+  }, [currentYear, currentMonth]);
+
+  useEffect(() => {
+    loadOccasions(selectedDayYear, selectedDayMonth + 1, selectedDay);
+  }, []);
+
+  useEffect(() => {
+    Animated.timing(drawerAnimation, {
+      toValue: isDrawerOpen ? 1 : 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [isDrawerOpen]);
+
+  const loadHolidays = async (year, month) => {
+    try {
+      const holidaysData = await HolidayService.getHolidays(year, month);
+      setHolidays(holidaysData);
+    } catch (error) {
+      console.error('خطا در بارگذاری تعطیلات:', error);
+      setHolidays([]);
+    }
+  };
+
+  const loadOccasions = async (year, month, day) => {
+    setLoadingOccasions(true);
+    try {
+      const occasionsData = await HolidayService.getOccasions(year, month, day);
+      setOccasions(occasionsData);
+    } catch (error) {
+      console.error('خطا در بارگذاری مناسبت‌ها:', error);
+      setOccasions([]);
+    } finally {
+      setLoadingOccasions(false);
+    }
+  };
+
+  const goToSpecialDate = () => {
+    setCurrentYear(1382);
+    setCurrentMonth(5);
+    setSelectedDay(23);
+    setSelectedDayMonth(5);
+    setSelectedDayYear(1382);
+    loadOccasions(1382, 6, 23);
+  };
+
   const cellSpacing = 4;
   const horizontalPadding = 8;
   const availableWidth = width - horizontalPadding * 2;
@@ -280,36 +328,99 @@ const PersianCalendarScreen = () => {
     return days;
   };
 
-  const goToPreviousMonth = () => {
+  const goToPreviousMonth = async () => {
+    let newMonth, newYear;
+
     if (currentMonth === 0) {
-      setCurrentMonth(11);
-      setCurrentYear(currentYear - 1);
+      newMonth = 11;
+      newYear = currentYear - 1;
     } else {
-      setCurrentMonth(currentMonth - 1);
+      newMonth = currentMonth - 1;
+      newYear = currentYear;
+    }
+
+    try {
+      const holidaysData = await HolidayService.getHolidays(newYear, newMonth + 1);
+      setHolidays(holidaysData);
+      setCurrentMonth(newMonth);
+      setCurrentYear(newYear);
+    } catch (error) {
+      console.error('خطا در بارگذاری تعطیلات:', error);
+      setHolidays([]);
+      setCurrentMonth(newMonth);
+      setCurrentYear(newYear);
     }
   };
 
-  const goToNextMonth = () => {
+  const goToNextMonth = async () => {
+    let newMonth, newYear;
+
     if (currentMonth === 11) {
-      setCurrentMonth(0);
-      setCurrentYear(currentYear + 1);
+      newMonth = 0;
+      newYear = currentYear + 1;
     } else {
-      setCurrentMonth(currentMonth + 1);
+      newMonth = currentMonth + 1;
+      newYear = currentYear;
+    }
+
+    try {
+      const holidaysData = await HolidayService.getHolidays(newYear, newMonth + 1);
+      setHolidays(holidaysData);
+      setCurrentMonth(newMonth);
+      setCurrentYear(newYear);
+    } catch (error) {
+      console.error('خطا در بارگذاری تعطیلات:', error);
+      setHolidays([]);
+      setCurrentMonth(newMonth);
+      setCurrentYear(newYear);
+    }
+  };
+
+  const handleMonthYearConfirm = async (date) => {
+    const newYear = date[0];
+    const newMonth = date[1] - 1;
+
+    try {
+      const holidaysData = await HolidayService.getHolidays(newYear, newMonth + 1);
+      setHolidays(holidaysData);
+      setCurrentYear(newYear);
+      setCurrentMonth(newMonth);
+    } catch (error) {
+      console.error('خطا در بارگذاری تعطیلات:', error);
+      setHolidays([]);
+      setCurrentYear(newYear);
+      setCurrentMonth(newMonth);
     }
   };
 
   const selectDay = (day) => {
     if (day !== null) {
-      setSelectedDay(day);
-      // When a day is selected, update the month and year it belongs to
-      setSelectedDayMonth(currentMonth);
-      setSelectedDayYear(currentYear);
+      const isSameDaySelected =
+        day === selectedDay &&
+        currentMonth === selectedDayMonth &&
+        currentYear === selectedDayYear;
+
+      if (isSameDaySelected) {
+        setIsDrawerOpen(!isDrawerOpen);
+      } else {
+        setIsDrawerOpen(false);
+        setSelectedDay(day);
+        setSelectedDayMonth(currentMonth);
+        setSelectedDayYear(currentYear);
+
+        loadOccasions(currentYear, currentMonth + 1, day);
+      }
+
+      setLastSelectedDay({
+        day,
+        month: currentMonth,
+        year: currentYear
+      });
     }
   };
 
-  const handleMonthYearConfirm = (date) => {
-    setCurrentYear(date[0]);
-    setCurrentMonth(date[1] - 1);
+  const closeDrawer = () => {
+    setIsDrawerOpen(false);
   };
 
   const renderDay = ({ item, index }) => {
@@ -317,7 +428,6 @@ const PersianCalendarScreen = () => {
       return <View style={[styles.dayCellSquare, styles.emptyDay]} />;
     }
 
-    // Only highlight the selected day if it belongs to the current month being viewed
     const isSelected =
       selectedDay === item &&
       selectedDayMonth === currentMonth &&
@@ -334,6 +444,13 @@ const PersianCalendarScreen = () => {
       currentMonth === jalaliToday.month &&
       item === jalaliToday.day;
 
+    const isHoliday = holidays.includes(item);
+
+    const isSpecialDate =
+      currentYear === 1382 &&
+      currentMonth === 5 &&
+      item === 23;
+
     return (
       <View style={styles.dayCellSquare}>
         <TouchableOpacity
@@ -341,37 +458,124 @@ const PersianCalendarScreen = () => {
             styles.dayItemContainer,
             isSelected && styles.selectedDay,
             isToday && !isSelected && styles.todayDay,
+            (isHoliday || isFriday) && !isSelected && styles.holidayDay,
+            isSpecialDate && !isSelected && styles.specialDay,
           ]}
           onPress={() => selectDay(item)}
         >
-          <Text
-            style={[
-              styles.dayText,
-              isFriday && !isSelected && styles.fridayText,
-              isSelected && styles.selectedDayText,
-              isToday && !isSelected && styles.todayText,
-            ]}
-          >
-            {toPersianDigits(item)}
-          </Text>
+          {isSpecialDate ? (
+            <MaterialIcons name="favorite" size={18} color="pink" />
+          ) : (
+            <Text
+              style={[
+                styles.dayText,
+                (isFriday || isHoliday) && !isSelected && styles.holidayText,
+                isSelected && styles.selectedDayText,
+                isToday && !isSelected && styles.todayText,
+              ]}
+            >
+              {toPersianDigits(item)}
+            </Text>
+          )}
         </TouchableOpacity>
       </View>
     );
   };
 
+  const renderOccasions = () => {
+    if (loadingOccasions) {
+      return (
+        <View style={styles.occasionsContainer}>
+          <Text style={styles.occasionsTitle}>مناسبت‌های روز</Text>
+          <ActivityIndicator size="small" color={colors.primary} />
+          <Text style={styles.loadingText}>در حال بارگذاری مناسبت‌ها...</Text>
+        </View>
+      );
+    }
+
+    if (!occasions || occasions.length === 0) {
+      return (
+        <View style={styles.occasionsContainer}>
+          <Text style={styles.occasionsTitle}>مناسبت‌های روز</Text>
+          <Text style={styles.noOccasionText}>هیچ مناسبتی برای این روز ثبت نشده است.</Text>
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.occasionsContainer}>
+        <Text style={styles.occasionsTitle}>مناسبت‌های روز</Text>
+        {occasions.map((occasion, index) => (
+          <Text
+            key={index}
+            style={[
+              styles.occasionText,
+              occasion.IsHoliday && styles.holidayOccasionText
+            ]}
+          >
+            {occasion.Name} {occasion.IsHoliday ? '(تعطیل)' : ''}
+          </Text>
+        ))}
+      </View>
+    );
+  };
+
+  const renderDrawer = () => {
+    const translateY = drawerAnimation.interpolate({
+      inputRange: [0, 1],
+      outputRange: [300, 0], 
+    });
+
+    return (
+      <Animated.View
+        style={[
+          styles.drawer,
+          { transform: [{ translateY }] }
+        ]}
+      >
+        <View style={styles.drawerHeader}>
+          <Text style={styles.drawerTitle}>
+            {`${toPersianDigits(selectedDay)} ${persianMonths[selectedDayMonth]} ${toPersianDigits(selectedDayYear)}`}
+          </Text>
+          <TouchableOpacity onPress={closeDrawer}>
+            <MaterialIcons name="close" size={24} color="#666" />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.drawerContent}>
+          <View style={styles.drawerSection}>
+            <Text style={styles.drawerSectionTitle}>یادداشت‌ها</Text>
+            <Text style={styles.drawerEmptyText}>هیچ یادداشتی برای این روز ثبت نشده است.</Text>
+            <TouchableOpacity style={styles.addButton}>
+              <MaterialIcons name="add" size={18} color="#fff" />
+              <Text style={styles.addButtonText}>افزودن یادداشت</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.drawerSection}>
+            <Text style={styles.drawerSectionTitle}>رویدادها</Text>
+            <Text style={styles.drawerEmptyText}>هیچ رویدادی برای این روز ثبت نشده است.</Text>
+            <TouchableOpacity style={styles.addButton}>
+              <MaterialIcons name="add" size={18} color="#fff" />
+              <Text style={styles.addButtonText}>افزودن رویداد</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Animated.View>
+    );
+  };
+
   return (
     <View style={styles.mainContainer}>
-      {/* <ScreenHeader title="تقویم" /> */}
-      <View style={styles.container}>
+      <ScrollView style={styles.container}>
         <View style={styles.seasonalImageContainer}>
           <Image
             source={getSeasonalImage(currentSeason)}
             style={styles.seasonalImage}
           />
 
-          {/* Glass Effect with Gradient Overlay */}
           <LinearGradient
-            colors={["rgba(0,0,0,0.05)", "rgba(0,0,0,0.5)"]}
+            colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.5)"]}
             style={styles.glassOverlay}
           >
             <View style={styles.monthHeader}>
@@ -416,7 +620,11 @@ const PersianCalendarScreen = () => {
           columnWrapperStyle={styles.calendarRow}
           contentContainerStyle={styles.calendarContainer}
         />
-      </View>
+
+        {selectedDay && renderOccasions()}
+
+        <View style={{ height: 20 }} />
+      </ScrollView>
 
       <MonthYearPicker
         isVisible={isDatePickerVisible}
@@ -424,6 +632,16 @@ const PersianCalendarScreen = () => {
         onConfirm={handleMonthYearConfirm}
         initialDate={[currentYear, currentMonth + 1]}
       />
+
+      {isDrawerOpen && renderDrawer()}
+
+      {isDrawerOpen && (
+        <TouchableOpacity
+          style={styles.backdrop}
+          activeOpacity={1}
+          onPress={closeDrawer}
+        />
+      )}
     </View>
   );
 };
@@ -437,20 +655,17 @@ const styles = StyleSheet.create({
     flex: 1,
     direction: "rtl",
   },
-
   seasonalImageContainer: {
     width: "100%",
     height: calculateImageHeight(),
     position: "relative",
     marginBottom: 15,
-
     overflow: "hidden",
   },
   seasonalImage: {
     width: "100%",
     height: "100%",
   },
-
   glassOverlay: {
     position: "absolute",
     top: 0,
@@ -467,7 +682,6 @@ const styles = StyleSheet.create({
       },
     }),
   },
-
   seasonOverlay: {
     position: "absolute",
     bottom: 0,
@@ -487,7 +701,6 @@ const styles = StyleSheet.create({
     marginRight: 1,
     marginLeft: 1,
   },
-  // Month header styling (now in the glass overlay)
   monthHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -574,6 +787,151 @@ const styles = StyleSheet.create({
   },
   todayText: {
     color: colors.secondary,
+  },
+  holidayDay: {
+    backgroundColor: "rgba(255, 0, 0, 0.1)",
+  },
+  holidayText: {
+    color: "#FF0000",
+  },
+  specialDay: {
+    // backgroundColor: "rgba(255, 200, 200, 0.3)",
+  },
+  specialDateButton: {
+    flexDirection: 'row',
+    backgroundColor: colors.primary,
+    borderRadius: 10,
+    padding: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: 15,
+    alignSelf: 'center',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  specialDateButtonText: {
+    color: '#FFFFFF',
+    marginRight: 8,
+    fontFamily: getFontFamily("Yekan_Bakh_Bold", "bold"),
+    fontSize: 14,
+  },
+  occasionsContainer: {
+    marginTop: 15,
+    padding: 15,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    marginHorizontal: 10,
+  },
+  occasionsTitle: {
+    fontSize: 17,
+    fontFamily: getFontFamily("Yekan_Bakh_Bold", "bold"),
+    color: '#333333',
+    marginBottom: 8,
+    textAlign: 'left',
+  },
+  occasionText: {
+    fontSize: 14,
+    fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
+    color: '#555555',
+    marginVertical: 3,
+    textAlign: 'left',
+  },
+  holidayOccasionText: {
+    color: '#FF0000',
+    fontFamily: getFontFamily("Yekan_Bakh_Bold", "bold"),
+  },
+  noOccasionText: {
+    fontSize: 14,
+    fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
+    color: '#888888',
+    textAlign: 'left',
+  },
+  loadingText: {
+    fontSize: 14,
+    fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
+    color: '#888888',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  backdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    zIndex: 10,
+  },
+  drawer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 30,
+    zIndex: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 10,
+    maxHeight: height * 0.7,
+  },
+  drawerHeader: {
+    flexDirection: 'row-reverse',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEEEEE',
+  },
+  drawerTitle: {
+    fontSize: 18,
+    fontFamily: getFontFamily("Yekan_Bakh_Bold", "bold"),
+    color: '#333333',
+    textAlign: 'center',
+  },
+  drawerContent: {
+    paddingTop: 16,
+  },
+  drawerSection: {
+    marginBottom: 24,
+  },
+  drawerSectionTitle: {
+    fontSize: 16,
+    fontFamily: getFontFamily("Yekan_Bakh_Bold", "bold"),
+    color: '#333333',
+    marginBottom: 12,
+    textAlign: 'right',
+  },
+  drawerEmptyText: {
+    fontSize: 14,
+    fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
+    color: '#888888',
+    marginBottom: 16,
+    textAlign: 'right',
+  },
+  addButton: {
+    flexDirection: 'row-reverse',
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'flex-end',
+  },
+  addButtonText: {
+    color: '#FFFFFF',
+    marginRight: 8,
+    fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
+    fontSize: 14,
   },
 });
 

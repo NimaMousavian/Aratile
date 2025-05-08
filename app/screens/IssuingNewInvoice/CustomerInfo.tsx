@@ -455,7 +455,7 @@ const CustomerInfo: React.FC = () => {
       if (person.ProvinceName) {
         fetchCitiesByProvince(person.ProvinceName);
       }
-    } catch (error) {}
+    } catch (error) { }
   };
 
   useEffect(() => {
