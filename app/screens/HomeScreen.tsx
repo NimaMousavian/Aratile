@@ -18,7 +18,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getLoginResponse } from "./LogingScreen";
 import { ILoginResponse } from "../config/types";
 import { PanGestureHandler, State } from "react-native-gesture-handler";
-import { Form } from "formik";
+import * as FileSystem from "expo-file-system";
 
 export interface MenuItem {
   id: number;
@@ -188,6 +188,9 @@ const HomeScreen: React.FC = () => {
   const [showSaveButton, setShowSaveButton] = useState(false);
   const [layoutModified, setLayoutModified] = useState(false);
   const [userData, setUserData] = useState<ILoginResponse>();
+  const [avatarUri, setAvatarUri] = useState<string | undefined>(
+    userData?.AvatarImageFileName
+  );
 
   const SPRING_CONFIG = {
     tension: 50,
@@ -228,6 +231,10 @@ const HomeScreen: React.FC = () => {
   const isSwapping = useRef(false);
   const swapDebounceTimer = useRef<NodeJS.Timeout | null>(null);
   const panState = useRef(State.UNDETERMINED);
+  const avatarCacheKey = "@AvatarImage";
+  const avatarLocalPath = FileSystem.documentDirectory
+    ? `${FileSystem.documentDirectory}avatar.jpg`
+    : null;
 
   const fetchUserData = async () => {
     const storedData = await getLoginResponse();
@@ -237,6 +244,58 @@ const HomeScreen: React.FC = () => {
       console.log("No data found");
     }
   };
+
+  // Load or download avatar image
+  useEffect(() => {
+    const loadAvatar = async () => {
+      try {
+        // If userData or AvatarImageURL is not available, fall back to default
+        if (!userData?.AvatarImageURL) {
+          setAvatarUri(undefined);
+          return;
+        }
+
+        if (!avatarLocalPath || !FileSystem.getInfoAsync) {
+          console.warn(
+            "FileSystem is not available, falling back to default icon"
+          );
+          setAvatarUri(undefined);
+          return;
+        }
+
+        // Check if image exists in AsyncStorage
+        const cachedUri = await AsyncStorage.getItem(avatarCacheKey);
+        if (cachedUri) {
+          const fileInfo = await FileSystem.getInfoAsync(avatarLocalPath).catch(
+            () => ({ exists: false })
+          );
+          if (fileInfo.exists) {
+            setAvatarUri(cachedUri);
+            return;
+          }
+        }
+
+        // If not cached, download and cache the image
+        const downloadResult = await FileSystem.downloadAsync(
+          userData.AvatarImageURL,
+          avatarLocalPath
+        );
+
+        if (downloadResult.status === 200) {
+          const uri = `${avatarLocalPath}`;
+          await AsyncStorage.setItem(avatarCacheKey, uri);
+          setAvatarUri(uri);
+        } else {
+          setAvatarUri(undefined);
+        }
+      } catch (error) {
+        console.error("Error loading avatar:", error);
+        setAvatarUri(undefined);
+      }
+    };
+
+    loadAvatar();
+  }, [userData?.AvatarImageURL]);
 
   useEffect(() => {
     isDraggingRef.current = isDragging;
@@ -291,7 +350,7 @@ const HomeScreen: React.FC = () => {
       }
     }
 
-    return () => { };
+    return () => {};
   }, [isDragging]);
 
   useEffect(() => {
@@ -631,7 +690,7 @@ const HomeScreen: React.FC = () => {
 
       const distance = Math.sqrt(
         Math.pow(position.x - currentPosition.x, 2) +
-        Math.pow(position.y - currentPosition.y, 2)
+          Math.pow(position.y - currentPosition.y, 2)
       );
 
       if (distance < minDistance) {
@@ -1021,11 +1080,14 @@ const HomeScreen: React.FC = () => {
           onPress={() => safeNavigate(navigation, "Profile")}
         >
           <View style={styles.avatarCircle}>
-            <MaterialIcons name="person" size={26} color="#666666" />
+            {avatarUri ? (
+              <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
+            ) : (
+              <MaterialIcons name="person" size={26} color="#666666" />
+            )}
           </View>
           <Text style={styles.userName}>{userData?.DisplayName}</Text>
         </TouchableOpacity>
-
 
         <TouchableOpacity
           style={styles.calendarIconContainer}
@@ -1033,7 +1095,11 @@ const HomeScreen: React.FC = () => {
             safeNavigate(navigation, "PersianCalendar");
           }}
         >
-          <MaterialIcons name="calendar-month" size={30} color={colors.primary} />
+          <MaterialIcons
+            name="calendar-month"
+            size={30}
+            color={colors.primary}
+          />
         </TouchableOpacity>
       </View>
 
@@ -1136,13 +1202,9 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   calendarIconContainer: {
-
-
-
     justifyContent: "center",
     alignItems: "center",
-marginLeft: -6,
-
+    marginLeft: -6,
   },
   list: {
     paddingHorizontal: 10,
@@ -1283,6 +1345,14 @@ marginLeft: -6,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 3,
+  },
+  avatarImage: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "contain",
+    borderRadius: 100,
+    borderWidth: 1,
+    borderColor: "#ccc",
   },
 });
 

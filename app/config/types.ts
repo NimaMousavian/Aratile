@@ -1,3 +1,5 @@
+import { MaterialIcons } from "@expo/vector-icons";
+
 export interface IProduct {
   id: number;
   title: string;
@@ -102,11 +104,13 @@ export interface ILoginResponse {
   DisplayName: string;
   UserName: string;
   UserMobile: string;
+  Token: string;
   CityId: number;
   CityName: string;
   ProvinceId: number;
   ProvinceName: string;
-  Token: string;
+  AvatarImageFileName: string;
+  AvatarImageURL: string;
   CompanyBranchId: number;
   CompanyBranchName: string;
   USerRoleList: {
@@ -330,4 +334,19 @@ export interface IPersonCustomField {
   PersonCustomFieldGroupId: number;
   PersonCustomFieldGroupName: string;
   Form_ShowOrder: number;
+}
+
+export interface IForm {
+  FormId: number;
+  FormName: string;
+  FormGroupId: number;
+  FormGroupName: string;
+  FormGroupShowOrder: number;
+  FormGroupIconName: React.ComponentProps<typeof MaterialIcons>["name"];
+  ShowOrderInGroup: number;
+  PublicOrPrivate: boolean;
+  PublicOrPrivateStr: string;
+  IconName: React.ComponentProps<typeof MaterialIcons>["name"];
+  Active: boolean;
+  ActiveStr: string;
 }
