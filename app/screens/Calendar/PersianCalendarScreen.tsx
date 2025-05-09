@@ -248,6 +248,27 @@ const PersianCalendarScreen = () => {
   const drawerAnimation = useRef(new Animated.Value(0)).current;
   const [lastSelectedDay, setLastSelectedDay] = useState(null);
 
+  const blinkAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const startBlinking = () => {
+      Animated.sequence([
+        Animated.timing(blinkAnim, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(blinkAnim, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+      ]).start(() => startBlinking());
+    };
+
+    startBlinking();
+  }, []);
+
   useEffect(() => {
     setCurrentSeason(getSeason(currentMonth));
   }, [currentMonth]);
@@ -439,17 +460,39 @@ const PersianCalendarScreen = () => {
 
     const isFriday = dayOfWeek === 6;
 
+    const hasNotification =
+      currentYear === 1404 &&
+      currentMonth === 1 &&
+      item === 18;
+
+    const isBlinkingDate =
+      currentYear === 1382 &&
+      currentMonth === 2 &&
+      item === 17;
+
+    const isSpecialDate_m =
+      currentYear === 1382 &&
+      currentMonth === 5 &&
+      item === 23;
+
+    const isSpecialDate_r =
+      currentYear === 1375 &&
+      currentMonth === 5 &&
+      item === 11;
+
+    const isSpecialDate_n =
+      currentYear === 1381 &&
+      currentMonth === 10 &&
+      item === 2;
+
+    const isHoliday = holidays.includes(item);
+
     const isToday =
       currentYear === jalaliToday.year &&
       currentMonth === jalaliToday.month &&
       item === jalaliToday.day;
 
-    const isHoliday = holidays.includes(item);
-
-    const isSpecialDate =
-      currentYear === 1382 &&
-      currentMonth === 5 &&
-      item === 23;
+    const dotOpacity = blinkAnim;
 
     return (
       <View style={styles.dayCellSquare}>
@@ -459,12 +502,30 @@ const PersianCalendarScreen = () => {
             isSelected && styles.selectedDay,
             isToday && !isSelected && styles.todayDay,
             (isHoliday || isFriday) && !isSelected && styles.holidayDay,
-            isSpecialDate && !isSelected && styles.specialDay,
+            (isSpecialDate_m || isSpecialDate_r) && !isSelected && styles.specialDay,
+            isBlinkingDate && styles.blinkingDay,
           ]}
           onPress={() => selectDay(item)}
         >
-          {isSpecialDate ? (
-            <MaterialIcons name="favorite" size={18} color="pink" />
+          {hasNotification && (
+            <Animated.View
+              style={[
+                styles.notificationDot,
+                { opacity: dotOpacity }
+              ]}
+            />
+          )}
+
+          {isBlinkingDate ? (
+            <MaterialIcons name="favorite" size={18} color="yellow" />
+          ) : isSpecialDate_n ? (
+            <MaterialIcons name="favorite" size={18} color="yellow" />
+          ) : (isSpecialDate_m || isSpecialDate_r) ? (
+            isSpecialDate_m ? (
+              <MaterialIcons name="favorite" size={18} color="pink" />
+            ) : (
+              <MaterialIcons name="favorite" size={18} color="red" />
+            )
           ) : (
             <Text
               style={[
@@ -481,7 +542,6 @@ const PersianCalendarScreen = () => {
       </View>
     );
   };
-
   const renderOccasions = () => {
     if (loadingOccasions) {
       return (
@@ -497,7 +557,7 @@ const PersianCalendarScreen = () => {
       return (
         <View style={styles.occasionsContainer}>
           <Text style={styles.occasionsTitle}>مناسبت‌های روز</Text>
-          <Text style={styles.noOccasionText}>هیچ مناسبتی برای این روز ثبت نشده است.</Text>
+          <Text style={styles.noOccasionText}>-</Text>
         </View>
       );
     }
@@ -523,7 +583,7 @@ const PersianCalendarScreen = () => {
   const renderDrawer = () => {
     const translateY = drawerAnimation.interpolate({
       inputRange: [0, 1],
-      outputRange: [300, 0], 
+      outputRange: [300, 0],
     });
 
     return (
@@ -563,6 +623,10 @@ const PersianCalendarScreen = () => {
         </View>
       </Animated.View>
     );
+  };
+
+  const isSelectedDayInCurrentMonth = () => {
+    return selectedDayMonth === currentMonth && selectedDayYear === currentYear;
   };
 
   return (
@@ -621,7 +685,7 @@ const PersianCalendarScreen = () => {
           contentContainerStyle={styles.calendarContainer}
         />
 
-        {selectedDay && renderOccasions()}
+        {selectedDay && isSelectedDayInCurrentMonth() && renderOccasions()}
 
         <View style={{ height: 20 }} />
       </ScrollView>
@@ -754,6 +818,16 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
+    position: "relative", 
+  },
+  notificationDot: {
+    position: "absolute",
+    top: 5,
+    right: 5,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#FF0000",
   },
   emptyDay: {
     elevation: 0,
@@ -772,6 +846,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 2 },
+  },
+  blinkingDay: {
+    backgroundColor: "black",
   },
   selectedDayText: {
     color: "#FFFFFF",
@@ -819,7 +896,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   occasionsContainer: {
-    marginTop: 15,
+    marginTop: 20,
     padding: 15,
     backgroundColor: '#FFFFFF',
     borderRadius: 8,
@@ -847,7 +924,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
     color: '#888888',
-    textAlign: 'left',
+    textAlign: 'center',
   },
   loadingText: {
     fontSize: 14,
