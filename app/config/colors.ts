@@ -1,6 +1,7 @@
 export type ColorKeys =
   | "primary"
   | "secondary"
+  | "secondaryDark"
   | "white"
   | "gray"
   | "medium"
@@ -17,6 +18,7 @@ export default {
   primaryLight: "#375885",
   primaryDark: "#61046f",
   secondary: "#bf4b7d",
+  secondaryDark: "#9c3863",
   black: "#000",
   white: "#fff",
   medium: "#6e6969",

@@ -11,7 +11,7 @@ import { useNavigation } from "@react-navigation/native";
 import AppSelectionScreen from "./screens/AppSelectionScreen";
 import styles from "./config/styles";
 import colors from "./config/colors";
-import { IProduct, IShowRoomVisitItem } from "./config/types";
+import { IForm, IProduct, IShowRoomVisitItem } from "./config/types";
 import AppText from "./components/Text";
 import LogingScreen from "./screens/LogingScreen";
 import ProfileScreen from "./screens/ProfileScreen";
@@ -40,10 +40,9 @@ import ShowRoom from "./screens/ShowRoom";
 import Visits from "./screens/Visits";
 import LabelRequest from "./screens/LabelRequest";
 import VisitDetail from "./screens/VisitDetail";
-import PersianCalendarScreen from './screens/Calendar/PersianCalendarScreen';
-import Forms from "./screens/Forms";
-
-
+import PersianCalendarScreen from "./screens/Calendar/PersianCalendarScreen";
+import Forms from "./screens/Forms/Forms";
+import FormItem from "./screens/Forms/FormItem";
 
 export type RootStackParamList = {
   AppSelection: undefined;
@@ -51,8 +50,6 @@ export type RootStackParamList = {
   Profile: undefined;
   ChangePassword: undefined;
   PersianCalendar: undefined;
-
-
 
   Home: undefined;
 
@@ -75,6 +72,7 @@ export type RootStackParamList = {
   SupplyRequestList: undefined;
   IssuedInvoices: undefined;
   Forms: undefined;
+  FormItem: { formItem: IForm };
 
   CashierHome: undefined;
   ReceiveNewInvoice: { invoicId: number };
@@ -251,9 +249,7 @@ const AppStack = () => {
       <Stack.Screen name="LabelRequest" component={LabelRequest} />
       <Stack.Screen name="VisitDetail" component={VisitDetail} />
       <Stack.Screen name="Forms" component={Forms} />
- 
-
-
+      <Stack.Screen name="FormItem" component={FormItem} />
     </Stack.Navigator>
   );
 };

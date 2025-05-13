@@ -47,6 +47,7 @@ interface IInputContainerProps {
   headerIcon?: string;
   showFilterIcon?: boolean; 
   onFilterIconPress?: () => void; 
+  isGradient?: boolean;
 }
 
 export const InputContainer: React.FC<IInputContainerProps> = ({
@@ -57,6 +58,7 @@ export const InputContainer: React.FC<IInputContainerProps> = ({
   showClearIcon = false,
   onClearIconPress,
   headerIcon,
+  isGradient = true,
   showFilterIcon = false,
   onFilterIconPress,
 }) => {
@@ -64,7 +66,11 @@ export const InputContainer: React.FC<IInputContainerProps> = ({
     <View style={styles.inputContainer}>
       <View style={styles.titleContainer}>
         <LinearGradient
-          colors={[colors.secondary, colors.primary]}
+          colors={
+            isGradient
+              ? [colors.secondary, colors.primary]
+              : [colors.secondaryDark, colors.secondaryDark]
+          }
           style={styles.inputHeader}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
