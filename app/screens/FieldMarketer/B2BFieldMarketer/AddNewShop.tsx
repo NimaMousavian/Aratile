@@ -39,12 +39,14 @@ import DynamicSelectionBottomSheet from "../../../components/DynamicSelectionBot
 
 interface IInputContainerProps {
   title: string;
-  children: React.ReactNode[];
+  children: React.ReactNode;
   showAddIcon?: boolean;
   onAddIconPress?: () => void;
   showClearIcon?: boolean;
   onClearIconPress?: () => void;
-  headerIcon?: React.ComponentProps<typeof MaterialIcons>["name"];
+  headerIcon?: string;
+  showFilterIcon?: boolean; 
+  onFilterIconPress?: () => void; 
 }
 
 export const InputContainer: React.FC<IInputContainerProps> = ({
@@ -55,6 +57,8 @@ export const InputContainer: React.FC<IInputContainerProps> = ({
   showClearIcon = false,
   onClearIconPress,
   headerIcon,
+  showFilterIcon = false,
+  onFilterIconPress,
 }) => {
   return (
     <View style={styles.inputContainer}>
@@ -80,15 +84,22 @@ export const InputContainer: React.FC<IInputContainerProps> = ({
           <View
             style={{
               flexDirection: "row",
-              justifyContent: "space-between",
+              justifyContent: "center", 
               alignItems: "center",
-              marginLeft: -10,
+              flex: 1,
             }}
           >
             <AppText style={styles.title}>{title}</AppText>
-            {headerIcon && (
-              <MaterialIcons name={headerIcon} size={22} color={colors.white} />
-            )}
+            <View style={styles.rightIconsContainer}>
+              {showFilterIcon && (
+                <TouchableOpacity onPress={onFilterIconPress}>
+                  <MaterialIcons name="filter-list" size={22} color={colors.white} />
+                </TouchableOpacity>
+              )}
+              {headerIcon && (
+                <MaterialIcons name={headerIcon} size={22} color={colors.white} />
+              )}
+            </View>
           </View>
         </LinearGradient>
       </View>
@@ -101,7 +112,6 @@ export const InputContainer: React.FC<IInputContainerProps> = ({
   );
 };
 
-// Define the route params type
 type AddNewShopRouteParams = {
   recordings?: { uri: string; duration: number }[];
 };
@@ -1001,7 +1011,7 @@ const AddNewShop = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: colors.background },
+ container: { flex: 1, padding: 20, backgroundColor: colors.background },
   inputContainer: {
     borderWidth: 1,
     borderRadius: 12,
@@ -1027,9 +1037,14 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: "Yekan_Bakh_Bold",
     fontSize: 20,
-    textAlign: "center",
     color: colors.white,
-    flex: 1, // Allow the title to take the available space
+    marginRight: 4,
+  },
+  titleWithIconsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    flex: 1,
   },
   inputHeader: {
     flexDirection: "row",
@@ -1038,7 +1053,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderTopRightRadius: 12,
     borderTopLeftRadius: 12,
-    position: "relative", // Add position relative to allow absolute positioning
+    position: "relative", 
+  },
+  rightIconsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  
+  },
+  filterIconContainer: {
+    marginRight: 8,
   },
   voiceButton: {
     height: 60,
@@ -1102,7 +1125,6 @@ const styles = StyleSheet.create({
     left: 12, // Place on the left side with some padding
     zIndex: 1, // Ensure it's above other elements
   },
-
   errorText: {
     color: colors.danger,
     fontSize: 12,
@@ -1115,5 +1137,4 @@ const styles = StyleSheet.create({
     paddingVertical: 40,
   },
 });
-
 export default AddNewShop;

@@ -14,10 +14,7 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true,
-      "infoPlist": {
-        "NSContactsUsageDescription": "این برنامه برای نمایش نام مخاطبین در لیست تماس‌ها به مخاطبین شما نیاز دارد."
-      }
+      "supportsTablet": true
     },
     "android": {
       "package": "com.aratile",
@@ -27,11 +24,6 @@
         "backgroundColor": "#ffffff"
       },
       "permissions": [
-
-        "android.permission.READ_CONTACTS",
-        "android.permission.READ_CALL_LOG",
-        "android.permission.READ_PHONE_STATE",
-        "android.permission.READ_PHONE_NUMBERS",
         "android.permission.CAMERA",
         "android.permission.INTERNET",
         "android.permission.ACCESS_NETWORK_STATE"
@@ -46,18 +38,10 @@
         "expo-build-properties",
         {
           "android": {
-            "usesCleartextTraffic": true,
-            "permissions": [
-   
-              "android.permission.READ_CONTACTS",
-              "android.permission.READ_CALL_LOG",
-              "android.permission.READ_PHONE_STATE",
-              "android.permission.READ_PHONE_NUMBERS"
-            ]
+            "usesCleartextTraffic": true
           }
         }
       ]
-
     ],
     "extra": {
       "eas": {
