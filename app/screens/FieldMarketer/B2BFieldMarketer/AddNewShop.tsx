@@ -45,6 +45,7 @@ interface IInputContainerProps {
   showClearIcon?: boolean;
   onClearIconPress?: () => void;
   headerIcon?: React.ComponentProps<typeof MaterialIcons>["name"];
+  isGradient?: boolean;
 }
 
 export const InputContainer: React.FC<IInputContainerProps> = ({
@@ -55,12 +56,17 @@ export const InputContainer: React.FC<IInputContainerProps> = ({
   showClearIcon = false,
   onClearIconPress,
   headerIcon,
+  isGradient = true,
 }) => {
   return (
     <View style={styles.inputContainer}>
       <View style={styles.titleContainer}>
         <LinearGradient
-          colors={[colors.secondary, colors.primary]}
+          colors={
+            isGradient
+              ? [colors.secondary, colors.primary]
+              : [colors.secondaryDark, colors.secondaryDark]
+          }
           style={styles.inputHeader}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}

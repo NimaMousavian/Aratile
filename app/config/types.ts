@@ -350,3 +350,45 @@ export interface IForm {
   Active: boolean;
   ActiveStr: string;
 }
+
+export interface IFormItem extends IForm {
+  FormStepList: IFormStep[];
+}
+
+export interface IFormStep {
+  FormStepId: number;
+  FormId: number;
+  Title: string;
+  ShowOrder: number;
+  Active: boolean;
+  IconName: React.ComponentProps<typeof MaterialIcons>["name"];
+  StepSectionList: IFormStepSection[];
+}
+
+export interface IFormStepSection {
+  FormStepSectionId: number;
+  FormStepId: number;
+  Title: string;
+  ShowOrder: number;
+  Active: boolean;
+  FormFieldList: IFormField[];
+  SectionMessageList: [];
+}
+
+export interface IFormField {
+  FormFieldId: number;
+  FormStepSectionId: number;
+  FieldName: string;
+  FieldType: number;
+  FieldTypeStr: string;
+  IconName: React.ComponentProps<typeof MaterialIcons>["name"];
+  DependsToId: null;
+  DefaultValue: null;
+  MinValue: string;
+  MaxValue: string;
+  Message: string;
+  Setting: null;
+  IsRequired: boolean;
+  ShowOrder: number;
+  Active: boolean;
+}

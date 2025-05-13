@@ -3,18 +3,18 @@ import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useNavigation } from "@react-navigation/native";
-import StackNavigator from "../StackNavigator";
-import ScreenHeader from "../components/ScreenHeader";
-import colors from "../config/colors";
-import { AppNavigationProp } from "../StackNavigator";
-import { IForm } from "../config/types";
+import StackNavigator from "../../StackNavigator";
+import ScreenHeader from "../../components/ScreenHeader";
+import colors from "../../config/colors";
+import { AppNavigationProp } from "../../StackNavigator";
+import { IForm } from "../../config/types";
 import axios from "axios";
-import appConfig from "../../config";
+import appConfig from "../../../config";
 import {
   groupBy,
   InputContainer,
-} from "./FieldMarketer/B2BFieldMarketer/AddNewShop";
-import AppText from "../components/Text";
+} from "../FieldMarketer/B2BFieldMarketer/AddNewShop";
+import AppText from "../../components/Text";
 
 const Forms = () => {
   const navigation = useNavigation<AppNavigationProp>();
@@ -59,7 +59,9 @@ const Forms = () => {
 
   const renderItem = (formItem: IForm): React.ReactElement => {
     return (
-      <TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => navigation.navigate("FormItem", { formItem: formItem })}
+      >
         <View key={formItem.FormId} style={styles.formItemContainer}>
           <MaterialIcons
             name={formItem.IconName || "article"}
@@ -85,6 +87,7 @@ const Forms = () => {
                   ? fields[0].FormGroupName
                   : "سایر فرم ها"
               }
+              isGradient={false}
             >
               {fields.map((field) => renderItem(field))}
             </InputContainer>
