@@ -1,6 +1,12 @@
-import { RouteProp, useRoute } from "@react-navigation/native";
+import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Easing, StyleSheet, View } from "react-native";
+import {
+  ActivityIndicator,
+  Animated,
+  Easing,
+  StyleSheet,
+  View,
+} from "react-native";
 import { IForm, IFormField, IFormItem, IFormStep } from "../../config/types";
 import { Formik, FormikProps } from "formik";
 import * as Yup from "yup";
@@ -8,7 +14,7 @@ import AppText from "../../components/Text";
 import { ScrollView } from "react-native-gesture-handler";
 import AppTextInput from "../../components/TextInput";
 import AppButton from "../../components/Button";
-import { MaterialIcons } from "@expo/vector-icons";
+import { MaterialIcons, Feather } from "@expo/vector-icons";
 import colors from "../../config/colors";
 import ScreenHeader from "../../components/ScreenHeader";
 import axios from "axios";
@@ -17,6 +23,8 @@ import { InputContainer } from "../FieldMarketer/B2BFieldMarketer/AddNewShop";
 import IconButton from "../../components/IconButton";
 import DynamicSelectionBottomSheet from "../../components/DynamicSelectionBottomSheet";
 import { DatePickerField } from "../../components/PersianDatePicker";
+import { AppNavigationProp } from "../../StackNavigator";
+import Toast from "../../components/Toast";
 
 // Interfaces for TypeScript
 interface Field {
@@ -101,14 +109,17 @@ const fetchStepsFromAPI = async (): Promise<Step[]> => {
   ];
 };
 
-// Create dynamic Yup validation schema based on fields
+// Fix 1: Update the createValidationSchema function
 const createValidationSchema = (fields: IFormField[]) => {
   const shape: { [key: string]: Yup.StringSchema } = {};
   fields.forEach((field) => {
     let schema = Yup.string();
+
+    // Fix: Make sure required validation is applied first
     if (field.IsRequired) {
       schema = schema.required(`${field.FieldName} الزامی است`);
     }
+
     if (field.MinValue) {
       schema = schema.min(
         Number(field.MinValue),
@@ -124,6 +135,8 @@ const createValidationSchema = (fields: IFormField[]) => {
     if (field.FieldType === 5) {
       schema = schema.email(`ایمیل نامعتبر است`);
     }
+
+    // Use consistent field name format
     shape[`custom-${field.FormFieldId}`] = schema;
   });
   return Yup.object().shape(shape);
@@ -147,7 +160,9 @@ const StepperHeader: React.FC<StepperHeaderProps> = ({
 }) => {
   const currentStepData = steps[currentStep];
   const prevStepIcon = currentStep > 0 ? steps[currentStep - 1].IconName : null;
-  const nextStepIcon = !isLastStep ? steps[currentStep + 1].IconName : null;
+  const nextStepIcon = !isLastStep
+    ? steps[currentStep + 1].IconName || "person"
+    : null;
   //   const prevStepIcon = "person";
   //   const nextStepIcon = "person";
 
@@ -159,7 +174,7 @@ const StepperHeader: React.FC<StepperHeaderProps> = ({
             name={prevStepIcon}
             size={30}
             color={onPrevious ? "#999" : "#E0E0E0"}
-            onPress={onPrevious || undefined}
+            // onPress={onPrevious || undefined}
             style={styles.navIcon}
           />
         </View>
@@ -187,7 +202,7 @@ const StepperHeader: React.FC<StepperHeaderProps> = ({
       <View style={styles.currentStepContainer}>
         <View style={styles.stepIcon}>
           <MaterialIcons
-            name={currentStepData.IconName}
+            name={currentStepData.IconName || "person"}
             size={40}
             color="#fff"
           />
@@ -205,10 +220,10 @@ const StepperHeader: React.FC<StepperHeaderProps> = ({
       {nextStepIcon ? (
         <View style={styles.stepWrapper}>
           <MaterialIcons
-            name={nextStepIcon}
+            name={nextStepIcon || "person"}
             size={30}
             color={isLastStep ? "#E0E0E0" : "#999"}
-            onPress={isLastStep ? undefined : onNext}
+            // onPress={isLastStep ? undefined : onNext}
             style={styles.navIcon}
           />
         </View>
@@ -399,6 +414,34 @@ const renderInput = (
       );
     case 11:
     case 12:
+      return (
+        <>
+          {formikProps.values[fieldName] ? (
+            <AppText
+              style={{
+                color: colors.dark,
+                fontSize: 18,
+                marginRight: 10,
+                textAlign: "center",
+                fontFamily: "Yekan_Bakh_Bold",
+              }}
+            >
+              {formikProps.values[fieldName]}
+            </AppText>
+          ) : (
+            <AppText
+              style={{
+                color: colors.medium,
+                fontSize: 15,
+                marginRight: 10,
+                textAlign: "center",
+              }}
+            >
+              {"محصول انتخاب نشده است."}
+            </AppText>
+          )}
+        </>
+      );
     default:
       return (
         <AppTextInput
@@ -430,23 +473,26 @@ interface StepScreenProps {
   onPrevious: (() => void) | null;
   isLastStep: boolean;
   slideAnim: Animated.Value;
+  isSubmitting?: boolean;
 }
 
+// Fix the StepScreen component to ensure validation works properly on all steps
 const StepScreen: React.FC<StepScreenProps> = ({
   step,
   onNext,
   onPrevious,
   isLastStep,
   slideAnim,
+  isSubmitting = false,
 }) => {
   let fields: IFormField[] = [];
   step.StepSectionList.forEach((section) =>
     section.FormFieldList.forEach((formField) => fields.push(formField))
   );
-  console.log("fields", fields);
 
+  // Initialize values with the correct field key format
   const initialValues = fields.reduce((acc, field) => {
-    acc[field.FieldName] = "";
+    acc[`custom-${field.FormFieldId}`] = "";
     return acc;
   }, {} as { [key: string]: string });
 
@@ -460,33 +506,24 @@ const StepScreen: React.FC<StepScreenProps> = ({
         <Formik
           initialValues={initialValues}
           validationSchema={validationSchema}
+          validateOnMount={true} // Enable validation on mount
+          validateOnChange={true} // Ensure validation runs on every change
+          validateOnBlur={true} // Ensure validation runs on blur
           onSubmit={(values) => onNext(values)}
         >
           {(FormikProps) => (
             <View>
               {step.StepSectionList.map((section) => (
-                <InputContainer title={section.Title}>
+                <InputContainer
+                  key={section.Title}
+                  title={section.Title}
+                  showAddIcon={section.FormFieldList[0].FieldType === 12}
+                >
                   {section.FormFieldList.map((formField) =>
                     renderInput(formField, FormikProps)
                   )}
                 </InputContainer>
               ))}
-              {/* {step.fields.map((field) => (
-                <View key={field.name} style={styles.inputContainer}>
-                  <AppText style={styles.label}>{field.label}</AppText>
-                  <AppTextInput
-                    style={styles.input}
-                    onChangeText={handleChange(field.name)}
-                    onBlur={handleBlur(field.name)}
-                    value={values[field.name]}
-                    placeholder={`وارد کنید ${field.label}`}
-                    textAlign="right"
-                  />
-                  {touched[field.name] && errors[field.name] && (
-                    <AppText style={styles.error}>{errors[field.name]}</AppText>
-                  )}
-                </View>
-              ))} */}
               <View style={styles.buttonContainer}>
                 {onPrevious ? (
                   <AppButton
@@ -498,9 +535,29 @@ const StepScreen: React.FC<StepScreenProps> = ({
                   <View></View>
                 )}
                 <AppButton
-                  title={isLastStep ? "ارسال" : "بعدی"}
-                  onPress={FormikProps.handleSubmit}
-                  disabled={Object.keys(FormikProps.errors).length > 0}
+                  title={
+                    isLastStep
+                      ? isSubmitting
+                        ? "در حال ارسال"
+                        : "ارسال"
+                      : "بعدی"
+                  }
+                  onPress={() => {
+                    // Force validation before submission
+                    FormikProps.validateForm().then((errors) => {
+                      // If there are errors, touch all fields to show error messages
+                      if (Object.keys(errors).length > 0) {
+                        const touchedFields = fields.reduce((acc, field) => {
+                          acc[`custom-${field.FormFieldId}`] = true;
+                          return acc;
+                        }, {} as { [key: string]: boolean });
+
+                        FormikProps.setTouched(touchedFields);
+                      } else {
+                        FormikProps.handleSubmit();
+                      }
+                    });
+                  }}
                   style={{ width: "48%" }}
                   color="success"
                 />
@@ -515,6 +572,7 @@ const StepScreen: React.FC<StepScreenProps> = ({
 
 // Main Stepper Component
 const FormItem: React.FC = () => {
+  const navigation = useNavigation<AppNavigationProp>();
   const route =
     useRoute<
       RouteProp<{ formItemProps: { formItem: IForm } }, "formItemProps">
@@ -525,21 +583,64 @@ const FormItem: React.FC = () => {
   const [formData, setFormData] = useState<{
     [key: number]: { [key: string]: string };
   }>({});
+  const [isSuccessfulSubmit, setIsSuccessfulSubmit] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
   const slideAnim = useRef(new Animated.Value(0)).current;
   const directionRef = useRef<"next" | "prev" | null>(null);
 
+  const [toastVisible, setToastVisible] = useState<boolean>(false);
+  const [toastMessage, setToastMessage] = useState<string>("");
+  const [toastType, setToastType] = useState<
+    "success" | "error" | "warning" | "info"
+  >("error");
+
+  const showToast = (
+    message: string,
+    type: "success" | "error" | "warning" | "info" = "error"
+  ) => {
+    setToastMessage(message);
+    setToastType(type);
+    setToastVisible(true);
+  };
+
   const getFormItem = async () => {
+    setLoading(true);
     try {
       const response = await axios.get<IFormItem>(
         `${appConfig.mobileApi}Form/Get?id=${formItem.FormId}`
       );
-      setSteps(response.data.FormStepList);
-    } catch (error) {}
+      if (response.data.FormStepList) setSteps(response.data.FormStepList);
+    } catch (error) {
+      console.log(error);
+      showToast("خطا در دریافت اطلاعات", "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     getFormItem();
   }, []);
+
+  const postFormData = async (data: any) => {
+    setIsSubmitting(true);
+    try {
+      const response = await axios.post(
+        `${appConfig.mobileApi}Form/SubmitForm`,
+        data
+      );
+      if (response.status === 200) {
+        setIsSuccessfulSubmit(true);
+      }
+    } catch (error) {
+      console.log(error);
+      showToast("خطا در ثبت محصول", "error");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const animateTransition = (
     direction: "next" | "prev",
@@ -559,17 +660,34 @@ const FormItem: React.FC = () => {
   };
 
   const handleNext = (values: { [key: string]: string }) => {
+    // Store the current step's data
     setFormData((prev) => ({
       ...prev,
       [currentStep]: values,
     }));
+
     if (currentStep < steps.length - 1) {
       animateTransition("next", () => {
         setCurrentStep(currentStep + 1);
       });
     } else {
-      console.log("داده‌های نهایی فرم:", formData);
-      alert("فرم با موفقیت ارسال شد!");
+      // Combine all step data for final submission
+      const finalFormData = { ...formData, [currentStep]: values };
+      console.log("داده‌های نهایی فرم:", finalFormData);
+      const objToPost = {
+        FormId: formItem.FormId,
+        SubmittedData: Object.entries(values).map(([key, value]) => {
+          // Extract the number from keys like "custom-1"
+          const keyNumber = parseInt(key.split("-")[1]);
+          return {
+            key: keyNumber,
+            value: value,
+          };
+        }),
+      };
+      console.log(objToPost);
+      // Here you would typically submit the data to your API
+      postFormData(objToPost);
     }
   };
 
@@ -581,34 +699,102 @@ const FormItem: React.FC = () => {
     }
   };
 
-  if (steps.length === 0) {
-    return <AppText>در حال بارگذاری...</AppText>;
-  }
+  // if (steps?.length === 0) {
+  //   return (
+  //     <View style={styles.emptyContainer}>
+  //       <Feather name="clipboard" size={64} color="#9CA3AF" />
+  //       <AppText style={styles.emptyText}>موردی یافت نشد</AppText>
+  //     </View>
+  //   );
+  // }
+
+  const SuccessfulSubmitScreen = () => {
+    return (
+      <View
+        style={[
+          styles.container,
+          { justifyContent: "center", alignItems: "center" },
+        ]}
+      >
+        <View
+          style={[
+            styles.stepIcon,
+            { backgroundColor: colors.success, marginBottom: 30 },
+          ]}
+        >
+          <MaterialIcons name={"check-circle"} size={40} color="#fff" />
+        </View>
+        <AppText
+          style={{
+            fontSize: 28,
+            fontFamily: "Yekan_Bakh_Bold",
+            marginBottom: 50,
+          }}
+        >
+          فرم با موفقیت ثبت شد
+        </AppText>
+        <AppButton
+          title="بازگشت"
+          onPress={() => navigation.navigate("Forms")}
+          style={{ width: "100%" }}
+        />
+      </View>
+    );
+  };
 
   return (
-    <View style={styles.container}>
+    <>
       <ScreenHeader title={formItem.FormName} />
-      <StepperHeader
-        steps={steps}
-        currentStep={currentStep}
-        onPrevious={currentStep > 0 ? handlePrevious : null}
-        onNext={() => {
-          // Trigger next step only if form is valid (handled in StepScreen)
-          const formikSubmitButton = document.querySelector(
-            'button[type="submit"]'
-          ) as HTMLButtonElement;
-          if (formikSubmitButton) formikSubmitButton.click();
-        }}
-        isLastStep={currentStep === steps.length - 1}
+      <Toast
+        visible={toastVisible}
+        message={toastMessage}
+        type={toastType}
+        onDismiss={() => setToastVisible(false)}
       />
-      <StepScreen
-        step={steps[currentStep]}
-        onNext={handleNext}
-        onPrevious={currentStep > 0 ? handlePrevious : null}
-        isLastStep={currentStep === steps.length - 1}
-        slideAnim={slideAnim}
-      />
-    </View>
+      {isSuccessfulSubmit ? (
+        <SuccessfulSubmitScreen />
+      ) : (
+        <View style={styles.container}>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={colors.primary} />
+              <AppText style={styles.loadingText}>
+                در حال دریافت اطلاعات...
+              </AppText>
+            </View>
+          ) : steps.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Feather name="clipboard" size={64} color="#9CA3AF" />
+              <AppText style={styles.emptyText}>موردی یافت نشد</AppText>
+            </View>
+          ) : (
+            <>
+              <StepperHeader
+                steps={steps}
+                currentStep={currentStep}
+                onPrevious={currentStep > 0 ? handlePrevious : null}
+                onNext={() => {
+                  // Trigger next step only if form is valid (handled in StepScreen)
+                  const formikSubmitButton = document.querySelector(
+                    'button[type="submit"]'
+                  ) as HTMLButtonElement;
+                  if (formikSubmitButton) formikSubmitButton.click();
+                }}
+                isLastStep={currentStep === steps.length - 1}
+              />
+              <StepScreen
+                step={steps[currentStep]}
+                onNext={handleNext}
+                onPrevious={currentStep > 0 ? handlePrevious : null}
+                isLastStep={currentStep === steps.length - 1}
+                slideAnim={slideAnim}
+                isSubmitting={isSubmitting}
+              />
+            </>
+          )}
+        </View>
+      )}
+    </>
   );
 };
 
@@ -700,6 +886,28 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 10,
     marginTop: 20,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 50,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: "#6B7280",
+    marginTop: 12,
+    textAlign: "center",
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  loadingText: {
+    fontSize: 16,
+    color: "#6B7280",
+    marginTop: 12,
   },
 });
 

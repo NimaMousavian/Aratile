@@ -59,10 +59,9 @@ const Forms = () => {
 
   const renderItem = (formItem: IForm): React.ReactElement => {
     return (
-      <TouchableOpacity key={formItem.FormId}>
-        <View style={styles.formItemContainer}>
       <TouchableOpacity
         onPress={() => navigation.navigate("FormItem", { formItem: formItem })}
+        key={formItem.FormId}
       >
         <View key={formItem.FormId} style={styles.formItemContainer}>
           <MaterialIcons
@@ -84,7 +83,6 @@ const Forms = () => {
           {Object.entries(groupedForms).map(([groupId, fields]) => (
             <InputContainer
               key={groupId}
-
               title={
                 fields[0].FormGroupName
                   ? fields[0].FormGroupName
@@ -106,7 +104,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    paddingTop:0,
+    paddingTop: 0,
     backgroundColor: colors.background,
   },
   addIconContainer: {
