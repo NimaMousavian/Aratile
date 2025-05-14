@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 
@@ -59,11 +60,7 @@ const Forms = () => {
 
   const renderItem = (formItem: IForm): React.ReactElement => {
     return (
-      <TouchableOpacity key={formItem.FormId}>
-        <View style={styles.formItemContainer}>
-      <TouchableOpacity
-        onPress={() => navigation.navigate("FormItem", { formItem: formItem })}
-      >
+      <TouchableOpacity>
         <View key={formItem.FormId} style={styles.formItemContainer}>
           <MaterialIcons
             name={formItem.IconName || "article"}
@@ -84,14 +81,11 @@ const Forms = () => {
           {Object.entries(groupedForms).map(([groupId, fields]) => (
             <InputContainer
               key={groupId}
-
               title={
                 fields[0].FormGroupName
                   ? fields[0].FormGroupName
                   : "سایر فرم ها"
               }
-              showFilterIcon={true}
-              isGradient={false}
             >
               {fields.map((field) => renderItem(field))}
             </InputContainer>
@@ -106,7 +100,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    paddingTop:0,
     backgroundColor: colors.background,
   },
   addIconContainer: {
