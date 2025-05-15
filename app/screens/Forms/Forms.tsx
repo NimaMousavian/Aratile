@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useNavigation } from "@react-navigation/native";
@@ -79,22 +85,31 @@ const Forms = () => {
     <>
       <ScreenHeader title="فرم ها" />
       <View style={styles.container}>
-        <ScrollView>
-          {Object.entries(groupedForms).map(([groupId, fields]) => (
-            <InputContainer
-              key={groupId}
-              title={
-                fields[0].FormGroupName
-                  ? fields[0].FormGroupName
-                  : "سایر فرم ها"
-              }
-              showFilterIcon={true}
-              isGradient={false}
-            >
-              {fields.map((field) => renderItem(field))}
-            </InputContainer>
-          ))}
-        </ScrollView>
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <AppText style={styles.loadingText}>
+              در حال دریافت اطلاعات...
+            </AppText>
+          </View>
+        ) : (
+          <ScrollView>
+            {Object.entries(groupedForms).map(([groupId, fields]) => (
+              <InputContainer
+                key={groupId}
+                title={
+                  fields[0].FormGroupName
+                    ? fields[0].FormGroupName
+                    : "سایر فرم ها"
+                }
+                showFilterIcon={true}
+                isGradient={false}
+              >
+                {fields.map((field) => renderItem(field))}
+              </InputContainer>
+            ))}
+          </ScrollView>
+        )}
       </View>
     </>
   );
@@ -131,6 +146,16 @@ const styles = StyleSheet.create({
     fontSize: 20,
     marginTop: 6,
     textAlign: "center",
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  loadingText: {
+    fontSize: 16,
+    color: "#6B7280",
+    marginTop: 12,
   },
 });
 

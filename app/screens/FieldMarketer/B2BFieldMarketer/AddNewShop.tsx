@@ -45,9 +45,10 @@ interface IInputContainerProps {
   showClearIcon?: boolean;
   onClearIconPress?: () => void;
   headerIcon?: string;
-  showFilterIcon?: boolean; 
-  onFilterIconPress?: () => void; 
+  showFilterIcon?: boolean;
+  onFilterIconPress?: () => void;
   isGradient?: boolean;
+  headerColor?: string;
 }
 
 export const InputContainer: React.FC<IInputContainerProps> = ({
@@ -61,6 +62,7 @@ export const InputContainer: React.FC<IInputContainerProps> = ({
   isGradient = true,
   showFilterIcon = false,
   onFilterIconPress,
+  headerColor = colors.secondaryDark,
 }) => {
   return (
     <View style={styles.inputContainer}>
@@ -69,7 +71,7 @@ export const InputContainer: React.FC<IInputContainerProps> = ({
           colors={
             isGradient
               ? [colors.secondary, colors.primary]
-              : [colors.secondaryDark, colors.secondaryDark]
+              : [headerColor, headerColor]
           }
           style={styles.inputHeader}
           start={{ x: 0, y: 0 }}
@@ -90,7 +92,7 @@ export const InputContainer: React.FC<IInputContainerProps> = ({
           <View
             style={{
               flexDirection: "row",
-              justifyContent: "center", 
+              justifyContent: "center",
               alignItems: "center",
               flex: 1,
             }}
@@ -99,11 +101,19 @@ export const InputContainer: React.FC<IInputContainerProps> = ({
             <View style={styles.rightIconsContainer}>
               {showFilterIcon && (
                 <TouchableOpacity onPress={onFilterIconPress}>
-                  <MaterialIcons name="filter-list" size={22} color={colors.white} />
+                  <MaterialIcons
+                    name="filter-list"
+                    size={22}
+                    color={colors.white}
+                  />
                 </TouchableOpacity>
               )}
               {headerIcon && (
-                <MaterialIcons name={headerIcon} size={22} color={colors.white} />
+                <MaterialIcons
+                  name={headerIcon}
+                  size={22}
+                  color={colors.white}
+                />
               )}
             </View>
           </View>
@@ -1017,7 +1027,7 @@ const AddNewShop = () => {
 };
 
 const styles = StyleSheet.create({
- container: { flex: 1, padding: 20, backgroundColor: colors.background },
+  container: { flex: 1, padding: 20, backgroundColor: colors.background },
   inputContainer: {
     borderWidth: 1,
     borderRadius: 12,
@@ -1059,12 +1069,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderTopRightRadius: 12,
     borderTopLeftRadius: 12,
-    position: "relative", 
+    position: "relative",
   },
   rightIconsContainer: {
     flexDirection: "row",
     alignItems: "center",
-  
   },
   filterIconContainer: {
     marginRight: 8,

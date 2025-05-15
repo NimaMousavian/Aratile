@@ -5,6 +5,7 @@ import {
   Animated,
   Easing,
   StyleSheet,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { IForm, IFormField, IFormItem, IFormStep } from "../../config/types";
@@ -25,6 +26,10 @@ import DynamicSelectionBottomSheet from "../../components/DynamicSelectionBottom
 import { DatePickerField } from "../../components/PersianDatePicker";
 import { AppNavigationProp } from "../../StackNavigator";
 import Toast from "../../components/Toast";
+import ProductSearchDrawer from "../IssuingNewInvoice/ProductSearchDrawer";
+import useProductScanner from "../../Hooks/useProductScanner";
+import ColleagueBottomSheet from "../IssuingNewInvoice/ColleagueSearchModal";
+import { toPersianDigits } from "../../utils/converters";
 
 // Interfaces for TypeScript
 interface Field {
@@ -234,11 +239,165 @@ const StepperHeader: React.FC<StepperHeaderProps> = ({
   );
 };
 
+const ProductInputField: React.FC<{
+  customField: IFormField;
+  formikProps: FormikProps<FormValues>;
+}> = ({ customField, formikProps }) => {
+  const fieldName = `custom-${customField.FormFieldId}`;
+  const [showProductSearchDrawer, setShowProductSearchDrawer] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState("");
+  const { searchProduct } = useProductScanner();
+
+  return (
+    <>
+      <View style={styles.customerContainer}>
+        <View style={styles.customerGradient}>
+          <View style={styles.customerRow}>
+            <View style={styles.customerField}>
+              <AppText style={styles.customerLabel}>
+                {customField.FieldName}
+              </AppText>
+            </View>
+            <View style={styles.customerButtonsContainer}>
+              {/* {selectedColleague && (
+                <TouchableOpacity
+                  style={[
+                    styles.iconCircleSmall,
+                    { backgroundColor: "#fef2e0" },
+                  ]}
+                  onPress={() =>
+                    navigation.navigate("CustomerInfo", {
+                      customer: selectedColleague,
+                    })
+                  }
+                >
+                  <MaterialIcons name="edit" size={22} color={colors.warning} />
+                </TouchableOpacity>
+              )} */}
+              {/* <TouchableOpacity
+                style={[styles.iconCircleSmall, { backgroundColor: "#e5f9ec" }]}
+                onPress={() => navigation.navigate("CustomerInfo")}
+              >
+                <MaterialIcons name="add" size={22} color={colors.success} />
+              </TouchableOpacity> */}
+              <TouchableOpacity
+                style={[styles.iconCircleSmall]}
+                onPress={() => setShowProductSearchDrawer(true)}
+              >
+                <MaterialIcons name="search" size={22} color={colors.white} />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.selectedCustomerContainer}>
+          {selectedProduct ? (
+            <AppText style={styles.selectedCustomerName}>
+              {toPersianDigits(selectedProduct)}
+            </AppText>
+          ) : (
+            <AppText style={styles.noCustomerText}>
+              {`${customField.FieldName} انتخاب نشده است`}
+            </AppText>
+          )}
+        </View>
+      </View>
+      <ProductSearchDrawer
+        visible={showProductSearchDrawer}
+        onClose={() => setShowProductSearchDrawer(false)}
+        onProductSelect={(value) => {
+          formikProps.setFieldValue(fieldName, value.id);
+          setSelectedProduct(value.title);
+        }}
+        searchProduct={searchProduct}
+      />
+    </>
+  );
+};
+
+const PersonInputField: React.FC<{
+  customField: IFormField;
+  formikProps: FormikProps<FormValues>;
+}> = ({ customField, formikProps }) => {
+  const fieldName = `custom-${customField.FormFieldId}`;
+  const [showColleagueSheet, setShowColleagueSheet] = useState<boolean>(false);
+  const [selectedColleague, setSelectedColleague] = useState("");
+  const { searchProduct } = useProductScanner();
+
+  return (
+    <>
+      <View style={styles.customerContainer}>
+        <View style={styles.customerGradient}>
+          <View style={styles.customerRow}>
+            <View style={styles.customerField}>
+              <AppText style={styles.customerLabel}>
+                {customField.FieldName}
+              </AppText>
+            </View>
+            <View style={styles.customerButtonsContainer}>
+              {/* {selectedColleague && (
+                <TouchableOpacity
+                  style={[
+                    styles.iconCircleSmall,
+                    { backgroundColor: "#fef2e0" },
+                  ]}
+                  onPress={() =>
+                    navigation.navigate("CustomerInfo", {
+                      customer: selectedColleague,
+                    })
+                  }
+                >
+                  <MaterialIcons name="edit" size={22} color={colors.warning} />
+                </TouchableOpacity>
+              )} */}
+              {/* <TouchableOpacity
+                style={[styles.iconCircleSmall, { backgroundColor: "#e5f9ec" }]}
+                onPress={() => navigation.navigate("CustomerInfo")}
+              >
+                <MaterialIcons name="add" size={22} color={colors.success} />
+              </TouchableOpacity> */}
+              <TouchableOpacity
+                style={[styles.iconCircleSmall]}
+                onPress={() => setShowColleagueSheet(true)}
+              >
+                <MaterialIcons name="search" size={22} color={colors.white} />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.selectedCustomerContainer}>
+          {selectedColleague ? (
+            <AppText style={styles.selectedCustomerName}>
+              {toPersianDigits(selectedColleague)}
+            </AppText>
+          ) : (
+            <AppText style={styles.noCustomerText}>
+              {`${customField.FieldName} انتخاب نشده است`}
+            </AppText>
+          )}
+        </View>
+      </View>
+      <ColleagueBottomSheet
+        title="انتخاب مشتری"
+        visible={showColleagueSheet}
+        onClose={() => setShowColleagueSheet(false)}
+        onSelectColleague={(colleague) => {
+          formikProps.setFieldValue(fieldName, colleague.id);
+          setSelectedColleague(colleague.name);
+          setShowColleagueSheet(false);
+        }}
+      />
+    </>
+  );
+};
+
 const renderInput = (
   customField: IFormField,
   formikProps: FormikProps<FormValues>
 ) => {
   const fieldName = `custom-${customField.FormFieldId}`;
+
   switch (customField.FieldType) {
     case 1:
       return (
@@ -311,13 +470,6 @@ const renderInput = (
       );
     case 4:
       return (
-        //   <DynamicSelectionBottomSheet<FormValues>
-        //     customFieldId={customField.ShopCustomFieldId}
-        //     customFieldName={customField.FieldName}
-        //     customIconName={customField.IconName}
-        //     url={`${appConfig.mobileApi}ShopCustomFieldSelectiveValue/GetAll?customFieldId=${customField.ShopCustomFieldId}&page=1&pageSize=1000`}
-        //     formikProps={formikProps}
-        //   />
         <AppTextInput
           autoCapitalize="none"
           icon={
@@ -395,13 +547,16 @@ const renderInput = (
     case 8:
       return <View></View>;
     case 9:
-    //   <DynamicSelectionBottomSheet<FormValues>
-    //     customFieldId={customField.ShopCustomFieldId}
-    //     customFieldName={customField.FieldName}
-    //     customIconName={customField.IconName}
-    //     url={`${appConfig.mobileApi}ShopCustomFieldSelectiveValue/GetAll?customFieldId=${customField.ShopCustomFieldId}&page=1&pageSize=1000`}
-    //     formikProps={formikProps}
-    //   />
+      return (
+        <DynamicSelectionBottomSheet<FormValues>
+          customFieldId={customField.FormFieldId}
+          customFieldName={customField.FieldName}
+          customIconName={customField.IconName}
+          url={`${appConfig.mobileApi}Form/GetSelectiveValues?formFieldId=${customField.FormFieldId}&page=1&pageSize=1000`}
+          formikProps={formikProps}
+        />
+      );
+
     case 10:
       return (
         <IconButton
@@ -413,34 +568,15 @@ const renderInput = (
         />
       );
     case 11:
+      return (
+        <PersonInputField customField={customField} formikProps={formikProps} />
+      );
     case 12:
       return (
-        <>
-          {formikProps.values[fieldName] ? (
-            <AppText
-              style={{
-                color: colors.dark,
-                fontSize: 18,
-                marginRight: 10,
-                textAlign: "center",
-                fontFamily: "Yekan_Bakh_Bold",
-              }}
-            >
-              {formikProps.values[fieldName]}
-            </AppText>
-          ) : (
-            <AppText
-              style={{
-                color: colors.medium,
-                fontSize: 15,
-                marginRight: 10,
-                textAlign: "center",
-              }}
-            >
-              {"محصول انتخاب نشده است."}
-            </AppText>
-          )}
-        </>
+        <ProductInputField
+          customField={customField}
+          formikProps={formikProps}
+        />
       );
     default:
       return (
@@ -474,6 +610,7 @@ interface StepScreenProps {
   isLastStep: boolean;
   slideAnim: Animated.Value;
   isSubmitting?: boolean;
+  isSingleStep?: boolean;
 }
 
 // Fix the StepScreen component to ensure validation works properly on all steps
@@ -484,7 +621,12 @@ const StepScreen: React.FC<StepScreenProps> = ({
   isLastStep,
   slideAnim,
   isSubmitting = false,
+  isSingleStep = false,
 }) => {
+  const { searchProduct } = useProductScanner();
+  const [showProductSearchDrawer, setShowProductSearchDrawer] =
+    useState<boolean>(false);
+
   let fields: IFormField[] = [];
   step.StepSectionList.forEach((section) =>
     section.FormFieldList.forEach((formField) => fields.push(formField))
@@ -514,11 +656,7 @@ const StepScreen: React.FC<StepScreenProps> = ({
           {(FormikProps) => (
             <View>
               {step.StepSectionList.map((section) => (
-                <InputContainer
-                  key={section.Title}
-                  title={section.Title}
-                  showAddIcon={section.FormFieldList[0].FieldType === 12}
-                >
+                <InputContainer key={section.Title} title={section.Title}>
                   {section.FormFieldList.map((formField) =>
                     renderInput(formField, FormikProps)
                   )}
@@ -558,7 +696,7 @@ const StepScreen: React.FC<StepScreenProps> = ({
                       }
                     });
                   }}
-                  style={{ width: "48%" }}
+                  style={{ width: isSingleStep ? "100%" : "48%" }}
                   color="success"
                 />
               </View>
@@ -731,10 +869,10 @@ const FormItem: React.FC = () => {
             marginBottom: 50,
           }}
         >
-          فرم با موفقیت ثبت شد
+          اطلاعات با موفقیت ثبت شد
         </AppText>
         <AppButton
-          title="بازگشت"
+          title="بازگشت به لیست فرم ها"
           onPress={() => navigation.navigate("Forms")}
           style={{ width: "100%" }}
         />
@@ -769,19 +907,21 @@ const FormItem: React.FC = () => {
             </View>
           ) : (
             <>
-              <StepperHeader
-                steps={steps}
-                currentStep={currentStep}
-                onPrevious={currentStep > 0 ? handlePrevious : null}
-                onNext={() => {
-                  // Trigger next step only if form is valid (handled in StepScreen)
-                  const formikSubmitButton = document.querySelector(
-                    'button[type="submit"]'
-                  ) as HTMLButtonElement;
-                  if (formikSubmitButton) formikSubmitButton.click();
-                }}
-                isLastStep={currentStep === steps.length - 1}
-              />
+              {steps.length !== 1 && (
+                <StepperHeader
+                  steps={steps}
+                  currentStep={currentStep}
+                  onPrevious={currentStep > 0 ? handlePrevious : null}
+                  onNext={() => {
+                    // Trigger next step only if form is valid (handled in StepScreen)
+                    const formikSubmitButton = document.querySelector(
+                      'button[type="submit"]'
+                    ) as HTMLButtonElement;
+                    if (formikSubmitButton) formikSubmitButton.click();
+                  }}
+                  isLastStep={currentStep === steps.length - 1}
+                />
+              )}
               <StepScreen
                 step={steps[currentStep]}
                 onNext={handleNext}
@@ -789,6 +929,7 @@ const FormItem: React.FC = () => {
                 isLastStep={currentStep === steps.length - 1}
                 slideAnim={slideAnim}
                 isSubmitting={isSubmitting}
+                isSingleStep={steps.length === 1}
               />
             </>
           )}
@@ -884,7 +1025,7 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: "row-reverse", // RTL support
     justifyContent: "space-between",
-    gap: 10,
+    alignItems: "center",
     marginTop: 20,
   },
   emptyContainer: {
@@ -908,6 +1049,73 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#6B7280",
     marginTop: 12,
+  },
+  customerContainer: {
+    flexDirection: "column",
+    marginBottom: 15,
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    overflow: "hidden",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 1,
+    borderWidth: 2,
+    borderColor: colors.gray,
+  },
+  customerGradient: {
+    padding: 12,
+    backgroundColor: colors.gray,
+  },
+  customerRow: {
+    flexDirection: "row-reverse",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  customerField: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+  },
+  customerLabel: {
+    fontSize: 16,
+    marginRight: 4,
+    fontFamily: "Yekan_Bakh_Bold",
+    color: colors.dark,
+  },
+  customerIcon: {},
+  customerButtonsContainer: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+  },
+  iconCircleSmall: {
+    width: 40,
+    height: 40,
+    borderRadius: 30,
+    justifyContent: "center",
+    alignItems: "center",
+    marginHorizontal: 5,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    backgroundColor: colors.warning,
+  },
+  selectedCustomerContainer: {
+    padding: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.gray,
+    backgroundColor: colors.white,
+  },
+  selectedCustomerName: {
+    fontSize: 16,
+    color: colors.dark,
+    fontFamily: "Yekan_Bakh_Bold",
+    textAlign: "center",
+  },
+  noCustomerText: {
+    fontSize: 14,
+    color: colors.medium,
+    fontFamily: "Yekan_Bakh_Bold",
+    textAlign: "center",
   },
 });
 
