@@ -41,6 +41,7 @@ import Visits from "./screens/Visits";
 import LabelRequest from "./screens/LabelRequest";
 import VisitDetail from "./screens/VisitDetail";
 import PersianCalendarScreen from "./screens/Calendar/PersianCalendarScreen";
+import TaskManagement from "./screens/TaskManagment/TaskManagment";
 import Forms from "./screens/Forms/Forms";
 import FormItem from "./screens/Forms/FormItem";
 
@@ -50,6 +51,7 @@ export type RootStackParamList = {
   Profile: undefined;
   ChangePassword: undefined;
   PersianCalendar: undefined;
+  TaskManagement: undefined;
 
   Home: undefined;
 
@@ -159,6 +161,11 @@ const AppStack = () => {
       <Stack.Screen
         name="PersianCalendar"
         component={PersianCalendarScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="TaskManagement"
+        component={TaskManagement}
         options={{ headerShown: false }}
       />
 

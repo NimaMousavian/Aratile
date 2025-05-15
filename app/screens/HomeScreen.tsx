@@ -9,6 +9,7 @@ import {
   View,
   Platform,
   Animated,
+  InteractionManager,
 } from "react-native";
 import colors from "../config/colors";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -66,9 +67,7 @@ const safeNavigate = (navigation: any, screenName: string, params?: any) => {
     FieldMarketer: "FieldMarketer",
     ShowRoom: "ShowRoom",
     Forms: "Forms",
-
-    // B2BFieldMarkete: "B2BFieldMarketer",
-    // B2CFieldMarkete: "B2CFieldMarketer",
+    Checklist: "TaskManagement",
   };
 
   if (commonScreens[screenName]) {
@@ -94,19 +93,6 @@ const safeNavigate = (navigation: any, screenName: string, params?: any) => {
     }
   }
 };
-
-// Make sure all items display is set to true
-const testItems = [
-  { id: 1, display: true },
-  { id: 2, display: true },
-  { id: 3, display: true },
-  { id: 4, display: true },
-  { id: 5, display: true },
-  { id: 6, display: true },
-  { id: 7, display: true },
-  { id: 8, display: true },
-  { id: 9, display: true },
-];
 
 const initialItems: MenuItem[] = [
   {
@@ -143,7 +129,6 @@ const initialItems: MenuItem[] = [
     iconColor: "#1C3F64",
     screenName: "SupplyRequest",
   },
-
   {
     id: 6,
     name: "بازاریابی میدانی",
@@ -165,10 +150,7 @@ const initialItems: MenuItem[] = [
     iconColor: "#1C3F64",
     screenName: "Forms",
   },
-
 ];
-
-const selectedItems = initialItems;
 
 const LAYOUT_STORAGE_KEY = "home_screen_items_layout";
 
@@ -186,11 +168,17 @@ const HomeScreen: React.FC = () => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [layoutSaved, setLayoutSaved] = useState(false);
   const [showSaveButton, setShowSaveButton] = useState(false);
-  const [layoutModified, setLayoutModified] = useState(false);
   const [userData, setUserData] = useState<ILoginResponse>();
   const [avatarUri, setAvatarUri] = useState<string | undefined>(
     userData?.AvatarImageFileName
   );
+
+  // Refs to avoid state updates during React's internal phases
+  const isDraggingRef = useRef(false);
+  const draggedItemRef = useRef<MenuItem | null>(null);
+  const draggedIndexRef = useRef<number | null>(null);
+  const hoveredIndexRef = useRef<number | null>(null);
+  const showSaveButtonRef = useRef(false);
 
   const SPRING_CONFIG = {
     tension: 50,
@@ -204,8 +192,6 @@ const HomeScreen: React.FC = () => {
   };
 
   const instructionOpacity = useRef(new Animated.Value(0)).current;
-  const isDraggingRef = useRef(false);
-
   const interactionType = useRef<"none" | "scrolling" | "dragging">("none");
   const lastInteractionTimestamp = useRef(0);
 
@@ -235,6 +221,44 @@ const HomeScreen: React.FC = () => {
   const avatarLocalPath = FileSystem.documentDirectory
     ? `${FileSystem.documentDirectory}avatar.jpg`
     : null;
+  const pendingGridCalculation = useRef(false);
+  const autoScrollTimerId = useRef<NodeJS.Timeout | null>(null);
+
+  // Safely update states
+  const safeUpdateDraggingState = (value: boolean) => {
+    isDraggingRef.current = value;
+    InteractionManager.runAfterInteractions(() => {
+      setIsDragging(value);
+    });
+  };
+
+  const safeUpdateDraggedItem = (value: MenuItem | null) => {
+    draggedItemRef.current = value;
+    InteractionManager.runAfterInteractions(() => {
+      setDraggedItem(value);
+    });
+  };
+
+  const safeUpdateDraggedIndex = (value: number | null) => {
+    draggedIndexRef.current = value;
+    InteractionManager.runAfterInteractions(() => {
+      setDraggedIndex(value);
+    });
+  };
+
+  const safeUpdateHoveredIndex = (value: number | null) => {
+    hoveredIndexRef.current = value;
+    InteractionManager.runAfterInteractions(() => {
+      setHoveredIndex(value);
+    });
+  };
+
+  const safeUpdateShowSaveButton = (value: boolean) => {
+    showSaveButtonRef.current = value;
+    InteractionManager.runAfterInteractions(() => {
+      setShowSaveButton(value);
+    });
+  };
 
   const fetchUserData = async () => {
     const storedData = await getLoginResponse();
@@ -301,8 +325,9 @@ const HomeScreen: React.FC = () => {
     isDraggingRef.current = isDragging;
 
     if (isDragging) {
-      setShowSaveButton(true);
+      showSaveButtonRef.current = true;
       interactionType.current = "dragging";
+      safeUpdateShowSaveButton(true);
     } else {
       setTimeout(() => {
         if (interactionType.current === "dragging") {
@@ -350,7 +375,7 @@ const HomeScreen: React.FC = () => {
       }
     }
 
-    return () => {};
+    return () => { };
   }, [isDragging]);
 
   useEffect(() => {
@@ -369,7 +394,6 @@ const HomeScreen: React.FC = () => {
     };
   }, [isDragging]);
 
-  const pendingGridCalculation = useRef(false);
   const calculateGridPositions = () => {
     if (pendingGridCalculation.current) return;
     pendingGridCalculation.current = true;
@@ -444,33 +468,36 @@ const HomeScreen: React.FC = () => {
   const stopDraggingButKeepSaveButton = () => {
     interactionType.current = "none";
 
-    if (draggedIndex !== null) {
+    if (draggedIndexRef.current !== null) {
+      const currentDraggedIndex = draggedIndexRef.current;
       saveLayout();
 
       Animated.parallel([
-        Animated.spring(itemRefs.current[draggedIndex].scale, {
+        Animated.spring(itemRefs.current[currentDraggedIndex].scale, {
           toValue: 1,
           ...SPRING_CONFIG,
         }),
-        Animated.spring(itemRefs.current[draggedIndex].translateX, {
+        Animated.spring(itemRefs.current[currentDraggedIndex].translateX, {
           toValue: 0,
           ...SPRING_CONFIG,
         }),
-        Animated.spring(itemRefs.current[draggedIndex].translateY, {
+        Animated.spring(itemRefs.current[currentDraggedIndex].translateY, {
           toValue: 0,
           ...SPRING_CONFIG,
         }),
-        Animated.timing(itemRefs.current[draggedIndex].opacity, {
+        Animated.timing(itemRefs.current[currentDraggedIndex].opacity, {
           toValue: 1,
           ...TIMING_CONFIG,
         }),
       ]).start(() => {
-        setIsDragging(false);
-        setDraggedItem(null);
-        setDraggedIndex(null);
-        setHoveredIndex(null);
-
-        setShowSaveButton(true);
+        // Defer state updates until after animation completes
+        InteractionManager.runAfterInteractions(() => {
+          safeUpdateDraggingState(false);
+          safeUpdateDraggedItem(null);
+          safeUpdateDraggedIndex(null);
+          safeUpdateHoveredIndex(null);
+          safeUpdateShowSaveButton(true);
+        });
 
         Object.keys(itemRefs.current).forEach((indexStr) => {
           const index = parseInt(indexStr);
@@ -483,11 +510,13 @@ const HomeScreen: React.FC = () => {
         });
       });
     } else {
-      setIsDragging(false);
-      setDraggedItem(null);
-      setDraggedIndex(null);
-      setHoveredIndex(null);
-      setShowSaveButton(true);
+      InteractionManager.runAfterInteractions(() => {
+        safeUpdateDraggingState(false);
+        safeUpdateDraggedItem(null);
+        safeUpdateDraggedIndex(null);
+        safeUpdateHoveredIndex(null);
+        safeUpdateShowSaveButton(true);
+      });
     }
 
     isSwapping.current = false;
@@ -505,32 +534,35 @@ const HomeScreen: React.FC = () => {
   };
 
   const finishDragging = () => {
-    if (draggedIndex !== null) {
+    if (draggedIndexRef.current !== null) {
+      const currentDraggedIndex = draggedIndexRef.current;
       saveLayout();
 
       Animated.parallel([
-        Animated.spring(itemRefs.current[draggedIndex].scale, {
+        Animated.spring(itemRefs.current[currentDraggedIndex].scale, {
           toValue: 1,
           ...SPRING_CONFIG,
         }),
-        Animated.spring(itemRefs.current[draggedIndex].translateX, {
+        Animated.spring(itemRefs.current[currentDraggedIndex].translateX, {
           toValue: 0,
           ...SPRING_CONFIG,
         }),
-        Animated.spring(itemRefs.current[draggedIndex].translateY, {
+        Animated.spring(itemRefs.current[currentDraggedIndex].translateY, {
           toValue: 0,
           ...SPRING_CONFIG,
         }),
-        Animated.timing(itemRefs.current[draggedIndex].opacity, {
+        Animated.timing(itemRefs.current[currentDraggedIndex].opacity, {
           toValue: 1,
           ...TIMING_CONFIG,
         }),
       ]).start(() => {
-        setIsDragging(false);
-        setDraggedItem(null);
-        setDraggedIndex(null);
-        setHoveredIndex(null);
-        setShowSaveButton(false);
+        InteractionManager.runAfterInteractions(() => {
+          safeUpdateDraggingState(false);
+          safeUpdateDraggedItem(null);
+          safeUpdateDraggedIndex(null);
+          safeUpdateHoveredIndex(null);
+          safeUpdateShowSaveButton(false);
+        });
 
         Object.keys(itemRefs.current).forEach((indexStr) => {
           const index = parseInt(indexStr);
@@ -543,11 +575,13 @@ const HomeScreen: React.FC = () => {
         });
       });
     } else {
-      setIsDragging(false);
-      setDraggedItem(null);
-      setDraggedIndex(null);
-      setHoveredIndex(null);
-      setShowSaveButton(false);
+      InteractionManager.runAfterInteractions(() => {
+        safeUpdateDraggingState(false);
+        safeUpdateDraggedItem(null);
+        safeUpdateDraggedIndex(null);
+        safeUpdateHoveredIndex(null);
+        safeUpdateShowSaveButton(false);
+      });
     }
 
     interactionType.current = "none";
@@ -586,9 +620,11 @@ const HomeScreen: React.FC = () => {
     newItems[fromIndex] = newItems[toIndex];
     newItems[toIndex] = temp;
 
-    setItems(newItems);
-    saveLayout();
-    setDraggedIndex(toIndex);
+    // Update items outside of the event handler
+    InteractionManager.runAfterInteractions(() => {
+      setItems(newItems);
+      safeUpdateDraggedIndex(toIndex);
+    });
 
     if (
       itemRefs.current[toIndex]?.component &&
@@ -683,14 +719,14 @@ const HomeScreen: React.FC = () => {
     Object.keys(gridPositions.current).forEach((key) => {
       const index = parseInt(key);
 
-      if (index === draggedIndex) return;
+      if (index === draggedIndexRef.current) return;
 
       const position = gridPositions.current[index];
       if (!position) return;
 
       const distance = Math.sqrt(
         Math.pow(position.x - currentPosition.x, 2) +
-          Math.pow(position.y - currentPosition.y, 2)
+        Math.pow(position.y - currentPosition.y, 2)
       );
 
       if (distance < minDistance) {
@@ -701,8 +737,6 @@ const HomeScreen: React.FC = () => {
 
     return closestIndex;
   };
-
-  const autoScrollTimerId = useRef<NodeJS.Timeout | null>(null);
 
   const handleAutoScroll = (y: number) => {
     if (!flatListRef.current || interactionType.current !== "dragging") return;
@@ -843,11 +877,7 @@ const HomeScreen: React.FC = () => {
     };
 
     const startDragging = () => {
-      setIsDragging(true);
-      setDraggedItem(item);
-      setDraggedIndex(index);
-      setShowSaveButton(true);
-
+      // First animate
       Animated.spring(scale, {
         toValue: 1.1,
         ...SPRING_CONFIG,
@@ -858,12 +888,26 @@ const HomeScreen: React.FC = () => {
         duration: 100,
         useNativeDriver: true,
       }).start();
+
+      // Set ref values immediately to use in gestures
+      isDraggingRef.current = true;
+      draggedItemRef.current = item;
+      draggedIndexRef.current = index;
+      showSaveButtonRef.current = true;
+
+      // Then update states outside of the event handler
+      InteractionManager.runAfterInteractions(() => {
+        setIsDragging(true);
+        setDraggedItem(item);
+        setDraggedIndex(index);
+        setShowSaveButton(true);
+      });
     };
 
     const onGestureEvent = (event: any) => {
       if (
-        isDragging &&
-        draggedIndex === index &&
+        isDraggingRef.current &&
+        draggedIndexRef.current === index &&
         interactionType.current === "dragging"
       ) {
         const {
@@ -875,10 +919,8 @@ const HomeScreen: React.FC = () => {
 
         lastGestureLocation.current = { x: absoluteX, y: absoluteY };
 
-        requestAnimationFrame(() => {
-          translateX.setValue(tx);
-          translateY.setValue(ty);
-        });
+        translateX.setValue(tx);
+        translateY.setValue(ty);
 
         const currentPosition = {
           x: itemRefs.current[index].position.x + tx,
@@ -892,13 +934,25 @@ const HomeScreen: React.FC = () => {
         const closestIndex = findClosestItem(currentPosition);
 
         if (closestIndex !== -1 && closestIndex !== index) {
-          setHoveredIndex(closestIndex);
+          // Update ref directly
+          hoveredIndexRef.current = closestIndex;
+
+          // Then schedule state update
+          InteractionManager.runAfterInteractions(() => {
+            setHoveredIndex(closestIndex);
+          });
 
           if (!isSwapping.current) {
             debouncedSwapItems(index, closestIndex);
           }
-        } else {
-          setHoveredIndex(null);
+        } else if (hoveredIndexRef.current !== null) {
+          // Update ref directly
+          hoveredIndexRef.current = null;
+
+          // Then schedule state update
+          InteractionManager.runAfterInteractions(() => {
+            setHoveredIndex(null);
+          });
         }
       }
     };
@@ -918,8 +972,8 @@ const HomeScreen: React.FC = () => {
         state === State.FAILED
       ) {
         if (
-          isDragging &&
-          draggedIndex === index &&
+          isDraggingRef.current &&
+          draggedIndexRef.current === index &&
           interactionType.current === "dragging"
         ) {
           const { translationX: tx, translationY: ty } = event.nativeEvent;
@@ -946,11 +1000,11 @@ const HomeScreen: React.FC = () => {
       if (
         state !== State.ACTIVE &&
         state !== State.BEGAN &&
-        isDragging &&
+        isDraggingRef.current &&
         interactionType.current === "dragging"
       ) {
         setTimeout(() => {
-          if (isDragging && interactionType.current === "dragging") {
+          if (isDraggingRef.current && interactionType.current === "dragging") {
             saveLayout();
             stopDraggingButKeepSaveButton();
           }
@@ -1043,7 +1097,6 @@ const HomeScreen: React.FC = () => {
               if (!isDragging && item.screenName) {
                 console.log("Navigating to:", item.screenName);
                 safeNavigate(navigation, item.screenName);
-                // navigation.navigate(item.screenName || "Home");
               }
             }}
           >
@@ -1089,18 +1142,34 @@ const HomeScreen: React.FC = () => {
           <Text style={styles.userName}>{userData?.DisplayName}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.calendarIconContainer}
-          onPress={() => {
-            safeNavigate(navigation, "PersianCalendar");
-          }}
-        >
-          <MaterialIcons
-            name="calendar-month"
-            size={30}
-            color={colors.primary}
-          />
-        </TouchableOpacity>
+        <View style={styles.iconsContainer}>
+        
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() => {
+              safeNavigate(navigation, "TaskManagement");
+            }}
+          >
+            <MaterialIcons
+              name="task-alt"
+              size={25}
+              color={colors.primary}
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() => {
+              safeNavigate(navigation, "PersianCalendar");
+            }}
+          >
+            <MaterialIcons
+              name="calendar-month"
+              size={25}
+              color={colors.primary}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {renderSaveButton()}
@@ -1139,9 +1208,9 @@ const HomeScreen: React.FC = () => {
           onScroll={(e) => {
             scrollOffset.current = e.nativeEvent.contentOffset.y;
 
-            if (isDragging && interactionType.current === "dragging") {
-              if (draggedIndex !== null && itemRefs.current[draggedIndex]) {
-                const index = draggedIndex;
+            if (isDraggingRef.current && interactionType.current === "dragging") {
+              if (draggedIndexRef.current !== null && itemRefs.current[draggedIndexRef.current]) {
+                const index = draggedIndexRef.current;
 
                 if (itemRefs.current[index]?.component) {
                   itemRefs.current[index].component.measure(
@@ -1263,6 +1332,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     marginVertical: 10,
+  },
+  iconsContainer: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: 5,
+  },
+  iconButton: {
+    justifyContent: "center",
+    alignItems: "center",
+    width: 43,
+    height: 43,
+    borderRadius: 25,
+    marginLeft: 0,
+    marginRight: 10,
+    backgroundColor: colors.secondaryLight, 
+    // backgroundColor: "#faf2f6", 
+    borderWidth: 2,
+    borderColor: colors.secondary, 
   },
   infoBox: {
     flexDirection: "row-reverse",

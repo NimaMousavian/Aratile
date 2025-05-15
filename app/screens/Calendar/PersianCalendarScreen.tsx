@@ -255,7 +255,7 @@ const PersianCalendarScreen = () => {
       Animated.sequence([
         Animated.timing(blinkAnim, {
           toValue: 1,
-          duration: 500,
+          duration: 1000,
           useNativeDriver: true,
         }),
         Animated.timing(blinkAnim, {

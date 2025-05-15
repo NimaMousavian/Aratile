@@ -20,7 +20,7 @@
       "package": "com.aratile",
       "versionCode": 1,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/logo-aratile-1.png",
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"
       },
       "permissions": [
@@ -33,7 +33,6 @@
       "favicon": "./assets/logo-aratile-1.png"
     },
     "plugins": [
-      "expo-barcode-scanner",
       [
         "expo-build-properties",
         {
@@ -46,11 +45,6 @@
     "extra": {
       "eas": {
         "projectId": "3aec5971-75b3-4df4-8596-0d8edf57b3c9"
-      }
-    },
-    "doctor": {
-      "reactNativeDirectoryCheck": {
-        "exclude": ["expo-barcode-scanner"]
       }
     }
   }
