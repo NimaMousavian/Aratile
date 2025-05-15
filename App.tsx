@@ -14,7 +14,7 @@ import StackNavigator from "./app/StackNavigator";
 import { PaperProvider } from "react-native-paper";
 import navigationTheme from "./app/config/navigationTheme";
 import { AuthProvider } from "./app/screens/AuthContext";
-
+import 'react-native-gesture-handler';
 
 SplashScreen.preventAutoHideAsync();
 

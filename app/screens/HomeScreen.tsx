@@ -1151,9 +1151,9 @@ const HomeScreen: React.FC = () => {
             }}
           >
             <MaterialIcons
-              name="task-alt"
+              name="checklist-rtl"
               size={25}
-              color={colors.primary}
+              color={colors.light}
             />
           </TouchableOpacity>
 
@@ -1166,7 +1166,7 @@ const HomeScreen: React.FC = () => {
             <MaterialIcons
               name="calendar-month"
               size={25}
-              color={colors.primary}
+              color={colors.light}
             />
           </TouchableOpacity>
         </View>
@@ -1336,7 +1336,7 @@ const styles = StyleSheet.create({
   iconsContainer: {
     flexDirection: "row-reverse",
     alignItems: "center",
-    gap: 5,
+    // gap: -2,
   },
   iconButton: {
     justifyContent: "center",
@@ -1345,8 +1345,8 @@ const styles = StyleSheet.create({
     height: 43,
     borderRadius: 25,
     marginLeft: 0,
-    marginRight: 10,
-    backgroundColor: colors.secondaryLight, 
+    marginRight: 7,
+    backgroundColor: colors.secondary, 
     // backgroundColor: "#faf2f6", 
     borderWidth: 2,
     borderColor: colors.secondary, 
@@ -1363,15 +1363,15 @@ const styles = StyleSheet.create({
     fontFamily: getFontFamily("Yekan_Bakh_Bold", "700"),
   },
   avatarCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 45,
+    height: 45,
+    borderRadius: 50,
     backgroundColor: "#f0f0f0",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
     borderColor: "#e0e0e0",
-    marginRight: -6,
+    marginRight: 0,
   },
   columnWrapper: {
     flexDirection: "row-reverse",
