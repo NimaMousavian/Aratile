@@ -49,6 +49,7 @@ interface IInputContainerProps {
   onFilterIconPress?: () => void;
   isGradient?: boolean;
   headerColor?: string;
+  filterIconName?: string; 
 }
 
 export const InputContainer: React.FC<IInputContainerProps> = ({
@@ -63,6 +64,7 @@ export const InputContainer: React.FC<IInputContainerProps> = ({
   showFilterIcon = false,
   onFilterIconPress,
   headerColor = colors.secondaryDark,
+  filterIconName = "edit-note", 
 }) => {
   return (
     <View style={styles.inputContainer}>
@@ -102,7 +104,7 @@ export const InputContainer: React.FC<IInputContainerProps> = ({
               {showFilterIcon && (
                 <TouchableOpacity onPress={onFilterIconPress}>
                   <MaterialIcons
-                    name="filter-list"
+                    name={filterIconName} // Use the dynamic filter icon name
                     size={22}
                     color={colors.white}
                   />
@@ -127,6 +129,7 @@ export const InputContainer: React.FC<IInputContainerProps> = ({
     </View>
   );
 };
+
 
 type AddNewShopRouteParams = {
   recordings?: { uri: string; duration: number }[];

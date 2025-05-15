@@ -20,6 +20,7 @@ import { getLoginResponse } from "./LogingScreen";
 import { ILoginResponse } from "../config/types";
 import { PanGestureHandler, State } from "react-native-gesture-handler";
 import * as FileSystem from "expo-file-system";
+import appConfig from "../../config";
 
 export interface MenuItem {
   id: number;
@@ -29,7 +30,9 @@ export interface MenuItem {
   screenName?: keyof RootStackParamList;
 }
 
+
 type FontWeight = "700" | "600" | "500" | "bold" | "semi-bold" | string;
+const API_BASE_URL = appConfig.mobileApi;
 
 const getFontFamily = (baseFont: string, weight: FontWeight): string => {
   if (Platform.OS === "android") {
@@ -172,8 +175,17 @@ const HomeScreen: React.FC = () => {
   const [avatarUri, setAvatarUri] = useState<string | undefined>(
     userData?.AvatarImageFileName
   );
+  const [hasTodayTasks, setHasTodayTasks] = useState(false);
+  const checklistButtonColorValue = useRef(new Animated.Value(0)).current;
 
-  // Refs to avoid state updates during React's internal phases
+
+
+  const checklistButtonColor = checklistButtonColorValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [colors.secondary, '#FFFFFF']
+  });
+
+
   const isDraggingRef = useRef(false);
   const draggedItemRef = useRef<MenuItem | null>(null);
   const draggedIndexRef = useRef<number | null>(null);
@@ -223,6 +235,7 @@ const HomeScreen: React.FC = () => {
     : null;
   const pendingGridCalculation = useRef(false);
   const autoScrollTimerId = useRef<NodeJS.Timeout | null>(null);
+  const blinkTimerId = useRef<NodeJS.Timeout | null>(null);
 
   // Safely update states
   const safeUpdateDraggingState = (value: boolean) => {
@@ -259,6 +272,64 @@ const HomeScreen: React.FC = () => {
       setShowSaveButton(value);
     });
   };
+
+  // Function to check if there are any tasks for today
+  const checkTodayTasks = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}Task/IsAnyTasksForToday`);
+      const result = await response.json();
+      setHasTodayTasks(result === true);
+    } catch (error) {
+      console.error('Failed to check today tasks:', error);
+    }
+  };
+
+  const blinkChecklistButton = () => {
+    // First blink
+    Animated.sequence([
+      Animated.timing(checklistButtonColorValue, {
+        toValue: 1, // به رنگ سفید تغییر می‌کند
+        duration: 300,
+        useNativeDriver: false,
+      }),
+      Animated.timing(checklistButtonColorValue, {
+        toValue: 0, // به رنگ اصلی برمی‌گردد
+        duration: 300,
+        useNativeDriver: false,
+      }),
+      // Small pause between blinks
+      Animated.delay(200),
+      // Second blink
+      Animated.timing(checklistButtonColorValue, {
+        toValue: 1, // به رنگ سفید تغییر می‌کند
+        duration: 300,
+        useNativeDriver: false,
+      }),
+      Animated.timing(checklistButtonColorValue, {
+        toValue: 0, // به رنگ اصلی برمی‌گردد
+        duration: 300,
+        useNativeDriver: false,
+      }),
+    ]).start();
+  };
+
+  useEffect(() => {
+    if (hasTodayTasks) {
+      // Initial blink
+      blinkChecklistButton();
+
+      // Set up timer to blink every 10 seconds
+      blinkTimerId.current = setInterval(() => {
+        blinkChecklistButton();
+      }, 5000);
+    }
+
+    return () => {
+      if (blinkTimerId.current) {
+        clearInterval(blinkTimerId.current);
+      }
+    };
+  }, [hasTodayTasks]);
 
   const fetchUserData = async () => {
     const storedData = await getLoginResponse();
@@ -346,6 +417,7 @@ const HomeScreen: React.FC = () => {
   useEffect(() => {
     loadSavedLayout();
     fetchUserData();
+    checkTodayTasks(); // Check for today's tasks when component mounts
   }, []);
 
   useEffect(() => {
@@ -1143,9 +1215,11 @@ const HomeScreen: React.FC = () => {
         </TouchableOpacity>
 
         <View style={styles.iconsContainer}>
-        
           <TouchableOpacity
-            style={styles.iconButton}
+            style={[
+              styles.iconButton,
+              { backgroundColor: checklistButtonColor }
+            ]}
             onPress={() => {
               safeNavigate(navigation, "TaskManagement");
             }}
@@ -1346,10 +1420,10 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     marginLeft: 0,
     marginRight: 7,
-    backgroundColor: colors.secondary, 
+    backgroundColor: colors.secondary,
     // backgroundColor: "#faf2f6", 
-    borderWidth: 2,
-    borderColor: colors.secondary, 
+    // borderWidth: 2,
+    // borderColor: colors.secondary,
   },
   infoBox: {
     flexDirection: "row-reverse",

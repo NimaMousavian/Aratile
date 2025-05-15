@@ -9,7 +9,6 @@ import {
 
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useNavigation } from "@react-navigation/native";
-import StackNavigator from "../../StackNavigator";
 import ScreenHeader from "../../components/ScreenHeader";
 import colors from "../../config/colors";
 import { AppNavigationProp } from "../../StackNavigator";
@@ -104,6 +103,7 @@ const Forms = () => {
                 }
                 showFilterIcon={true}
                 isGradient={false}
+                filterIconName={fields[0].FormGroupIconName || "edit-note"} 
               >
                 {fields.map((field) => renderItem(field))}
               </InputContainer>

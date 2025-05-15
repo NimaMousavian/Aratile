@@ -11,6 +11,7 @@ import {
   Platform,
   ActivityIndicator,
   Easing,
+  Modal,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -344,8 +345,9 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
               data={filteredColleagues}
               keyExtractor={(item, index) => `${item.id}-${index}`}
               style={styles.resultList}
-              renderItem={({ item }) => (
+              renderItem={({ item, index }) => (
                 <TouchableOpacity
+                  key={`colleague-${item.id}-${index}`}
                   style={styles.resultItem}
                   onPress={() => handleSelectColleague(item)}
                 >
@@ -397,13 +399,14 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
                 color={colors.medium}
               />
               <Text style={styles.noResultsText}>نتیجه‌ای یافت نشد</Text>
-              {/* All buttons have been removed here */}
-              <AppButton
-                title="ثبت خریدار جدید"
-                onPress={() => navigation.navigate("CustomerInfo", {})}
-                color="success"
-                style={{ width: "100%", marginTop: 15 }}
-              />
+              {isCustomer && (
+                <AppButton
+                  title="ثبت خریدار جدید"
+                  onPress={() => navigation.navigate("CustomerInfo", {})}
+                  color="success"
+                  style={{ width: "100%", marginTop: 15 }}
+                />
+              )}
             </View>
           ) : (
             <View style={styles.initialStateContainer}>
@@ -420,9 +423,18 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    ...StyleSheet.absoluteFillObject,
+    flex: 1,
     justifyContent: "flex-end",
-    zIndex: 1000,
+    // FIXED: Removed problematic styles that caused positioning issues
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    zIndex: 9999,
+    elevation: 999,
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
