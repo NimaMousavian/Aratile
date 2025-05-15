@@ -392,3 +392,19 @@ export interface IFormField {
   ShowOrder: number;
   Active: boolean;
 }
+
+export interface ITask {
+  TaskAssignmentId: number;
+  TaskId: number;
+  TaskTypeId: number;
+  TaskTypeName: string;
+  TaskTitle: string;
+  TaskDeadlineDate: string;
+  ShamsiTaskDeadlineDate: string;
+  TaskState: number;
+  TaskStateStr: string;
+  ApplicationUserId: number;
+  ApplicationUserName: string;
+  InsertDate: string;
+  ShamsiInsertDate: string;
+}

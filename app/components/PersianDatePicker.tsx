@@ -15,7 +15,7 @@ import colors from "../config/colors";
 import { toPersianDigits } from "../utils/converters";
 
 // Jalali date conversion utility
-const toJalali = (gregorianDate: Date) => {
+export const toJalali = (gregorianDate: Date) => {
   // Simplified Jalali conversion (for demonstration)
   // In a real app, use a library like 'moment-jalaali' or 'date-fns-jalali'
   const gy = gregorianDate.getFullYear();
