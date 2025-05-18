@@ -23,6 +23,9 @@ import HolidayService from "./HolidayService";
 
 const { width, height } = Dimensions.get("window");
 
+
+
+
 const getFontFamily = (baseFont, weight) => {
   if (Platform.OS === "android") {
     switch (weight) {
@@ -39,7 +42,6 @@ const getFontFamily = (baseFont, weight) => {
   }
   return baseFont;
 };
-
 const persianMonths = [
   "فروردین",
   "اردیبهشت",
@@ -63,6 +65,9 @@ const persianSeasons = {
   FALL: "پاییز",
   WINTER: "زمستان",
 };
+
+
+
 
 const getSeason = (month) => {
   if (month >= 0 && month <= 2) return persianSeasons.SPRING;
@@ -228,6 +233,7 @@ const PersianCalendarScreen = () => {
   const navigation = useNavigation();
   const today = new Date();
   const jalaliToday = toJalali(today);
+  const [blinkingDays, setBlinkingDays] = useState([]);
 
   const [currentYear, setCurrentYear] = useState(jalaliToday.year);
   const [currentMonth, setCurrentMonth] = useState(jalaliToday.month);
@@ -249,6 +255,15 @@ const PersianCalendarScreen = () => {
   const [lastSelectedDay, setLastSelectedDay] = useState(null);
 
   const blinkAnim = useRef(new Animated.Value(0)).current;
+  const loadBlinkingDays = async (year, month) => {
+    try {
+      const blinkingDaysData = await HolidayService.getBlinkingDays(year, month);
+      setBlinkingDays(blinkingDaysData);
+    } catch (error) {
+      console.error('خطا در بارگذاری روزهای چشمک زن:', error);
+      setBlinkingDays([]);
+    }
+  };
 
   useEffect(() => {
     const startBlinking = () => {
@@ -275,6 +290,7 @@ const PersianCalendarScreen = () => {
 
   useEffect(() => {
     loadHolidays(currentYear, currentMonth + 1);
+    loadBlinkingDays(currentYear, currentMonth + 1);
   }, [currentYear, currentMonth]);
 
   useEffect(() => {
@@ -362,12 +378,15 @@ const PersianCalendarScreen = () => {
 
     try {
       const holidaysData = await HolidayService.getHolidays(newYear, newMonth + 1);
+      const blinkingDaysData = await HolidayService.getBlinkingDays(newYear, newMonth + 1);
       setHolidays(holidaysData);
+      setBlinkingDays(blinkingDaysData);
       setCurrentMonth(newMonth);
       setCurrentYear(newYear);
     } catch (error) {
-      console.error('خطا در بارگذاری تعطیلات:', error);
+      console.error('خطا در بارگذاری اطلاعات ماه:', error);
       setHolidays([]);
+      setBlinkingDays([]);
       setCurrentMonth(newMonth);
       setCurrentYear(newYear);
     }
@@ -493,6 +512,9 @@ const PersianCalendarScreen = () => {
       item === jalaliToday.day;
 
     const dotOpacity = blinkAnim;
+    const blinkingDayInfo = blinkingDays.find(bd => bd.Day === item);
+    const isBlinkingDay = blinkingDayInfo !== undefined;
+    const blinkingColor = isBlinkingDay ? blinkingDayInfo.BlinkColor : null;
 
     return (
       <View style={styles.dayCellSquare}>
@@ -503,18 +525,23 @@ const PersianCalendarScreen = () => {
             isToday && !isSelected && styles.todayDay,
             (isHoliday || isFriday) && !isSelected && styles.holidayDay,
             (isSpecialDate_m || isSpecialDate_r) && !isSelected && styles.specialDay,
-            isBlinkingDate && styles.blinkingDay,
+            isBlinkingDay && !isSelected && styles.blinkingDay,
           ]}
           onPress={() => selectDay(item)}
         >
-          {hasNotification && (
+          {isBlinkingDay && (
             <Animated.View
               style={[
                 styles.notificationDot,
-                { opacity: dotOpacity }
+                {
+                  opacity: dotOpacity,
+                  backgroundColor: blinkingColor === 3 ? "#FF0000" :
+                    blinkingColor === 2 ? "#FF8800" : "#FFDE1A"
+                }
               ]}
             />
           )}
+
 
           {isBlinkingDate ? (
             <MaterialIcons name="favorite" size={18} color="yellow" />
@@ -827,6 +854,8 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
+    // backgroundColor: "#FFDE1A",
+    // backgroundColor: "#F78900",
     backgroundColor: "#FF0000",
   },
   emptyDay: {
@@ -848,7 +877,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
   },
   blinkingDay: {
-    backgroundColor: "black",
+    // backgroundColor: "black",
   },
   selectedDayText: {
     color: "#FFFFFF",
@@ -924,7 +953,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
     color: '#888888',
-    textAlign: 'center',
+    textAlign: 'left',
   },
   loadingText: {
     fontSize: 14,

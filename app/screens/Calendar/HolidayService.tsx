@@ -91,6 +91,39 @@ class HolidayService {
     }
   }
 
+  // متد جدید برای دریافت روزهای چشمک‌زن
+  static async getBlinkingDays(year, month) {
+    try {
+      // کلید منحصر به فرد برای ذخیره در حافظه محلی
+      const blinkingDaysCacheKey = `blinking_days_${year}_${month}`;
+
+      // ابتدا سعی می‌کنیم از حافظه محلی بخوانیم
+      const cachedBlinkingDays = await AsyncStorage.getItem(blinkingDaysCacheKey);
+      if (cachedBlinkingDays) {
+        return JSON.parse(cachedBlinkingDays);
+      }
+
+      // اگر در حافظه محلی نبود، از API دریافت می‌کنیم
+      const response = await fetch(
+        `${appConfig.mobileApi}Calendar/GetBlinkingDaysOfMonth?year=${year}&month=${month}`
+      );
+
+      if (!response.ok) {
+        throw new Error(`خطای API با کد: ${response.status}`);
+      }
+
+      const blinkingDays = await response.json();
+
+      // ذخیره در حافظه محلی برای استفاده بعدی
+      await AsyncStorage.setItem(blinkingDaysCacheKey, JSON.stringify(blinkingDays));
+
+      return blinkingDays;
+    } catch (error) {
+      console.error('خطا در دریافت روزهای چشمک‌زن:', error);
+      return [];
+    }
+  }
+
   static async fetchHolidaysFromApi(year, month) {
     try {
       const response = await fetch(
@@ -136,7 +169,8 @@ class HolidayService {
 
       if (lastSavedYear !== currentYear) {
         await this.clearAllHolidaysCache();
-        await this.clearAllOccasionsCache(); // پاک کردن حافظه مناسبت‌ها نیز
+        await this.clearAllOccasionsCache();
+        await this.clearAllBlinkingDaysCache(); // افزودن پاک کردن حافظه روزهای چشمک‌زن
         await AsyncStorage.setItem('last_saved_year', currentYear.toString());
 
         console.log(`سال جدید ${currentYear} شناسایی شد. داده‌های قبلی پاک شدند.`);
@@ -159,7 +193,20 @@ class HolidayService {
     }
   }
 
-  // افزودن متد جدید برای پاک کردن حافظه مناسبت‌ها
+  // متد جدید برای پاک کردن حافظه روزهای چشمک‌زن
+  static async clearAllBlinkingDaysCache() {
+    try {
+      const keys = await AsyncStorage.getAllKeys();
+      const blinkingDaysKeys = keys.filter(key => key.startsWith('blinking_days_'));
+      if (blinkingDaysKeys.length > 0) {
+        await AsyncStorage.multiRemove(blinkingDaysKeys);
+        console.log(`${blinkingDaysKeys.length} مورد داده روزهای چشمک‌زن از حافظه محلی پاک شد.`);
+      }
+    } catch (error) {
+      console.error('خطا در پاک کردن حافظه روزهای چشمک‌زن:', error);
+    }
+  }
+
   static async clearAllOccasionsCache() {
     try {
       const keys = await AsyncStorage.getAllKeys();

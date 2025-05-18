@@ -7,6 +7,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   View,
+  Modal
 } from "react-native";
 import { IForm, IFormField, IFormItem, IFormStep } from "../../config/types";
 import { Formik, FormikProps } from "formik";
@@ -315,6 +316,7 @@ const ProductInputField: React.FC<{
   );
 };
 
+// Modified PersonInputField component with correct modal positioning
 const PersonInputField: React.FC<{
   customField: IFormField;
   formikProps: FormikProps<FormValues>;
@@ -335,27 +337,6 @@ const PersonInputField: React.FC<{
               </AppText>
             </View>
             <View style={styles.customerButtonsContainer}>
-              {/* {selectedColleague && (
-                <TouchableOpacity
-                  style={[
-                    styles.iconCircleSmall,
-                    { backgroundColor: "#fef2e0" },
-                  ]}
-                  onPress={() =>
-                    navigation.navigate("CustomerInfo", {
-                      customer: selectedColleague,
-                    })
-                  }
-                >
-                  <MaterialIcons name="edit" size={22} color={colors.warning} />
-                </TouchableOpacity>
-              )} */}
-              {/* <TouchableOpacity
-                style={[styles.iconCircleSmall, { backgroundColor: "#e5f9ec" }]}
-                onPress={() => navigation.navigate("CustomerInfo")}
-              >
-                <MaterialIcons name="add" size={22} color={colors.success} />
-              </TouchableOpacity> */}
               <TouchableOpacity
                 style={[styles.iconCircleSmall]}
                 onPress={() => setShowColleagueSheet(true)}
@@ -378,16 +359,24 @@ const PersonInputField: React.FC<{
           )}
         </View>
       </View>
-      <ColleagueBottomSheet
-        title="انتخاب مشتری"
+
+      <Modal
+        transparent={true}
         visible={showColleagueSheet}
-        onClose={() => setShowColleagueSheet(false)}
-        onSelectColleague={(colleague) => {
-          formikProps.setFieldValue(fieldName, colleague.id);
-          setSelectedColleague(colleague.name);
-          setShowColleagueSheet(false);
-        }}
-      />
+        animationType="slide"
+        onRequestClose={() => setShowColleagueSheet(false)}
+      >
+        <ColleagueBottomSheet
+          title="انتخاب مشتری"
+          visible={showColleagueSheet}
+          onClose={() => setShowColleagueSheet(false)}
+          onSelectColleague={(colleague) => {
+            formikProps.setFieldValue(fieldName, colleague.id);
+            setSelectedColleague(colleague.name);
+            setShowColleagueSheet(false);
+          }}
+        />
+      </Modal>
     </>
   );
 };
@@ -562,14 +551,17 @@ const renderInput = (
         <IconButton
           text="موقعیت جغرافیایی"
           iconName="location-pin"
-          onPress={() => {}}
+          onPress={() => { }}
           backgroundColor={colors.primary}
           flex={1}
         />
       );
     case 11:
       return (
-        <PersonInputField customField={customField} formikProps={formikProps} />
+        
+
+          <PersonInputField customField={customField} formikProps={formikProps} />
+
       );
     case 12:
       return (
@@ -958,6 +950,10 @@ const styles = StyleSheet.create({
   currentStepContainer: {
     alignItems: "center",
   },
+  customerContainerDropDown: {
+    justifyContent: "flex-end",
+
+  },
   stepIcon: {
     width: 60,
     height: 60,
@@ -1056,12 +1052,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: 12,
     overflow: "hidden",
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 1,
-    borderWidth: 2,
+ 
+    borderWidth: 1,
     borderColor: colors.gray,
   },
   customerGradient: {
