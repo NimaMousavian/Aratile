@@ -12,7 +12,7 @@
         "buildType": "apk"
       },
       "env": {
-        "ENABLE_HERMES": "false",
+        "ENABLE_HERMES": "true",
         "NODE_ENV": "development"
       },
       "channel": "development"

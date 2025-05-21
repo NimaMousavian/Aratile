@@ -16,6 +16,13 @@ import navigationTheme from "./app/config/navigationTheme";
 import { AuthProvider } from "./app/screens/AuthContext";
 
 
+if (I18nManager.isRTL) {
+  I18nManager.forceRTL(false);
+  I18nManager.allowRTL(false);
+}
+
+
+
 SplashScreen.preventAutoHideAsync();
 
 type RootStackParamList = {

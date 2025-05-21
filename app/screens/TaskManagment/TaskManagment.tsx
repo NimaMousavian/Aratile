@@ -1,3 +1,4 @@
+// src/screens/TaskManagement.tsx
 import React, { useEffect, useRef, useState } from "react";
 import {
   View,
@@ -59,21 +60,7 @@ const getFontFamily = (baseFont: string, weight: FontWeight): string => {
   }
   return baseFont;
 };
-
-const persianMonths: string[] = [
-  "فروردین",
-  "اردیبهشت",
-  "خرداد",
-  "تیر",
-  "مرداد",
-  "شهریور",
-  "مهر",
-  "آبان",
-  "آذر",
-  "دی",
-  "بهمن",
-  "اسفند",
-];
+// اضافه کردن تابع تبدیل جلالی به میلادی و توابع کمکی دیگر که در کد قبلی از آنها استفاده شده بود
 
 export const jalaliToGregorian = (
   jy: number,
@@ -222,17 +209,31 @@ const formatDelayTime = (delaySeconds: number): string => {
   return result.trim();
 };
 
+const persianMonths: string[] = [
+  "فروردین",
+  "اردیبهشت",
+  "خرداد",
+  "تیر",
+  "مرداد",
+  "شهریور",
+  "مهر",
+  "آبان",
+  "آذر",
+  "دی",
+  "بهمن",
+  "اسفند",
+];
+
 // Status indicator component
 const StatusIndicator = ({ status }: { status: string }) => {
   const statusColor = TASK_STATUS_COLORS[status] || "#9E9E9E";
 
   return (
-    <View style={[styles.statusIndicator, {  borderColor: statusColor,borderWidth: 1, borderRadius: 6, }]}>
-      <AppText style={[styles.statusText, { color: statusColor }]}>{status}</AppText>
+    <View style={[styles.statusIndicator, { borderColor: statusColor, borderWidth: 1, borderRadius: 6, }]}>
+      <AppText style={[styles.statusText]}>{status}</AppText>
     </View>
   );
 };
-
 
 const TaskManagement: React.FC = () => {
   const navigation = useNavigation();
@@ -245,6 +246,7 @@ const TaskManagement: React.FC = () => {
   const [taskDrawerVisible, setTaskDrawerVisible] = useState<boolean>(false);
   const [currentTaskId, setCurrentTaskId] = useState<number | null>(null);
   const [delayTimes, setDelayTimes] = useState<{ [key: number]: number }>({});
+  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
 
   const [tasks, setTasks] = useState<ITask[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -345,6 +347,41 @@ const TaskManagement: React.FC = () => {
   const handleTaskPress = (taskId: number) => {
     setSelectedTaskId(taskId);
     setTaskDrawerVisible(true);
+  };
+
+  // تابع جدید برای تغییر وضعیت تسک
+  const handleStatusChange = (taskId: number, currentStatus: string) => {
+    // تغییر وضعیت به صورت چرخشی
+    const statusOrder = [
+      TASK_STATUS.NOT_STARTED,
+      TASK_STATUS.IN_PROGRESS,
+      TASK_STATUS.COMPLETED,
+      TASK_STATUS.DELAYED,
+      TASK_STATUS.CANCELED
+    ];
+
+    // پیدا کردن وضعیت فعلی در لیست
+    const currentIndex = statusOrder.findIndex(status => status === currentStatus);
+    // محاسبه وضعیت بعدی (چرخشی)
+    const nextIndex = (currentIndex + 1) % statusOrder.length;
+    const nextStatus = statusOrder[nextIndex];
+
+    // به‌روزرسانی وضعیت تسک در لیست
+    setTasks(prevTasks =>
+      prevTasks.map(task =>
+        task.TaskId === taskId
+          ? { ...task, TaskStateStr: nextStatus }
+          : task
+      )
+    );
+
+    // اگر وضعیت به "تاخیر خورده" تغییر کرد، یک تایمر تاخیر اضافه کنیم
+    if (nextStatus === TASK_STATUS.DELAYED) {
+      setDelayTimes(prev => ({
+        ...prev,
+        [taskId]: 0
+      }));
+    }
   };
 
   return (
@@ -459,12 +496,6 @@ const TaskManagement: React.FC = () => {
                     label: "نوع:",
                     value: toPersianDigits(task.TaskTypeName),
                   },
-                  // {
-                  //   icon: "calendar-month",
-                  //   iconColor: colors.secondary,
-                  //   label: "وضعیت:",
-                  //   value: toPersianDigits(task.TaskStateStr),
-                  // },
                 ]}
                 note={
                   task.TaskStateStr === TASK_STATUS.DELAYED ? (
@@ -498,6 +529,9 @@ const TaskManagement: React.FC = () => {
                   setCurrentTaskId(task.TaskId);
                   setTaskDrawerVisible(true);
                 }}
+                // اضافه کردن پارامترهای جدید
+                status={task.TaskStateStr}
+                onStatusChange={(currentStatus) => handleStatusChange(task.TaskId, currentStatus)}
               />
             ))
           )}
@@ -576,6 +610,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 16,
+    
     // alignItems: "center",
   },
   contentText: {

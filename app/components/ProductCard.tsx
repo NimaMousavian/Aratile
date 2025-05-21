@@ -1,3 +1,4 @@
+// src/components/ProductCard.tsx
 import React from "react";
 import {
   View,
@@ -11,6 +12,7 @@ import {
 } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import colors from "../config/colors";
+import StatusCircle from "../screens/TaskManagment/StatusCircle";
 
 type FontWeight = "700" | "600" | "500" | "bold" | "semi-bold" | string;
 
@@ -54,7 +56,7 @@ interface FieldItem {
   containerStyle?: StyleProp<ViewStyle>;
   divider?: boolean;
   customStyle?: StyleProp<ViewStyle>;
-  isPriceField?: boolean; // Add a new property to identify the final price field
+  isPriceField?: boolean;
 }
 
 interface NoteConfig {
@@ -77,10 +79,10 @@ interface QrConfig {
 }
 
 interface ProductCardProps {
-  title?: string;
+  title?: string | React.ReactNode; // تغییر به ReactNode برای پشتیبانی از کامپوننت‌های پیچیده‌تر
   titleIcon?: IconConfig;
   fields: FieldItem[];
-  note?: string;
+  note?: string | React.ReactNode; // تغییر به ReactNode
 
   noteConfig?: NoteConfig;
   qrConfig?: QrConfig;
@@ -96,6 +98,10 @@ interface ProductCardProps {
 
   onPress?: () => void;
   onLongPress?: () => void;
+
+  // اضافه کردن props جدید برای دایره وضعیت
+  status?: string;
+  onStatusChange?: (status: string) => void;
 
   showTitle?: boolean;
 }
@@ -132,6 +138,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   onPress,
   onLongPress,
+
+  // پارامترهای جدید وضعیت
+  status,
+  onStatusChange,
 
   showTitle = true,
 }) => {
@@ -237,7 +247,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
                   style={{ marginLeft: 8 }}
                 />
               )}
-              <Text style={[styles.productTitle, titleStyle]}>{title}</Text>
+              {typeof title === 'string' ? (
+                <Text style={[styles.productTitle, titleStyle]}>{title}</Text>
+              ) : (
+                title // اگر title یک ReactNode باشد، مستقیماً رندر می‌شود
+              )}
             </View>
           </View>
         </View>
@@ -267,7 +281,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                   styles.fieldContainer,
                   field.containerStyle,
                   index < fieldsBeforePrice.length - 1 &&
-                    styles.fieldMarginBottom,
+                  styles.fieldMarginBottom,
                 ]}
               >
                 {field.icon && (
@@ -369,7 +383,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     styles.fieldContainer,
                     field.containerStyle,
                     index < fieldsAfterPrice.length - 1 &&
-                      styles.fieldMarginBottom,
+                    styles.fieldMarginBottom,
                   ]}
                 >
                   {field.icon && (
@@ -443,12 +457,29 @@ const ProductCard: React.FC<ProductCardProps> = ({
               )}
             </View>
 
-            <Text style={[styles.regularNoteContent, noteConfig.valueStyle]}>
-              {note ? note : "-"}
-            </Text>
+            {typeof note === 'string' ? (
+              <Text style={[styles.regularNoteContent, noteConfig.valueStyle]}>
+                {note ? note : "-"}
+              </Text>
+            ) : (
+              note // اگر note یک ReactNode باشد، مستقیماً رندر می‌شود
+            )}
           </View>
         )}
       </View>
+
+      {/* دایره وضعیت (چپ کارت) */}
+      {status && onStatusChange && (
+        <View style={styles.statusCircleContainer}>
+          <StatusCircle
+            status={status}
+            onPress={(e) => {
+              e.stopPropagation(); // جلوگیری از اجرای onPress کارت
+              onStatusChange(status);
+            }}
+          />
+        </View>
+      )}
     </TouchableOpacity>
   );
 };
@@ -465,6 +496,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderWidth: 1,
     borderColor: "#e1e1e1",
+    position: "relative", // برای اضافه کردن دایره در موقعیت absolute
   },
   androidCardAdjustment: {
     borderWidth: 1.5,
@@ -585,6 +617,13 @@ const styles = StyleSheet.create({
     textAlign: "right",
     width: "100%",
     paddingRight: 22,
+  },
+  // استایل جدید برای دایره وضعیت
+  statusCircleContainer: {
+    position: "absolute",
+    left: 10,
+    bottom: 3, // به جای top: "50%" از bottom استفاده می‌کنیم
+    zIndex: 10,
   },
 });
 

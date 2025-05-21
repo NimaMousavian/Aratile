@@ -7,14 +7,12 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": false,
-    "jsEngine": "jsc",
-    "splash": {
-      "image": "./assets/logo-aratile.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
+    "jsEngine": "hermes",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "runtimeVersion": {
+        "policy": "appVersion"
+      }
     },
     "android": {
       "package": "com.aratile",
@@ -27,7 +25,8 @@
         "android.permission.CAMERA",
         "android.permission.INTERNET",
         "android.permission.ACCESS_NETWORK_STATE"
-      ]
+      ],
+      "runtimeVersion": "1.0.0"
     },
     "web": {
       "favicon": "./assets/logo-aratile-1.png"
@@ -40,12 +39,16 @@
             "usesCleartextTraffic": true
           }
         }
-      ]
+      ],
+      "expo-font"
     ],
     "extra": {
       "eas": {
-        "projectId": "3aec5971-75b3-4df4-8596-0d8edf57b3c9"
+        "projectId": "d8c577b3-5b18-4ce5-94f0-6047fe8def48"
       }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/d8c577b3-5b18-4ce5-94f0-6047fe8def48"
     }
   }
 }
