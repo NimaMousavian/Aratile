@@ -7,7 +7,7 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": false,
-    "jsEngine": "hermes",
+    "jsEngine": "jsc",
     "splash": {
       "image": "./assets/logo-aratile.png",
       "resizeMode": "contain",

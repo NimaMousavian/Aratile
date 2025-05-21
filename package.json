@@ -32,16 +32,14 @@
     "expo-sharing": "~13.1.5",
     "expo-splash-screen": "~0.30.8",
     "expo-status-bar": "~2.2.3",
+    "expo-updates": "~0.28.13",
     "formik": "^2.4.6",
     "react": "19.0.0",
     "react-dom": "^19.0.0",
     "react-native": "0.79.2",
-    "react-native-draggable-flatlist": "^4.0.1",
     "react-native-gesture-handler": "^2.25.0",
     "react-native-paper": "^5.13.1",
-    "react-native-reanimated": "~3.5.0",
-    "yup": "^1.6.1",
-    "expo-updates": "~0.28.13"
+    "yup": "^1.6.1"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

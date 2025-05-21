@@ -24,6 +24,23 @@ import AppText from "../../components/Text";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import TaskDrawer from "../../components/TaskDrawer";
 
+// Task status constants and colors
+const TASK_STATUS = {
+  NOT_STARTED: "شروع نشده",
+  IN_PROGRESS: "درحال انجام",
+  COMPLETED: "پایان یافته",
+  DELAYED: "تاخیر خورده",
+  CANCELED: "لغو شده",
+};
+
+const TASK_STATUS_COLORS = {
+  [TASK_STATUS.NOT_STARTED]: "#f1c02a", // Yellow
+  [TASK_STATUS.IN_PROGRESS]: "#2196F3", // Blue
+  [TASK_STATUS.COMPLETED]: "#4CAF50", // Green
+  [TASK_STATUS.DELAYED]: "#F44336", // Red
+  [TASK_STATUS.CANCELED]: "#9E9E9E", // Gray
+};
+
 type FontWeight = "700" | "600" | "500" | "bold" | "semi-bold" | string;
 
 const getFontFamily = (baseFont: string, weight: FontWeight): string => {
@@ -187,6 +204,36 @@ const daysToJalaliMonthDay = (year: number, dayOfYear: number) => {
   return [month, remainingDays];
 };
 
+// Format delay time in days, hours, minutes, seconds
+const formatDelayTime = (delaySeconds: number): string => {
+  if (delaySeconds <= 0) return "";
+
+  const days = Math.floor(delaySeconds / (24 * 60 * 60));
+  const hours = Math.floor((delaySeconds % (24 * 60 * 60)) / (60 * 60));
+  const minutes = Math.floor((delaySeconds % (60 * 60)) / 60);
+  const seconds = Math.floor(delaySeconds % 60);
+
+  let result = "";
+  if (days > 0) result += `${toPersianDigits(days.toString())} روز `;
+  if (hours > 0) result += `${toPersianDigits(hours.toString())} ساعت `;
+  if (minutes > 0) result += `${toPersianDigits(minutes.toString())} دقیقه `;
+  if (seconds > 0) result += `${toPersianDigits(seconds.toString())} ثانیه`;
+
+  return result.trim();
+};
+
+// Status indicator component
+const StatusIndicator = ({ status }: { status: string }) => {
+  const statusColor = TASK_STATUS_COLORS[status] || "#9E9E9E";
+
+  return (
+    <View style={[styles.statusIndicator, {  borderColor: statusColor,borderWidth: 1, borderRadius: 6, }]}>
+      <AppText style={[styles.statusText, { color: statusColor }]}>{status}</AppText>
+    </View>
+  );
+};
+
+
 const TaskManagement: React.FC = () => {
   const navigation = useNavigation();
   const dateRange = getJalaliDateRange();
@@ -196,6 +243,8 @@ const TaskManagement: React.FC = () => {
   const [jyear, jmonth, jday] = toJalali(new Date());
   const gregorianDate = new Date(); // Current date
   const [taskDrawerVisible, setTaskDrawerVisible] = useState<boolean>(false);
+  const [currentTaskId, setCurrentTaskId] = useState<number | null>(null);
+  const [delayTimes, setDelayTimes] = useState<{ [key: number]: number }>({});
 
   const [tasks, setTasks] = useState<ITask[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -213,8 +262,26 @@ const TaskManagement: React.FC = () => {
       const response = await axios.get(
         `${appConfig.mobileApi}Task/GetAllByDate?date=${year}%2F${month}%2F${day}&page=1&pageSize=1000`
       );
-      setTasks(response.data.Items);
-      console.log(response.data.Items);
+
+      // For demo purposes, assign random statuses to tasks if they don't have statuses
+      const tasksWithStatuses = response.data.Items.map((task: ITask) => {
+        if (!task.TaskStateStr) {
+          const statuses = Object.values(TASK_STATUS);
+          task.TaskStateStr = statuses[Math.floor(Math.random() * statuses.length)];
+        }
+
+        // Initialize delay times for delayed tasks
+        if (task.TaskStateStr === TASK_STATUS.DELAYED) {
+          setDelayTimes(prev => ({
+            ...prev,
+            [task.TaskId]: Math.floor(Math.random() * 100000) // Random delay for demo
+          }));
+        }
+
+        return task;
+      });
+
+      setTasks(tasksWithStatuses);
     } catch (error) {
       console.log(error);
     } finally {
@@ -229,6 +296,23 @@ const TaskManagement: React.FC = () => {
   useEffect(() => {
     getTasks();
   }, [selectedDay]);
+
+  // Update delay timers for delayed tasks
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setDelayTimes(prev => {
+        const newDelays = { ...prev };
+        tasks.forEach(task => {
+          if (task.TaskStateStr === TASK_STATUS.DELAYED && newDelays[task.TaskId] !== undefined) {
+            newDelays[task.TaskId] = newDelays[task.TaskId] + 1;
+          }
+        });
+        return newDelays;
+      });
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [tasks]);
 
   // Create a ref for the ScrollView
   const scrollViewRef = useRef<ScrollView>(null);
@@ -256,6 +340,11 @@ const TaskManagement: React.FC = () => {
         (screenWidth - dayItemWidth) / 2;
       scrollViewRef.current.scrollTo({ x, animated: true });
     }
+  };
+
+  const handleTaskPress = (taskId: number) => {
+    setSelectedTaskId(taskId);
+    setTaskDrawerVisible(true);
   };
 
   return (
@@ -355,78 +444,73 @@ const TaskManagement: React.FC = () => {
             </View>
           ) : (
             tasks.map((task) => (
-              <>
-                <ProductCard
-                  key={task.TaskId}
-                  title={toPersianDigits(task.TaskTitle)}
-                  fields={[
-                    {
-                      icon: "person-4",
-                      iconColor: colors.secondary,
-                      label: "نوع:",
-                      value: toPersianDigits(task.TaskTypeName),
-                    },
-                    {
-                      icon: "calendar-month",
-                      iconColor: colors.secondary,
-                      label: "وضعیت:",
-                      value: toPersianDigits(task.TaskStateStr),
-                    },
-                  ]}
-                  note={""}
-                  noteConfig={{
-                    show: false,
-                    icon: "notes",
+              <ProductCard
+                key={task.TaskId}
+                title={
+                  <View style={styles.titleContainer}>
+                    <Text style={styles.titleText}>{toPersianDigits(task.TaskTitle)}</Text>
+                    <StatusIndicator status={task.TaskStateStr} />
+                  </View>
+                }
+                fields={[
+                  {
+                    icon: "person-4",
                     iconColor: colors.secondary,
-                    label: "توضیحات:",
-                  }}
-                  qrConfig={{
-                    show: false,
-                    icon: "camera", // تغییر آیکون به دوربین/عکس
-                    iconSize: 36,
-                    iconColor: colors.secondary,
-                  }}
-                  titleStyle={{ fontSize: 20 }}
-                  //   editIcon={{
-                  //     name: "edit",
-                  //     size: 22,
-                  //     color: colors.warning,
-                  //     onPress: () => handleEditProduct(product.id),
-                  //     containerStyle: styles.iconCircleSmall, // اضافه کردن استایل دایره
-                  //   }}
-                  //   deleteIcon={{
-                  //     name: "delete",
-                  //     size: 22,
-                  //     color: colors.danger,
-                  //     onPress: () => {
-                  //       showRemoveConfirmation(product.id, () => {
-                  //         showToast("محصول با موفقیت حذف شد", "info");
-                  //       });
-                  //     },
-                  //     containerStyle: styles.iconCircleSmall, // اضافه کردن استایل دایره
-                  //   }}
-                  containerStyle={
-                    Platform.OS === "android"
-                      ? styles.androidCardAdjustment
-                      : {}
-                  }
-                  //   onLongPress={() => {
-                  //     showRemoveConfirmation(product.id, () => {
-                  //       showToast("محصول با موفقیت حذف شد", "info");
-                  //     });
-                  //   }}
-                  onPress={() => setTaskDrawerVisible(true)}
-                />
-                <TaskDrawer
-                  visible={taskDrawerVisible}
-                  onClose={() => setTaskDrawerVisible(false)}
-                  taskId={task.TaskId}
-                />
-              </>
+                    label: "نوع:",
+                    value: toPersianDigits(task.TaskTypeName),
+                  },
+                  // {
+                  //   icon: "calendar-month",
+                  //   iconColor: colors.secondary,
+                  //   label: "وضعیت:",
+                  //   value: toPersianDigits(task.TaskStateStr),
+                  // },
+                ]}
+                note={
+                  task.TaskStateStr === TASK_STATUS.DELAYED ? (
+                    <View style={styles.delayContainer}>
+                      <View style={styles.delayLine} />
+                      <AppText style={styles.delayText}>
+                        مدت تاخیر: {formatDelayTime(delayTimes[task.TaskId] || 0)}
+                      </AppText>
+                    </View>
+                  ) : ""
+                }
+                noteConfig={{
+                  show: task.TaskStateStr === TASK_STATUS.DELAYED,
+                  icon: "notes",
+                  iconColor: colors.secondary,
+                  label: "",
+                }}
+                qrConfig={{
+                  show: false,
+                  icon: "camera",
+                  iconSize: 36,
+                  iconColor: colors.secondary,
+                }}
+                titleStyle={{ fontSize: 20 }}
+                containerStyle={
+                  Platform.OS === "android"
+                    ? styles.androidCardAdjustment
+                    : {}
+                }
+                onPress={() => {
+                  setCurrentTaskId(task.TaskId);
+                  setTaskDrawerVisible(true);
+                }}
+              />
             ))
           )}
         </View>
       </SafeAreaView>
+
+      {currentTaskId && (
+        <TaskDrawer
+          visible={taskDrawerVisible}
+          onClose={() => setTaskDrawerVisible(false)}
+          taskId={currentTaskId}
+        />
+      )}
     </>
   );
 };
@@ -530,6 +614,43 @@ const styles = StyleSheet.create({
     backgroundColor: colors.secondary,
     borderColor: colors.secondary,
   },
+  // New styles for status indicator and delay
+  titleContainer: {
+    flexDirection: "row-reverse",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+  },
+  titleText: {
+    fontSize: 20,
+    fontFamily: getFontFamily("", "bold"),
+    color: colors.text || "#333",
+    textAlign: 'right',
+  },
+  statusIndicator: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  statusText: {
+    // color: statusColor,
+    fontSize: 12,
+    fontFamily: getFontFamily("", "medium"),
+  },
+  delayContainer: {
+    marginTop: 8,
+  },
+  delayLine: {
+    height: 1,
+    backgroundColor: "#F44336", // Red
+    marginBottom: 8,
+  },
+  delayText: {
+    color: "#F44336", // Red
+    fontSize: 13,
+    fontFamily: getFontFamily("", "medium"),
+    textAlign: "left",
+  }
 });
 
 export default TaskManagement;
