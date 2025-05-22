@@ -11,6 +11,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Animated,
+  I18nManager,
 } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import colors from "../../config/colors";
@@ -23,8 +24,14 @@ import HolidayService from "./HolidayService";
 
 const { width, height } = Dimensions.get("window");
 
-
-
+// تابع برای اجبار RTL فقط برای این کامپوننت
+const forceRTLForComponent = () => {
+  // این تنظیمات فقط برای layout های داخلی این کامپوننت است
+  return {
+    writingDirection: 'ltr',
+    direction: 'ltr'
+  };
+};
 
 const getFontFamily = (baseFont, weight) => {
   if (Platform.OS === "android") {
@@ -42,6 +49,7 @@ const getFontFamily = (baseFont, weight) => {
   }
   return baseFont;
 };
+
 const persianMonths = [
   "فروردین",
   "اردیبهشت",
@@ -65,9 +73,6 @@ const persianSeasons = {
   FALL: "پاییز",
   WINTER: "زمستان",
 };
-
-
-
 
 const getSeason = (month) => {
   if (month >= 0 && month <= 2) return persianSeasons.SPRING;
@@ -255,6 +260,7 @@ const PersianCalendarScreen = () => {
   const [lastSelectedDay, setLastSelectedDay] = useState(null);
 
   const blinkAnim = useRef(new Animated.Value(0)).current;
+
   const loadBlinkingDays = async (year, month) => {
     try {
       const blinkingDaysData = await HolidayService.getBlinkingDays(year, month);
@@ -542,7 +548,6 @@ const PersianCalendarScreen = () => {
             />
           )}
 
-
           {isBlinkingDate ? (
             <MaterialIcons name="favorite" size={18} color="yellow" />
           ) : isSpecialDate_n ? (
@@ -569,10 +574,11 @@ const PersianCalendarScreen = () => {
       </View>
     );
   };
+
   const renderOccasions = () => {
     if (loadingOccasions) {
       return (
-        <View style={styles.occasionsContainer}>
+        <View style={[styles.occasionsContainer, forceRTLForComponent()]}>
           <Text style={styles.occasionsTitle}>مناسبت‌های روز</Text>
           <ActivityIndicator size="small" color={colors.primary} />
           <Text style={styles.loadingText}>در حال بارگذاری مناسبت‌ها...</Text>
@@ -582,7 +588,7 @@ const PersianCalendarScreen = () => {
 
     if (!occasions || occasions.length === 0) {
       return (
-        <View style={styles.occasionsContainer}>
+        <View style={[styles.occasionsContainer, forceRTLForComponent()]}>
           <Text style={styles.occasionsTitle}>مناسبت‌های روز</Text>
           <Text style={styles.noOccasionText}>-</Text>
         </View>
@@ -590,7 +596,7 @@ const PersianCalendarScreen = () => {
     }
 
     return (
-      <View style={styles.occasionsContainer}>
+      <View style={[styles.occasionsContainer, forceRTLForComponent()]}>
         <Text style={styles.occasionsTitle}>مناسبت‌های روز</Text>
         {occasions.map((occasion, index) => (
           <Text
@@ -617,10 +623,11 @@ const PersianCalendarScreen = () => {
       <Animated.View
         style={[
           styles.drawer,
+          forceRTLForComponent(),
           { transform: [{ translateY }] }
         ]}
       >
-        <View style={styles.drawerHeader}>
+        <View style={[styles.drawerHeader, forceRTLForComponent()]}>
           <Text style={styles.drawerTitle}>
             {`${toPersianDigits(selectedDay)} ${persianMonths[selectedDayMonth]} ${toPersianDigits(selectedDayYear)}`}
           </Text>
@@ -629,20 +636,20 @@ const PersianCalendarScreen = () => {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.drawerContent}>
-          <View style={styles.drawerSection}>
+        <View style={[styles.drawerContent, forceRTLForComponent()]}>
+          <View style={[styles.drawerSection, forceRTLForComponent()]}>
             <Text style={styles.drawerSectionTitle}>یادداشت‌ها</Text>
             <Text style={styles.drawerEmptyText}>هیچ یادداشتی برای این روز ثبت نشده است.</Text>
-            <TouchableOpacity style={styles.addButton}>
+            <TouchableOpacity style={[styles.addButton, forceRTLForComponent()]}>
               <MaterialIcons name="add" size={18} color="#fff" />
               <Text style={styles.addButtonText}>افزودن یادداشت</Text>
             </TouchableOpacity>
           </View>
 
-          <View style={styles.drawerSection}>
+          <View style={[styles.drawerSection, forceRTLForComponent()]}>
             <Text style={styles.drawerSectionTitle}>رویدادها</Text>
             <Text style={styles.drawerEmptyText}>هیچ رویدادی برای این روز ثبت نشده است.</Text>
-            <TouchableOpacity style={styles.addButton}>
+            <TouchableOpacity style={[styles.addButton, forceRTLForComponent()]}>
               <MaterialIcons name="add" size={18} color="#fff" />
               <Text style={styles.addButtonText}>افزودن رویداد</Text>
             </TouchableOpacity>
@@ -657,8 +664,8 @@ const PersianCalendarScreen = () => {
   };
 
   return (
-    <View style={styles.mainContainer}>
-      <ScrollView style={styles.container}>
+    <View style={[styles.mainContainer, forceRTLForComponent()]}>
+      <ScrollView style={[styles.container, forceRTLForComponent()]}>
         <View style={styles.seasonalImageContainer}>
           <Image
             source={getSeasonalImage(currentSeason)}
@@ -669,7 +676,7 @@ const PersianCalendarScreen = () => {
             colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.5)"]}
             style={styles.glassOverlay}
           >
-            <View style={styles.monthHeader}>
+            <View style={[styles.monthHeader, forceRTLForComponent()]}>
               <TouchableOpacity onPress={goToPreviousMonth}>
                 <MaterialIcons name="chevron-right" size={40} color="#FFFFFF" />
               </TouchableOpacity>
@@ -687,7 +694,7 @@ const PersianCalendarScreen = () => {
           </LinearGradient>
         </View>
 
-        <View style={styles.weekDaysContainer}>
+        <View style={[styles.weekDaysContainer, forceRTLForComponent()]}>
           {weekDays.map((day, index) => (
             <View
               key={index}
@@ -708,8 +715,8 @@ const PersianCalendarScreen = () => {
           keyExtractor={(item, index) => index.toString()}
           numColumns={7}
           scrollEnabled={false}
-          columnWrapperStyle={styles.calendarRow}
-          contentContainerStyle={styles.calendarContainer}
+          columnWrapperStyle={[styles.calendarRow, forceRTLForComponent()]}
+          contentContainerStyle={[styles.calendarContainer, forceRTLForComponent()]}
         />
 
         {selectedDay && isSelectedDayInCurrentMonth() && renderOccasions()}
@@ -741,10 +748,13 @@ const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
     backgroundColor: colors.background,
+    writingDirection: 'rtl',
+    direction: 'rtl',
   },
   container: {
     flex: 1,
-    direction: "rtl",
+    writingDirection: 'rtl',
+    direction: 'rtl',
   },
   seasonalImageContainer: {
     width: "100%",
@@ -791,12 +801,16 @@ const styles = StyleSheet.create({
   calendarContainer: {
     marginRight: 1,
     marginLeft: 1,
+    writingDirection: 'rtl',
+    direction: 'rtl',
   },
   monthHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: -5,
+    writingDirection: 'rtl',
+    direction: 'rtl',
   },
   monthYearTextOverlay: {
     fontSize: 22,
@@ -806,13 +820,16 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
     marginBottom: -10,
+    textAlign: 'center',
   },
   weekDaysContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-around",
     backgroundColor: "#F5F5F5",
     paddingVertical: 10,
     marginBottom: 4,
+    writingDirection: 'rtl',
+    direction: 'rtl',
   },
   weekDayContainer: {
     alignItems: "center",
@@ -827,6 +844,9 @@ const styles = StyleSheet.create({
   calendarRow: {
     justifyContent: "space-around",
     marginBottom: 1,
+    flexDirection: "row-reverse",
+    writingDirection: 'rtl',
+    direction: 'rtl',
   },
   dayCellSquare: {
     width: Math.floor(width / 7) - 4,
@@ -845,7 +865,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    position: "relative", 
+    position: "relative",
   },
   notificationDot: {
     position: "absolute",
@@ -854,8 +874,6 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    // backgroundColor: "#FFDE1A",
-    // backgroundColor: "#F78900",
     backgroundColor: "#FF0000",
   },
   emptyDay: {
@@ -904,7 +922,7 @@ const styles = StyleSheet.create({
     // backgroundColor: "rgba(255, 200, 200, 0.3)",
   },
   specialDateButton: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     backgroundColor: colors.primary,
     borderRadius: 10,
     padding: 10,
@@ -917,12 +935,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+    writingDirection: 'rtl',
+    direction: 'rtl',
   },
   specialDateButtonText: {
     color: '#FFFFFF',
-    marginRight: 8,
+    marginLeft: 8,
     fontFamily: getFontFamily("Yekan_Bakh_Bold", "bold"),
     fontSize: 14,
+    textAlign: 'right',
   },
   occasionsContainer: {
     marginTop: 20,
@@ -930,20 +951,22 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 8,
     marginHorizontal: 10,
+    writingDirection: 'rtl',
+    direction: 'rtl',
   },
   occasionsTitle: {
     fontSize: 17,
     fontFamily: getFontFamily("Yekan_Bakh_Bold", "bold"),
     color: '#333333',
     marginBottom: 8,
-    textAlign: 'left',
+    textAlign: 'right',
   },
   occasionText: {
     fontSize: 14,
     fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
     color: '#555555',
     marginVertical: 3,
-    textAlign: 'left',
+    textAlign: 'right',
   },
   holidayOccasionText: {
     color: '#FF0000',
@@ -953,7 +976,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
     color: '#888888',
-    textAlign: 'left',
+    textAlign: 'right',
   },
   loadingText: {
     fontSize: 14,
@@ -988,26 +1011,34 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 10,
     maxHeight: height * 0.7,
+    writingDirection: 'rtl',
+    direction: 'rtl',
   },
   drawerHeader: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#EEEEEE',
+    writingDirection: 'rtl',
+    direction: 'rtl',
   },
   drawerTitle: {
     fontSize: 18,
     fontFamily: getFontFamily("Yekan_Bakh_Bold", "bold"),
     color: '#333333',
-    textAlign: 'center',
+    textAlign: 'right',
   },
   drawerContent: {
     paddingTop: 16,
+    writingDirection: 'rtl',
+    direction: 'rtl',
   },
   drawerSection: {
     marginBottom: 24,
+    writingDirection: 'rtl',
+    direction: 'rtl',
   },
   drawerSectionTitle: {
     fontSize: 16,
@@ -1024,7 +1055,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   addButton: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     backgroundColor: colors.primary,
     borderRadius: 8,
     paddingVertical: 8,
@@ -1032,12 +1063,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'flex-end',
-  },
-  addButtonText: {
-    color: '#FFFFFF',
-    marginRight: 8,
-    fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
-    fontSize: 14,
+    writingDirection: 'rtl',
+    direction: 'rtl',
   },
 });
 
