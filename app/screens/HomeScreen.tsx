@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import {
   Dimensions,
@@ -11,6 +10,8 @@ import {
   Platform,
   Animated,
   InteractionManager,
+  Linking,
+  Alert,
 } from "react-native";
 import colors from "../config/colors";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -22,6 +23,7 @@ import { ILoginResponse } from "../config/types";
 import { PanGestureHandler, State } from "react-native-gesture-handler";
 import * as FileSystem from "expo-file-system";
 import appConfig from "../../config";
+import * as IntentLauncher from "expo-intent-launcher";
 
 export interface MenuItem {
   id: number;
@@ -30,7 +32,6 @@ export interface MenuItem {
   iconColor?: string;
   screenName?: keyof RootStackParamList;
 }
-
 
 type FontWeight = "700" | "600" | "500" | "bold" | "semi-bold" | string;
 const API_BASE_URL = appConfig.mobileApi;
@@ -52,6 +53,44 @@ const getFontFamily = (baseFont: string, weight: FontWeight): string => {
   return baseFont;
 };
 
+const openAppByPackageName = async () => {
+  if (Platform.OS === "android") {
+    try {
+      await IntentLauncher.startActivityAsync("android.intent.action.VIEW", {
+        data: "package:com.pirooze.MianCheck", // Change this to the package you want
+      });
+    } catch (error) {
+      Alert.alert("Error", "App not found or cannot be opened.");
+    }
+  } else {
+    Alert.alert("Unsupported", "This only works on Android.");
+  }
+};
+
+const openApp = async (packageName: string) => {
+  if (Platform.OS === "android") {
+    // Construct the intent URI for Android
+    const url = `intent://open#Intent;package=${packageName};end`;
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        console.log(`Cannot open app with package: ${packageName}`);
+      }
+    } catch (error) {
+      console.error("An error occurred while opening the app:", error);
+    }
+  } else {
+    console.log("This feature is only supported on Android");
+  }
+};
+
+const openCalculator = () => {
+  IntentLauncher.startActivityAsync("android.intent.action.MAIN", {
+    category: "android.intent.category.APP_CALCULATOR",
+  });
+};
 const safeNavigate = (navigation: any, screenName: string, params?: any) => {
   console.log(`Attempting to navigate to: ${screenName}`);
 
@@ -179,13 +218,10 @@ const HomeScreen: React.FC = () => {
   const [hasTodayTasks, setHasTodayTasks] = useState(false);
   const checklistButtonColorValue = useRef(new Animated.Value(0)).current;
 
-
-
   const checklistButtonColor = checklistButtonColorValue.interpolate({
     inputRange: [0, 1],
-    outputRange: [colors.secondary, '#FFFFFF']
+    outputRange: [colors.secondary, "#FFFFFF"],
   });
-
 
   const isDraggingRef = useRef(false);
   const draggedItemRef = useRef<MenuItem | null>(null);
@@ -281,7 +317,7 @@ const HomeScreen: React.FC = () => {
       const result = await response.json();
       setHasTodayTasks(result === true);
     } catch (error) {
-      console.error('Failed to check today tasks:', error);
+      console.error("Failed to check today tasks:", error);
     }
   };
 
@@ -448,7 +484,7 @@ const HomeScreen: React.FC = () => {
       }
     }
 
-    return () => { };
+    return () => {};
   }, [isDragging]);
 
   useEffect(() => {
@@ -799,7 +835,7 @@ const HomeScreen: React.FC = () => {
 
       const distance = Math.sqrt(
         Math.pow(position.x - currentPosition.x, 2) +
-        Math.pow(position.y - currentPosition.y, 2)
+          Math.pow(position.y - currentPosition.y, 2)
       );
 
       if (distance < minDistance) {
@@ -1167,9 +1203,14 @@ const HomeScreen: React.FC = () => {
             delayLongPress={200}
             activeOpacity={0.7}
             onPress={() => {
-              if (!isDragging && item.screenName) {
-                console.log("Navigating to:", item.screenName);
-                safeNavigate(navigation, item.screenName);
+              if (!isDragging) {
+                if (item.id === 4) openCalculator();
+                // else if (item.id === 3) openApp("com.pirooze.MianCheck");
+                else if (item.id === 3) openAppByPackageName();
+                else if (item.screenName) {
+                  console.log("Navigating to:", item.screenName);
+                  safeNavigate(navigation, item.screenName);
+                }
               }
             }}
           >
@@ -1219,7 +1260,7 @@ const HomeScreen: React.FC = () => {
           <TouchableOpacity
             style={[
               styles.iconButton,
-              { backgroundColor: checklistButtonColor }
+              { backgroundColor: checklistButtonColor },
             ]}
             onPress={() => {
               safeNavigate(navigation, "TaskManagement");
@@ -1283,8 +1324,14 @@ const HomeScreen: React.FC = () => {
           onScroll={(e) => {
             scrollOffset.current = e.nativeEvent.contentOffset.y;
 
-            if (isDraggingRef.current && interactionType.current === "dragging") {
-              if (draggedIndexRef.current !== null && itemRefs.current[draggedIndexRef.current]) {
+            if (
+              isDraggingRef.current &&
+              interactionType.current === "dragging"
+            ) {
+              if (
+                draggedIndexRef.current !== null &&
+                itemRefs.current[draggedIndexRef.current]
+              ) {
                 const index = draggedIndexRef.current;
 
                 if (itemRefs.current[index]?.component) {
@@ -1422,7 +1469,7 @@ const styles = StyleSheet.create({
     marginLeft: 0,
     marginRight: 7,
     backgroundColor: colors.secondary,
-    // backgroundColor: "#faf2f6", 
+    // backgroundColor: "#faf2f6",
     // borderWidth: 2,
     // borderColor: colors.secondary,
   },

@@ -1,13 +1,18 @@
 import { MaterialIcons } from "@expo/vector-icons";
 
 export interface IProduct {
-  id: number;
-  title: string;
-  quantity: string;
-  note: string;
-  code: string;
+  ProductId: number;
+  ProductName: string;
+  ProductType: number;
+  ProductTypeStr: string;
+  SKU: string;
+  ProductMeasurementUnitId: number;
+  ProductMeasurementUnitName: string;
   Price: number;
-  hasColorSpectrum?: boolean;
+  ProductImageFileName: null;
+  ProductCategories: string;
+  Active: boolean;
+  ActiveStr: string;
 }
 
 export interface ISupplyRequest {

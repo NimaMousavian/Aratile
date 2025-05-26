@@ -455,7 +455,7 @@ const CustomerInfo: React.FC = () => {
       if (person.ProvinceName) {
         fetchCitiesByProvince(person.ProvinceName);
       }
-    } catch (error) { }
+    } catch (error) {}
   };
 
   useEffect(() => {
@@ -625,7 +625,7 @@ const CustomerInfo: React.FC = () => {
     return true;
   };
 
-  const handleSubmit = async (): Promise<void> => {
+  const handleSubmit = async (data: FormValues): Promise<void> => {
     if (customerID) {
       // handle edit mode
       console.log("in edit mode");
@@ -703,17 +703,16 @@ const CustomerInfo: React.FC = () => {
       }
     } else {
       // in add mode
-      if (!validateForm()) {
-        console.log("form is not valid");
+      // if (!validateForm()) {
+      //   console.log("form is not valid");
 
-        return;
-      }
-      console.log("here");
+      //   return;
+      // }
       setIsSubmitting(true);
 
       try {
         const provinceId = await LocationService.getProvinceIdByName(
-          selectedProvince
+          data.province
         );
         if (!provinceId) {
           showToast("خطا در دریافت شناسه استان", "error");
@@ -722,8 +721,8 @@ const CustomerInfo: React.FC = () => {
         }
 
         const cityId = await PersonManagementService.getCityIdByName(
-          selectedCity,
-          selectedProvince
+          data.city,
+          data.province
         );
         if (!cityId) {
           showToast("خطا در دریافت شناسه شهر", "error");
@@ -732,25 +731,25 @@ const CustomerInfo: React.FC = () => {
         }
 
         let personGroupIds: number[] = [];
-        if (selectedCustomerTypes.length > 0) {
+        if (data.customerType) {
           personGroupIds =
-            await PersonManagementService.getPersonGroupIdsByNames(
-              selectedCustomerTypes
-            );
-          if (personGroupIds.length === 0 && selectedCustomerTypes.length > 0) {
+            await PersonManagementService.getPersonGroupIdsByNames([
+              data.customerType,
+            ]);
+          if (personGroupIds.length === 0 && data.customerType) {
             showToast("خطا در دریافت شناسه‌های گروه مشتری", "warning");
           }
         }
 
         const personData: CreatePersonDTO = {
           PersonId: 0,
-          FirstName: firstName,
-          LastName: lastName,
-          Mobile: mobile,
+          FirstName: data.firstName,
+          LastName: data.lastName,
+          Mobile: data.mobile,
           ProvinceId: provinceId,
           CityId: cityId,
           MarketingChannelId: null,
-          Address: address,
+          Address: data.address,
           PersonGroupIdList: personGroupIds,
         };
 
@@ -1106,7 +1105,7 @@ const CustomerInfo: React.FC = () => {
                   )}
                   <IconButton
                     text={isSubmitting ? "در حال ثبت..." : "ثبت"}
-                    onPress={handleSubmit}
+                    onPress={formikProps.handleSubmit}
                     iconName="done"
                     style={{ width: "100%", marginBottom: 30 }}
                     backgroundColor={colors.success}
