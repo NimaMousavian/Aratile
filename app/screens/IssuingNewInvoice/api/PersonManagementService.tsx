@@ -16,6 +16,12 @@ export interface CreatePersonDTO {
   MarketingChannelId: string | null;
   Address: string;
   PersonGroupIdList: number[];
+  PersonCustomFieldList: {
+    PersonId: number;
+    PersonCustomFieldId: number;
+    Value: string;
+    InsertDate: string;
+  }[];
 }
 
 const convertObjectNumbersToEnglish = <T extends Record<string, any>>(

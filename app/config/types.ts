@@ -333,12 +333,22 @@ export interface IShowRoomVisitCustomField {
 export interface IPersonCustomField {
   PersonCustomFieldId: number;
   FieldName: string;
-  FieldType: number; // 1: text, 2: number, 3: date, 4: multi-select, 5: number, 6: location, 7: multiline text
-  IsRequired: boolean;
-  IconName: string;
   PersonCustomFieldGroupId: number;
   PersonCustomFieldGroupName: string;
+  PersonGroupId: number;
+  PersonGroupName: string;
+  FieldType: number; // 1: text, 2: number, 3: date, 4: multi-select, 5: number, 6: location, 7: multiline text
+  DefaultValue: string;
+  Min: string;
+  Max: string;
+  IsRequired: boolean;
+  IconName: string;
   Form_ShowOrder: number;
+  Filterable: boolean;
+  Filter_ShowOrder: number;
+  Active: boolean;
+  InsertDate: string;
+  LastUpdateDate: string;
 }
 
 export interface IForm {
