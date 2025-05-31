@@ -12,7 +12,7 @@ const B2CFieldMarketer = () => {
   return (
     <>
       <ScreenHeader
-        title="بازاریاب میدانی B2C"
+        title="بازاریابی میدانی B2C"
         rightComponent={
           <TouchableOpacity
             style={styles.addIconContainer}

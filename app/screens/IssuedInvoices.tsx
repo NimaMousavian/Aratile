@@ -797,7 +797,7 @@ const IssuedInvoices: React.FC = () => {
         />
 
         <View style={styles.tabContainer}>
-          {/* Updated tab for "لغو شده" (Canceled) instead of "درحال ویرایش" (Editing) */}
+          {/* Updated tab for "لغو شده" (Canceled) instead of "در حال ویرایش" (Editing) */}
           <TouchableOpacity
             style={[
               styles.tab,

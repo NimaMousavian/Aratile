@@ -18,12 +18,15 @@
     "expo-av": "^15.1.4",
     "expo-blur": "^14.1.4",
     "expo-build-properties": "~0.14.6",
+    "expo-camera": "~16.1.6",
     "expo-dev-client": "~5.1.8",
     "expo-file-system": "^18.1.10",
     "expo-font": "^13.3.1",
+    "expo-intent-launcher": "~12.0.2",
     "expo-linear-gradient": "^14.1.4",
     "expo-splash-screen": "^0.30.8",
     "expo-status-bar": "~2.2.3",
+    "expo-updates": "~0.28.13",
     "formik": "^2.4.6",
     "react": "19.0.0",
     "react-native": "0.79.2",
@@ -31,10 +34,7 @@
     "react-native-paper": "^5.14.4",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.10.0",
-    "yup": "^1.6.1",
-    "expo-intent-launcher": "~12.0.2",
-    "expo-updates": "~0.28.13",
-    "expo-camera": "~16.1.6"
+    "yup": "^1.6.1"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

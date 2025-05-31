@@ -37,14 +37,11 @@ const StatusCircle: React.FC<StatusCircleProps> = ({
     case "شروع نشده":
       iconName = "circle";
       break;
-    case "درحال انجام":
+    case "در حال انجام":
       iconName = "play";
       break;
-    case "پایان یافته":
+    case "انجام شده":
       iconName = "check-circle";
-      break;
-    case "تاخیر خورده":
-      iconName = "alert-triangle";
       break;
     case "لغو شده":
       iconName = "x-circle";
@@ -57,13 +54,11 @@ const StatusCircle: React.FC<StatusCircleProps> = ({
   const getStatusColor = () => {
     switch (status) {
       case "شروع نشده":
-        return "#f1c02a"; // زرد
-      case "درحال انجام":
-        return "#2196F3"; // آبی
-      case "پایان یافته":
-        return "#4CAF50"; // سبز
-      case "تاخیر خورده":
-        return "#F44336"; // قرمز
+        return "#FFC107"; // زرد
+      case "در حال انجام":
+        return "#17A2B8"; // آبی
+      case "انجام شده":
+        return "#28A745"; // سبز
       case "لغو شده":
         return "#9E9E9E"; // خاکستری
       default:
@@ -71,11 +66,11 @@ const StatusCircle: React.FC<StatusCircleProps> = ({
     }
   };
 
-  // افکت پالس مداوم برای وضعیت "درحال انجام"
+  // افکت پالس مداوم برای وضعیت "در حال انجام"
   useEffect(() => {
     let pulseAnimation: Animated.CompositeAnimation;
 
-    if (status === "درحال انجام" && showPulse) {
+    if (status === "در حال انجام" && showPulse) {
       pulseAnimation = Animated.loop(
         Animated.sequence([
           Animated.timing(pulseAnim, {
@@ -157,21 +152,13 @@ const StatusCircle: React.FC<StatusCircleProps> = ({
 
   // اضافه کردن افکت سایه متناسب با وضعیت
   const getAdditionalStyles = () => {
-    if (status === "درحال انجام") {
+    if (status === "در حال انجام") {
       return {
-        shadowColor: getStatusColor(),
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.5,
-        shadowRadius: 6,
-        elevation: 8,
-      };
-    } else if (status === "تاخیر خورده") {
-      return {
-        shadowColor: "#F44336",
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.6,
-        shadowRadius: 8,
-        elevation: 10,
+        // shadowColor: getStatusColor(),
+        // shadowOffset: { width: 0, height: 0 },
+        // shadowOpacity: 0.5,
+        // shadowRadius: 6,
+        // elevation: 8,
       };
     }
     return {};
@@ -261,14 +248,14 @@ const styles = StyleSheet.create({
   circle: {
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.23,
-    shadowRadius: 2.62,
-    elevation: 4,
+    // shadowColor: "#000",
+    // shadowOffset: {
+    //   width: 0,
+    //   height: 2,
+    // },
+    // shadowOpacity: 0.23,
+    // shadowRadius: 2.62,
+    // elevation: 4,
   },
   ripple: {
     position: 'absolute',

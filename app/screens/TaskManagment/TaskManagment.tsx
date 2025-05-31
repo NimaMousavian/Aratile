@@ -1,4 +1,3 @@
-// src/screens/TaskManagement.tsx
 import React, { useEffect, useRef, useState } from "react";
 import {
   View,
@@ -10,6 +9,8 @@ import {
   ScrollView,
   Dimensions,
   ActivityIndicator,
+  Animated,
+  Alert,
 } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useNavigation } from "@react-navigation/native";
@@ -25,21 +26,52 @@ import AppText from "../../components/Text";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import TaskDrawer from "../../components/TaskDrawer";
 
-// Task status constants and colors
+// به‌روزرسانی تعریف وضعیت‌های تسک بر اساس API
 const TASK_STATUS = {
   NOT_STARTED: "شروع نشده",
-  IN_PROGRESS: "درحال انجام",
-  COMPLETED: "پایان یافته",
-  DELAYED: "تاخیر خورده",
+  IN_PROGRESS: "در حال انجام",
+  COMPLETED: "انجام شده",
   CANCELED: "لغو شده",
 };
 
+// نگاشت وضعیت‌های عددی API به متن فارسی (بر اساس API جدید)
+const API_STATUS_MAPPING = {
+  1: TASK_STATUS.NOT_STARTED,
+  2: TASK_STATUS.IN_PROGRESS,
+  3: TASK_STATUS.COMPLETED,
+  4: TASK_STATUS.CANCELED,
+};
+
+// نگاشت برعکس: از متن فارسی به عدد
+const STATUS_TO_API_MAPPING = {
+  [TASK_STATUS.NOT_STARTED]: 1,
+  [TASK_STATUS.IN_PROGRESS]: 2,
+  [TASK_STATUS.COMPLETED]: 3,
+  [TASK_STATUS.CANCELED]: 4,
+};
+
 const TASK_STATUS_COLORS = {
-  [TASK_STATUS.NOT_STARTED]: "#f1c02a", // Yellow
-  [TASK_STATUS.IN_PROGRESS]: "#2196F3", // Blue
-  [TASK_STATUS.COMPLETED]: "#4CAF50", // Green
-  [TASK_STATUS.DELAYED]: "#F44336", // Red
-  [TASK_STATUS.CANCELED]: "#9E9E9E", // Gray
+  [TASK_STATUS.NOT_STARTED]: "#FFC107",
+  [TASK_STATUS.IN_PROGRESS]: "#17A2B8",
+  [TASK_STATUS.COMPLETED]: "#28A745",
+  [TASK_STATUS.CANCELED]: "#9E9E9E",
+};
+const TASK_STATUS_BACKGROUND = {
+  [TASK_STATUS.NOT_STARTED]: "#FFFFE1",
+  [TASK_STATUS.IN_PROGRESS]: "#dfe8ff",
+  [TASK_STATUS.COMPLETED]: "#f1feed",
+  [TASK_STATUS.CANCELED]: "#e2e2e2",
+};
+
+// تابع برای تبدیل وضعیت عددی به متن
+const getTaskStatusText = (taskState, taskStateStr) => {
+  // اگر TaskStateStr موجود باشد، از آن استفاده کن
+  if (taskStateStr) {
+    return taskStateStr;
+  }
+
+  // در غیر این صورت از TaskState عددی استفاده کن
+  return API_STATUS_MAPPING[taskState] || TASK_STATUS.NOT_STARTED;
 };
 
 type FontWeight = "700" | "600" | "500" | "bold" | "semi-bold" | string;
@@ -60,38 +92,21 @@ const getFontFamily = (baseFont: string, weight: FontWeight): string => {
   }
   return baseFont;
 };
-// اضافه کردن تابع تبدیل جلالی به میلادی و توابع کمکی دیگر که در کد قبلی از آنها استفاده شده بود
 
 export const jalaliToGregorian = (
   jy: number,
   jm: number,
   jd: number
 ): [number, number, number] => {
-  // Convert Jalali date to Gregorian
-  // Algorithm based on the inverse of the Gregorian-to-Jalali conversion
-
-  // Adjust Jalali year if month is in the new year but before Nowruz
   let gy = jy + 621;
   let leapDays = 0;
 
-  // Check if the Jalali year is a leap year
   const jalaliLeapYears = [1, 5, 9, 13, 17, 22, 26, 30];
   const cycle = (jy - 1) % 33;
   const isLeap = jalaliLeapYears.includes(cycle);
 
-  // Days passed in current Jalali year
   const jalaliDaysInMonth = [
-    31,
-    31,
-    31,
-    31,
-    31,
-    31,
-    30,
-    30,
-    30,
-    30,
-    30,
+    31, 31, 31, 31, 31, 31, 30, 30, 30, 30, 30,
     isLeap ? 30 : 29,
   ];
   let dayOfYear = jd;
@@ -100,17 +115,14 @@ export const jalaliToGregorian = (
     dayOfYear += jalaliDaysInMonth[i];
   }
 
-  // Nowruz (March 21) in Gregorian
   const nowruzGregorian = new Date(gy, 2, 21);
   const nowruzDayOfYear =
     Math.floor(
       (nowruzGregorian.getTime() - new Date(gy, 0, 1).getTime()) / 86400000
     ) + 1;
 
-  // Calculate Gregorian day of year
   let gregDayOfYear = dayOfYear + nowruzDayOfYear - 1;
 
-  // Handle overflow into next Gregorian year
   const isGregorianLeap = (gy % 4 === 0 && gy % 100 !== 0) || gy % 400 === 0;
   const daysInGregorianYear = isGregorianLeap ? 366 : 365;
 
@@ -119,32 +131,29 @@ export const jalaliToGregorian = (
     gy += 1;
   }
 
-  // Convert day of year back to month/day
   const gregDate = new Date(gy, 0, gregDayOfYear);
   return [gregDate.getFullYear(), gregDate.getMonth() + 1, gregDate.getDate()];
 };
 
-export const getJalaliDateRange = () => {
+export const getJalaliDateRange = (rangeSize: number = 11) => {
   const today = new Date();
   const currentJalali = toJalali(today);
 
-  // Convert current Jalali date to days since epoch (simplified)
   const [jy, jm, jd] = currentJalali;
   let totalDays = jd;
 
-  // Add days from previous months in the current year
   const jalaliDaysInMonth = [31, 31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 29];
   for (let i = 0; i < jm - 1; i++) {
     totalDays += jalaliDaysInMonth[i];
   }
 
-  // Create array for 21 days (10 before, current, 10 after)
   const dates = [];
-  for (let i = -10; i <= 10; i++) {
+  const halfRange = Math.floor(rangeSize / 2);
+
+  for (let i = -halfRange; i <= halfRange; i++) {
     let targetDays = totalDays + i;
     let year = jy;
 
-    // Handle year overflow/underflow (simplified)
     if (targetDays < 1) {
       year--;
       targetDays += isJalaliLeap(year) ? 366 : 365;
@@ -156,7 +165,6 @@ export const getJalaliDateRange = () => {
       }
     }
 
-    // Convert days back to Jalali date
     const [month, day] = daysToJalaliMonthDay(year, targetDays);
     dates.push([year, month, day]);
   }
@@ -164,19 +172,16 @@ export const getJalaliDateRange = () => {
   return dates;
 };
 
-// Helper function to check if a Jalali year is leap
 const isJalaliLeap = (year: number) => {
-  // Jalali leap years follow a 33-year cycle with 8 leap years
   const cycle = (year - 1) % 33;
   const leapYears = [1, 5, 9, 13, 17, 22, 26, 30];
   return leapYears.includes(cycle);
 };
 
-// Helper function to convert day-of-year to month/day in Jalali
 const daysToJalaliMonthDay = (year: number, dayOfYear: number) => {
   const jalaliDaysInMonth = [31, 31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 29];
   if (isJalaliLeap(year)) {
-    jalaliDaysInMonth[11] = 30; // Esfand has 30 days in leap years
+    jalaliDaysInMonth[11] = 30;
   }
 
   let remainingDays = dayOfYear;
@@ -191,94 +196,332 @@ const daysToJalaliMonthDay = (year: number, dayOfYear: number) => {
   return [month, remainingDays];
 };
 
-// Format delay time in days, hours, minutes, seconds
-const formatDelayTime = (delaySeconds: number): string => {
-  if (delaySeconds <= 0) return "";
-
-  const days = Math.floor(delaySeconds / (24 * 60 * 60));
-  const hours = Math.floor((delaySeconds % (24 * 60 * 60)) / (60 * 60));
-  const minutes = Math.floor((delaySeconds % (60 * 60)) / 60);
-  const seconds = Math.floor(delaySeconds % 60);
-
-  let result = "";
-  if (days > 0) result += `${toPersianDigits(days.toString())} روز `;
-  if (hours > 0) result += `${toPersianDigits(hours.toString())} ساعت `;
-  if (minutes > 0) result += `${toPersianDigits(minutes.toString())} دقیقه `;
-  if (seconds > 0) result += `${toPersianDigits(seconds.toString())} ثانیه`;
-
-  return result.trim();
-};
-
 const persianMonths: string[] = [
-  "فروردین",
-  "اردیبهشت",
-  "خرداد",
-  "تیر",
-  "مرداد",
-  "شهریور",
-  "مهر",
-  "آبان",
-  "آذر",
-  "دی",
-  "بهمن",
-  "اسفند",
+  "فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور",
+  "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند",
 ];
 
-// Status indicator component
-const StatusIndicator = ({ status }: { status: string }) => {
-  const statusColor = TASK_STATUS_COLORS[status] || "#9E9E9E";
+const ScrollableDayCarousel = ({
+  dateRange,
+  selectedDay,
+  onDaySelect,
+  currentDayIndex
+}) => {
+  const scrollViewRef = useRef(null);
+  const screenWidth = Dimensions.get("window").width;
+  const dayItemWidth = 80;
+  const dayItemSpacing = 20;
+  const [scrollOffset, setScrollOffset] = useState(0);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(false);
+
+  const getItemCenterPosition = (index) => {
+    const paddingStart = screenWidth / 2 - dayItemWidth / 2;
+    let totalWidth = paddingStart;
+
+    for (let i = 0; i < index; i++) {
+      const itemMargin = getItemMargin(i);
+      totalWidth += dayItemWidth + (itemMargin * 2);
+    }
+
+    const currentItemMargin = getItemMargin(index);
+    totalWidth += currentItemMargin + (dayItemWidth / 2);
+
+    return totalWidth;
+  };
+
+  const getItemMargin = (index) => {
+    if (index === selectedDay) {
+      return dayItemSpacing * 1.1;
+    } else if (Math.abs(index - selectedDay) === 1) {
+      return dayItemSpacing * 0.3;
+    } else {
+      return dayItemSpacing / 2;
+    }
+  };
+
+  const getScrollOffsetForIndex = (index) => {
+    const itemCenterX = getItemCenterPosition(index);
+    const screenCenterX = screenWidth / 2;
+    const offset = itemCenterX - screenCenterX;
+
+    return Math.max(0, offset);
+  };
+
+  const getTotalContentWidth = () => {
+    let totalWidth = 0;
+    for (let i = 0; i < dateRange.length; i++) {
+      const itemMargin = getItemMargin(i);
+      totalWidth += dayItemWidth + (itemMargin * 2);
+    }
+    return totalWidth;
+  };
+
+  useEffect(() => {
+    if (!isInitialized && scrollViewRef.current && dateRange.length > 0) {
+      setTimeout(() => {
+        const reversedTodayIndex = dateRange.length - 1 - currentDayIndex;
+        const offsetX = getScrollOffsetForIndex(reversedTodayIndex);
+
+        scrollViewRef.current.scrollTo({
+          x: offsetX,
+          animated: false
+        });
+        setIsInitialized(true);
+      }, 150);
+    }
+  }, [dateRange, currentDayIndex, isInitialized, selectedDay]);
+
+  const handleDayPress = (index) => {
+    onDaySelect(index);
+    setShouldAutoScroll(true);
+
+    setTimeout(() => {
+      const offsetX = getScrollOffsetForIndex(index);
+
+      scrollViewRef.current?.scrollTo({
+        x: offsetX,
+        animated: true
+      });
+
+      setTimeout(() => {
+        setShouldAutoScroll(false);
+      }, 600);
+    }, 30);
+  };
+
+  const handleScroll = (event) => {
+    const scrollX = event.nativeEvent.contentOffset.x;
+    setScrollOffset(scrollX);
+  };
+
+  const getCenterDistance = (index) => {
+    const itemCenterX = getItemCenterPosition(index);
+    const screenCenterX = scrollOffset + (screenWidth / 2);
+    return Math.abs(itemCenterX - screenCenterX);
+  };
+
+  const getItemScale = (index) => {
+    if (index === selectedDay) {
+      return 1.5;
+    }
+
+    if (Math.abs(index - selectedDay) === 1) {
+      return 1.2;
+    }
+
+    if (Math.abs(index - selectedDay) === 2) {
+      return 1.1;
+    }
+
+    const distance = getCenterDistance(index);
+    const maxDistance = (dayItemWidth + dayItemSpacing) * 3;
+    const scale = Math.max(0.8, 1.0 - (distance / maxDistance) * 0.2);
+    return Math.min(1.0, scale);
+  };
+
+  const getItemOpacity = (index) => {
+    if (index === selectedDay) {
+      return 1.0;
+    }
+
+    if (Math.abs(index - selectedDay) === 1) {
+      return 0.9;
+    }
+
+    const distance = getCenterDistance(index);
+    const maxDistance = (dayItemWidth + dayItemSpacing) * 2.5;
+    return Math.max(0.5, 1 - (distance / maxDistance) * 0.5);
+  };
+
+  const handleScrollEnd = () => {
+    if (shouldAutoScroll) {
+      setShouldAutoScroll(false);
+      return;
+    }
+
+    if (!shouldAutoScroll) {
+      let closestIndex = 0;
+      let minDistance = Infinity;
+
+      for (let i = 0; i < dateRange.length; i++) {
+        const distance = getCenterDistance(i);
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestIndex = i;
+        }
+      }
+
+      if (minDistance > 20) {
+        setTimeout(() => {
+          const offsetX = getScrollOffsetForIndex(closestIndex);
+          scrollViewRef.current?.scrollTo({
+            x: offsetX,
+            animated: true
+          });
+        }, 100);
+      }
+    }
+  };
+
+  const renderDayItem = (dayData, index) => {
+    const [year, month, day] = dayData;
+    const originalIndex = dateRange.length - 1 - index;
+    const isToday = originalIndex === currentDayIndex;
+    const scale = getItemScale(index);
+    const opacity = getItemOpacity(index);
+    const isSelected = selectedDay === index;
+
+    return (
+      <TouchableOpacity
+        key={`day-${index}`}
+        style={[
+          styles.dayCarouselItem,
+          {
+            width: dayItemWidth,
+            marginHorizontal: getItemMargin(index),
+            opacity: opacity,
+            transform: [{ scale: scale }]
+          }
+        ]}
+        onPress={() => handleDayPress(index)}
+        activeOpacity={0.7}
+      >
+        <View
+          style={[
+            styles.dayItemContainer,
+            {
+              backgroundColor: isSelected ? "#d60079" : colors.white,
+              borderColor: isToday && !isSelected
+                ? (colors.secondary || "#4A80F0")
+                : (colors.lightGray || "#E5E7EB"),
+              borderWidth: (isToday && !isSelected) ? 2 : 0,
+              width: 70,
+              height: 70,
+            }
+          ]}
+        >
+          <Text
+            style={[
+              styles.dayText,
+              {
+                color: isSelected
+                  ? (colors.white || "#FFFFFF")
+                  : (colors.text || "#374151"),
+                fontSize: isSelected ? 24 : 18,
+                fontFamily: isSelected
+                  ? (Platform.OS === "android" ? "Yekan_Bakh_Bold" : getFontFamily("Yekan_Bakh_Bold", "500"))
+                  : (Platform.OS === "android" ? "Yekan_Bakh_Regular" : getFontFamily("Yekan_Bakh_Regular", "normal")),
+              }
+            ]}
+          >
+            {toPersianDigits(day.toString())}
+          </Text>
+          <Text
+            style={[
+              styles.monthText,
+              {
+                color: isSelected
+                  ? (colors.white || "#FFFFFF")
+                  : (colors.secondary || "#6B7280"),
+                fontSize: isSelected ? 11 : 9,
+                fontFamily: isSelected
+                  ? getFontFamily("Yekan_Bakh_Bold", "500")
+                  : getFontFamily("Yekan_Bakh_Regular", "normal"),
+              }
+            ]}
+          >
+            {persianMonths[month - 1]}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const reversedDateRange = [...dateRange].reverse();
 
   return (
-    <View style={[styles.statusIndicator, { borderColor: statusColor, borderWidth: 1, borderRadius: 6, }]}>
-      <AppText style={[styles.statusText]}>{status}</AppText>
+    <View style={styles.carouselContainer}>
+      <ScrollView
+        ref={scrollViewRef}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingHorizontal: screenWidth / 2 - dayItemWidth / 2,
+            paddingRight: screenWidth / 2,
+          }
+        ]}
+        onScroll={handleScroll}
+        onMomentumScrollEnd={handleScrollEnd}
+        onScrollEndDrag={handleScrollEnd}
+        scrollEventThrottle={16}
+        decelerationRate="fast"
+        snapToAlignment="center"
+        snapToInterval={dayItemWidth + dayItemSpacing}
+      >
+        {reversedDateRange.map((dayData, index) => renderDayItem(dayData, index))}
+      </ScrollView>
+    </View>
+  );
+};
+
+const StatusIndicator = ({ status }: { status: string }) => {
+  const statusColor = TASK_STATUS_COLORS[status] || "#9E9E9E";
+  const statusColorBackground = TASK_STATUS_BACKGROUND[status] || "#ebebeb";
+
+  return (
+    <View style={[styles.statusIndicator, {  borderRadius: 6, backgroundColor: statusColorBackground }]}>
+      <AppText style={[styles.statusText, { color: statusColor }]}>{status}</AppText>
     </View>
   );
 };
 
 const TaskManagement: React.FC = () => {
   const navigation = useNavigation();
-  const dateRange = getJalaliDateRange();
+  const dateRange = getJalaliDateRange(11);
   const days = dateRange.map(([year, month, day]) => day);
   const months = dateRange.map(([year, month, day]) => month);
   const years = dateRange.map(([year, month, day]) => year);
   const [jyear, jmonth, jday] = toJalali(new Date());
-  const gregorianDate = new Date(); // Current date
+  const gregorianDate = new Date();
   const [taskDrawerVisible, setTaskDrawerVisible] = useState<boolean>(false);
   const [currentTaskId, setCurrentTaskId] = useState<number | null>(null);
-  const [delayTimes, setDelayTimes] = useState<{ [key: number]: number }>({});
-  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
 
   const [tasks, setTasks] = useState<ITask[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [statusUpdateLoading, setStatusUpdateLoading] = useState<{ [key: number]: boolean }>({});
+
+  const currentDayIndex = 5;
+  const todayIndexInReversedArray = dateRange.length - 1 - currentDayIndex;
+  const [selectedDay, setSelectedDay] = useState(todayIndexInReversedArray);
+
+  useEffect(() => {
+    setSelectedDay(todayIndexInReversedArray);
+  }, []);
 
   const getTasks = async () => {
     setLoading(true);
-    // const year = gregorianDate.getFullYear(); // 4-digit year (e.g., 2023)
-    // const month = gregorianDate.getMonth() + 1; // Month (1-12, since getMonth() returns 0-11)
+    const originalIndex = dateRange.length - 1 - selectedDay;
+
     const [year, month, day] = jalaliToGregorian(
-      jyear,
-      jmonth,
-      days[selectedDay]
+      years[originalIndex],
+      months[originalIndex],
+      days[originalIndex]
     );
+
     try {
       const response = await axios.get(
         `${appConfig.mobileApi}Task/GetAllByDate?date=${year}%2F${month}%2F${day}&page=1&pageSize=1000`
       );
 
-      // For demo purposes, assign random statuses to tasks if they don't have statuses
       const tasksWithStatuses = response.data.Items.map((task: ITask) => {
-        if (!task.TaskStateStr) {
-          const statuses = Object.values(TASK_STATUS);
-          task.TaskStateStr = statuses[Math.floor(Math.random() * statuses.length)];
-        }
+        // استفاده از وضعیت واقعی از API
+        const statusText = getTaskStatusText(task.TaskState, task.TaskStateStr);
 
-        // Initialize delay times for delayed tasks
-        if (task.TaskStateStr === TASK_STATUS.DELAYED) {
-          setDelayTimes(prev => ({
-            ...prev,
-            [task.TaskId]: Math.floor(Math.random() * 100000) // Random delay for demo
-          }));
-        }
+        // به‌روزرسانی TaskStateStr با وضعیت صحیح
+        task.TaskStateStr = statusText;
 
         return task;
       });
@@ -286,101 +529,87 @@ const TaskManagement: React.FC = () => {
       setTasks(tasksWithStatuses);
     } catch (error) {
       console.log(error);
+      Alert.alert("خطا", "خطا در دریافت اطلاعات تسک‌ها");
     } finally {
       setLoading(false);
     }
   };
 
-  // Set the current day index (should be at position 10 since we have 10 days before and 10 days after)
-  const currentDayIndex = 10;
-  const [selectedDay, setSelectedDay] = useState(currentDayIndex);
+  const handleDaySelect = (selectedIndex: number) => {
+    setSelectedDay(selectedIndex);
+  };
 
   useEffect(() => {
     getTasks();
   }, [selectedDay]);
 
-  // Update delay timers for delayed tasks
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      setDelayTimes(prev => {
-        const newDelays = { ...prev };
-        tasks.forEach(task => {
-          if (task.TaskStateStr === TASK_STATUS.DELAYED && newDelays[task.TaskId] !== undefined) {
-            newDelays[task.TaskId] = newDelays[task.TaskId] + 1;
-          }
-        });
-        return newDelays;
-      });
-    }, 1000);
+  const updateTaskStatus = async (taskId: number, newStatus: string) => {
+    const newStateNumber = STATUS_TO_API_MAPPING[newStatus];
 
-    return () => clearInterval(intervalId);
-  }, [tasks]);
-
-  // Create a ref for the ScrollView
-  const scrollViewRef = useRef<ScrollView>(null);
-
-  const screenWidth = Dimensions.get("window").width;
-  // Calculate item width to display 3 items at a time with some spacing
-  const dayItemWidth = (screenWidth - 200) / 3; // 48 accounts for padding and margins
-
-  // Scroll to current day on initial render
-  useEffect(() => {
-    if (scrollViewRef.current) {
-      const x =
-        (days.length - 1 - selectedDay) * (dayItemWidth + 16) -
-        (screenWidth - dayItemWidth) / 2;
-      setTimeout(() => {
-        scrollViewRef.current?.scrollTo({ x, animated: true });
-      }, 100);
+    if (!newStateNumber) {
+      Alert.alert("خطا", "وضعیت نامعتبر");
+      return false;
     }
-  }, [selectedDay, dayItemWidth, screenWidth]);
 
-  const scrollToIndex = (index: number) => {
-    if (scrollViewRef.current) {
-      const x =
-        (days.length - 1 - index) * (dayItemWidth + 11) -
-        (screenWidth - dayItemWidth) / 2;
-      scrollViewRef.current.scrollTo({ x, animated: true });
+    setStatusUpdateLoading(prev => ({ ...prev, [taskId]: true }));
+
+    try {
+      const response = await axios.get(
+        `${appConfig.mobileApi}Task/SetTaskState?taskId=${taskId}&state=${newStateNumber}`
+      );
+
+      if (response.data === true) {
+        // بروزرسانی موفقیت‌آمیز
+        setTasks(prevTasks =>
+          prevTasks.map(task =>
+            task.TaskId === taskId
+              ? { ...task, TaskStateStr: newStatus, TaskState: newStateNumber }
+              : task
+          )
+        );
+        return true;
+      } else {
+        // API خطا برگردانده
+        Alert.alert("خطا", "تغییر وضعیت ناموفق بود");
+        return false;
+      }
+    } catch (error) {
+      console.log("Error updating task status:", error);
+      Alert.alert("خطا", "خطا در ارتباط با سرور");
+      return false;
+    } finally {
+      setStatusUpdateLoading(prev => ({ ...prev, [taskId]: false }));
     }
   };
 
-  const handleTaskPress = (taskId: number) => {
-    setSelectedTaskId(taskId);
-    setTaskDrawerVisible(true);
-  };
+  const handleStatusChange = async (taskId: number, currentStatus: string) => {
+    // تعیین وضعیت بعدی بر اساس وضعیت فعلی
+    let nextStatus;
 
-  // تابع جدید برای تغییر وضعیت تسک
-  const handleStatusChange = (taskId: number, currentStatus: string) => {
-    // تغییر وضعیت به صورت چرخشی
-    const statusOrder = [
-      TASK_STATUS.NOT_STARTED,
-      TASK_STATUS.IN_PROGRESS,
-      TASK_STATUS.COMPLETED,
-      TASK_STATUS.DELAYED,
-      TASK_STATUS.CANCELED
-    ];
+    switch (currentStatus) {
+      case TASK_STATUS.NOT_STARTED:
+        nextStatus = TASK_STATUS.IN_PROGRESS;
+        break;
+      case TASK_STATUS.IN_PROGRESS:
+        nextStatus = TASK_STATUS.COMPLETED;
+        break;
+      case TASK_STATUS.COMPLETED:
+        nextStatus = TASK_STATUS.CANCELED;
+        break;
+      case TASK_STATUS.CANCELED:
+        nextStatus = TASK_STATUS.NOT_STARTED;
+        break;
+      default:
+        nextStatus = TASK_STATUS.IN_PROGRESS;
+        break;
+    }
 
-    // پیدا کردن وضعیت فعلی در لیست
-    const currentIndex = statusOrder.findIndex(status => status === currentStatus);
-    // محاسبه وضعیت بعدی (چرخشی)
-    const nextIndex = (currentIndex + 1) % statusOrder.length;
-    const nextStatus = statusOrder[nextIndex];
+    // فراخوانی API برای تغییر وضعیت
+    const success = await updateTaskStatus(taskId, nextStatus);
 
-    // به‌روزرسانی وضعیت تسک در لیست
-    setTasks(prevTasks =>
-      prevTasks.map(task =>
-        task.TaskId === taskId
-          ? { ...task, TaskStateStr: nextStatus }
-          : task
-      )
-    );
-
-    // اگر وضعیت به "تاخیر خورده" تغییر کرد، یک تایمر تاخیر اضافه کنیم
-    if (nextStatus === TASK_STATUS.DELAYED) {
-      setDelayTimes(prev => ({
-        ...prev,
-        [taskId]: 0
-      }));
+    if (!success) {
+      // در صورت ناموفق بودن، وضعیت تغییر نمی‌کند
+      console.log("Status update failed for task:", taskId);
     }
   };
 
@@ -388,83 +617,12 @@ const TaskManagement: React.FC = () => {
     <>
       <ScreenHeader title="مدیریت وظایف" />
       <SafeAreaView style={styles.container}>
-        <View style={styles.carouselContainer}>
-          <TouchableOpacity
-            style={styles.arrowButton}
-            onPress={() => {
-              if (selectedDay > 0) {
-                const newIndex = selectedDay - 1;
-                setSelectedDay(newIndex);
-                scrollToIndex(newIndex);
-              }
-            }}
-            disabled={selectedDay === 0}
-          >
-            <Ionicons
-              name="chevron-forward"
-              size={24}
-              color={selectedDay === 0 ? colors.gray : colors.white}
-            />
-          </TouchableOpacity>
-          <ScrollView
-            ref={scrollViewRef}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.carousel}
-            snapToInterval={dayItemWidth + 10} // Add margin to snap calculation
-            decelerationRate="fast"
-            snapToAlignment="center"
-            contentInset={{ left: 0, right: 0 }}
-          >
-            {days.map((day, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  styles.dayItem,
-                  { width: dayItemWidth, height: dayItemWidth }, // Make width and height equal for square
-                  selectedDay === index && styles.selectedDayItem,
-                ]}
-                onPress={() => setSelectedDay(index)}
-              >
-                <Text
-                  style={[
-                    styles.dayText,
-                    selectedDay === index && styles.selectedDayText,
-                  ]}
-                >
-                  {toPersianDigits(day.toString())}
-                </Text>
-                <AppText
-                  style={[
-                    { fontSize: 11, color: colors.primary },
-                    selectedDay === index && styles.selectedDayText,
-                  ]}
-                >
-                  {persianMonths[months[index] - 1]}
-                </AppText>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-          <TouchableOpacity
-            style={styles.arrowButton}
-            onPress={() => {
-              if (selectedDay < days.length - 1) {
-                const newIndex = selectedDay + 1;
-                setSelectedDay(newIndex);
-                scrollToIndex(newIndex);
-              }
-            }}
-            disabled={selectedDay === days.length - 1}
-          >
-            <Ionicons
-              name="chevron-back"
-              size={24}
-              color={
-                selectedDay === days.length - 1 ? colors.gray : colors.white
-              }
-            />
-          </TouchableOpacity>
-        </View>
+        <ScrollableDayCarousel
+          dateRange={dateRange}
+          selectedDay={selectedDay}
+          onDaySelect={handleDaySelect}
+          currentDayIndex={currentDayIndex}
+        />
 
         <View style={styles.content}>
           {loading ? (
@@ -486,7 +644,16 @@ const TaskManagement: React.FC = () => {
                 title={
                   <View style={styles.titleContainer}>
                     <Text style={styles.titleText}>{toPersianDigits(task.TaskTitle)}</Text>
-                    <StatusIndicator status={task.TaskStateStr} />
+                    <View style={styles.statusContainer}>
+                      <StatusIndicator status={task.TaskStateStr} />
+                      {statusUpdateLoading[task.TaskId] && (
+                        <ActivityIndicator
+                          size="small"
+                          color={colors.primary}
+                          style={styles.statusLoader}
+                        />
+                      )}
+                    </View>
                   </View>
                 }
                 fields={[
@@ -497,18 +664,9 @@ const TaskManagement: React.FC = () => {
                     value: toPersianDigits(task.TaskTypeName),
                   },
                 ]}
-                note={
-                  task.TaskStateStr === TASK_STATUS.DELAYED ? (
-                    <View style={styles.delayContainer}>
-                      <View style={styles.delayLine} />
-                      <AppText style={styles.delayText}>
-                        مدت تاخیر: {formatDelayTime(delayTimes[task.TaskId] || 0)}
-                      </AppText>
-                    </View>
-                  ) : ""
-                }
+                note=""
                 noteConfig={{
-                  show: task.TaskStateStr === TASK_STATUS.DELAYED,
+                  show: false,
                   icon: "notes",
                   iconColor: colors.secondary,
                   label: "",
@@ -520,18 +678,19 @@ const TaskManagement: React.FC = () => {
                   iconColor: colors.secondary,
                 }}
                 titleStyle={{ fontSize: 20 }}
-                containerStyle={
+                containerStyle={[
                   Platform.OS === "android"
                     ? styles.androidCardAdjustment
-                    : {}
-                }
+                    : styles.cardContainer,
+                  styles.taskContentContainer
+                ]}
                 onPress={() => {
                   setCurrentTaskId(task.TaskId);
                   setTaskDrawerVisible(true);
                 }}
-                // اضافه کردن پارامترهای جدید
                 status={task.TaskStateStr}
                 onStatusChange={(currentStatus) => handleStatusChange(task.TaskId, currentStatus)}
+                disabled={statusUpdateLoading[task.TaskId]}
               />
             ))
           )}
@@ -558,6 +717,62 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: "#e0e0e0",
     marginVertical: 8,
+    minHeight: 120,
+    paddingVertical: 16,
+  },
+  cardContainer: {
+    minHeight: 120,
+    paddingVertical: 16,
+    marginVertical: 10,
+  },
+  titleContainer: {
+    flexDirection: "row-reverse",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+    minHeight: 0,
+    paddingVertical: 0,
+  },
+  statusContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  statusLoader: {
+    marginLeft: 4,
+  },
+  taskContentContainer: {
+    paddingVertical: 8,
+    paddingTop: 0,
+    minHeight: 80,
+  },
+  carouselContainer: {
+    height: 120,
+    marginTop: 0,
+    marginBottom: 10,
+  },
+  scrollContent: {
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  dayCarouselItem: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 100,
+  },
+  dayItemContainer: {
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  dayText: {
+    fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
+    textAlign: 'center',
+  },
+  monthText: {
+    fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
+    textAlign: 'center',
+    marginTop: 2,
   },
   header: {
     flexDirection: "row",
@@ -568,54 +783,16 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontFamily: getFontFamily("", "bold"),
+    fontFamily: getFontFamily("Yekan_Bakh_Bold", "bold"),
     color: colors.black,
-  },
-  carouselContainer: {
-    marginTop: 16,
-    flexDirection: "row-reverse",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "#6e7e94",
-    borderRadius: 12,
-    padding: 10,
-    marginHorizontal: 15,
-  },
-  carousel: {
-    paddingHorizontal: 5,
-    flexDirection: "row-reverse", // Ensure RTL layout
-  },
-  dayItem: {
-    // Width and height now dynamically set in the component
-    borderRadius: 8, // Reduced radius for square look
-    justifyContent: "center",
-    alignItems: "center",
-    marginHorizontal: 5,
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.primary,
-  },
-  selectedDayItem: {
-    backgroundColor: colors.primary || "#4A80F0",
-  },
-  dayText: {
-    fontSize: 26, // Increased font size
-    fontFamily: getFontFamily("", "semi-bold"),
-    color: colors.primary || "#707070",
-  },
-  selectedDayText: {
-    color: colors.white || "#FFFFFF",
   },
   content: {
     flex: 1,
     padding: 16,
-    
-    // alignItems: "center",
   },
   contentText: {
     fontSize: 16,
-    fontFamily: getFontFamily("", "regular"),
+    fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
     textAlign: "center",
     marginTop: 20,
   },
@@ -641,24 +818,9 @@ const styles = StyleSheet.create({
     marginTop: 12,
     textAlign: "center",
   },
-  arrowButton: {
-    padding: 10,
-    marginHorizontal: 6,
-    borderWidth: 1,
-    borderRadius: 50,
-    backgroundColor: colors.secondary,
-    borderColor: colors.secondary,
-  },
-  // New styles for status indicator and delay
-  titleContainer: {
-    flexDirection: "row-reverse",
-    justifyContent: "space-between",
-    alignItems: "center",
-    width: "100%",
-  },
   titleText: {
     fontSize: 20,
-    fontFamily: getFontFamily("", "bold"),
+    fontFamily: getFontFamily("Yekan_Bakh_Bold", "500"),
     color: colors.text || "#333",
     textAlign: 'right',
   },
@@ -668,23 +830,8 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   statusText: {
-    // color: statusColor,
     fontSize: 12,
-    fontFamily: getFontFamily("", "medium"),
-  },
-  delayContainer: {
-    marginTop: 8,
-  },
-  delayLine: {
-    height: 1,
-    backgroundColor: "#F44336", // Red
-    marginBottom: 8,
-  },
-  delayText: {
-    color: "#F44336", // Red
-    fontSize: 13,
-    fontFamily: getFontFamily("", "medium"),
-    textAlign: "left",
+    fontFamily: getFontFamily("Yekan_Bakh_Regular", "500"),
   }
 });
 

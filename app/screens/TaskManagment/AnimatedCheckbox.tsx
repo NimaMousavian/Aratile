@@ -4,16 +4,16 @@ import { Feather } from "@expo/vector-icons";
 
 const TASK_STATUS = {
   NOT_STARTED: "شروع نشده",
-  IN_PROGRESS: "درحال انجام",
+  IN_PROGRESS: "در حال انجام",
   COMPLETED: "پایان یافته",
   DELAYED: "تاخیر خورده",
   CANCELED: "لغو شده",
 };
 
 const TASK_STATUS_COLORS = {
-  [TASK_STATUS.NOT_STARTED]: "#f1c02a",
-  [TASK_STATUS.IN_PROGRESS]: "#2196F3",
-  [TASK_STATUS.COMPLETED]: "#4CAF50",
+  [TASK_STATUS.NOT_STARTED]: "#FFC107",
+  [TASK_STATUS.IN_PROGRESS]: "#17A2B8",
+  [TASK_STATUS.COMPLETED]: "#28A745",
   [TASK_STATUS.DELAYED]: "#F44336",
   [TASK_STATUS.CANCELED]: "#9E9E9E",
 };

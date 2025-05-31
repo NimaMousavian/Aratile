@@ -86,10 +86,101 @@ const openApp = async (packageName: string) => {
   }
 };
 
-const openCalculator = () => {
-  IntentLauncher.startActivityAsync("android.intent.action.MAIN", {
-    category: "android.intent.category.APP_CALCULATOR",
-  });
+const openCalculator = async () => {
+  if (Platform.OS === "android") {
+    try {
+      const calculatorIntent = "android.intent.action.MAIN";
+      const calculatorCategory = "android.intent.category.APP_CALCULATOR";
+
+      try {
+        await IntentLauncher.startActivityAsync(calculatorIntent, {
+          category: calculatorCategory,
+        });
+        return;
+      } catch (intentError) {
+        console.log("Intent launcher failed, trying Linking...");
+      }
+
+      const calculatorPackages = [
+        "com.google.android.calculator", 
+        "com.android.calculator2", 
+        "com.sec.android.app.popupcalculator", 
+        "com.miui.calculator",
+        "com.oneplus.calculator",
+        "com.huawei.calculator",
+        "calculator://", 
+      ];
+
+      for (const packageName of calculatorPackages) {
+        try {
+          let url;
+          if (packageName.startsWith("calculator://")) {
+            url = packageName;
+          } else {
+            url = `intent://open#Intent;package=${packageName};end`;
+          }
+
+          const canOpen = await Linking.canOpenURL(url);
+          if (canOpen) {
+            await Linking.openURL(url);
+            return;
+          }
+        } catch (error) {
+          console.log(`Failed to open calculator with package: ${packageName}`);
+          continue;
+        }
+      }
+
+      Alert.alert(
+        "خطا",
+        "ماشین حساب پیدا نشد. لطفاً از فهرست برنامه‌ها ماشین حساب را باز کنید.",
+        [{ text: "باشه", style: "default" }]
+      );
+
+    } catch (error) {
+      console.error("Error opening calculator:", error);
+      Alert.alert(
+        "خطا",
+        "خطا در باز کردن ماشین حساب. لطفاً دستی باز کنید.",
+        [{ text: "باشه", style: "default" }]
+      );
+    }
+  } else if (Platform.OS === "ios") {
+    try {
+      const calculatorURL = "calc://";
+      const canOpen = await Linking.canOpenURL(calculatorURL);
+
+      if (canOpen) {
+        await Linking.openURL(calculatorURL);
+      } else {
+        const shortcutsURL = "shortcuts://run-shortcut?name=Calculator";
+        const canOpenShortcuts = await Linking.canOpenURL(shortcutsURL);
+
+        if (canOpenShortcuts) {
+          await Linking.openURL(shortcutsURL);
+        } else {
+          Alert.alert(
+            "ماشین حساب",
+            "ماشین حساب را از Control Center یا صفحه اصلی باز کنید.",
+            [{ text: "باشه", style: "default" }]
+          );
+        }
+      }
+    } catch (error) {
+      console.error("Error opening calculator on iOS:", error);
+      Alert.alert(
+        "ماشین حساب",
+        "ماشین حساب را از Control Center یا صفحه اصلی باز کنید.",
+        [{ text: "باشه", style: "default" }]
+      );
+    }
+  } else {
+    Alert.alert(
+      "پشتیبانی نشده",
+      "این ویژگی فقط روی موبایل قابل استفاده است.",
+      [{ text: "باشه", style: "default" }]
+    );
+  }
 };
 const safeNavigate = (navigation: any, screenName: string, params?: any) => {
   console.log(`Attempting to navigate to: ${screenName}`);
@@ -163,7 +254,6 @@ const initialItems: MenuItem[] = [
     name: "ماشین حساب",
     icon: "calculate",
     iconColor: "#1C3F64",
-    screenName: "ShowRoom",
   },
   {
     id: 5,
