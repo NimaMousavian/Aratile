@@ -11,7 +11,7 @@ import { useNavigation } from "@react-navigation/native";
 import AppSelectionScreen from "./screens/AppSelectionScreen";
 import styles from "./config/styles";
 import colors from "./config/colors";
-import { IForm, IProduct, IShowRoomVisitItem } from "./config/types";
+import { IForm, IProduct, IShopItem, IShowRoomVisitItem } from "./config/types";
 import AppText from "./components/Text";
 import LogingScreen from "./screens/LogingScreen";
 import ProfileScreen from "./screens/ProfileScreen";
@@ -44,6 +44,7 @@ import PersianCalendarScreen from "./screens/Calendar/PersianCalendarScreen";
 import TaskManagement from "./screens/TaskManagment/TaskManagment";
 import Forms from "./screens/Forms/Forms";
 import FormItem from "./screens/Forms/FormItem";
+import SupplyRequestForm from "./screens/SupplyRequestForm";
 
 export type RootStackParamList = {
   AppSelection: undefined;
@@ -71,7 +72,15 @@ export type RootStackParamList = {
   AddNewColleague: undefined;
   ProductProperties: undefined;
   SupplyRequest: undefined;
-  SupplyRequestList: undefined;
+  SupplyRequestForm: {
+    product?: Product;
+    requestedValue_?: number;
+    description_?: string;
+    getAllSupplyRequest: () => void;
+    supplyRequestId?: number;
+    mode: "add" | "edit";
+    readonly?: boolean;
+  };
   IssuedInvoices: undefined;
   Forms: undefined;
   FormItem: { formItem: IForm };
@@ -88,7 +97,7 @@ export type RootStackParamList = {
   FieldMarketer: undefined;
   B2BFieldMarketer: undefined;
   B2CFieldMarketer: undefined;
-  AddNewShop: undefined;
+  AddNewShop: { shop?: IShopItem };
   VoiceRecording: undefined;
   AddNewProject: undefined;
 
@@ -206,7 +215,7 @@ const AppStack = () => {
         }}
       />
       <Stack.Screen name="SupplyRequest" component={SupplyRequest} />
-      <Stack.Screen name="SupplyRequestList" component={SupplyRequestList} />
+      <Stack.Screen name="SupplyRequestForm" component={SupplyRequestForm} />
 
       <Stack.Screen
         name="IssuedInvoices"

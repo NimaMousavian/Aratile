@@ -30,13 +30,13 @@ const showRoomItems: MenuItem[] = [
     iconColor: "#1C3F64",
     screenName: "Visits",
   },
-  {
-    id: 2,
-    name: "درخواست برچسب",
-    icon: "new-label",
-    iconColor: "#1C3F64",
-    screenName: "LabelRequest",
-  },
+  // {
+  //   id: 2,
+  //   name: "درخواست برچسب",
+  //   icon: "new-label",
+  //   iconColor: "#1C3F64",
+  //   screenName: "LabelRequest",
+  // },
 ];
 
 const screenWidth = Dimensions.get("window").width;
@@ -94,20 +94,19 @@ const ShowRoom = () => {
   return (
     <>
       <ScreenHeader title="شوروم" />
-    <View style={styles.container}>
+      <View style={styles.container}>
+        <View style={styles.gridContainer}>
+          {showRoomItems.map((item, index) => renderItem(item, index))}
+        </View>
 
-      <View style={styles.gridContainer}>
-        {showRoomItems.map((item, index) => renderItem(item, index))}
-      </View>
+        <Toast
+          visible={toastVisible}
+          message={toastMessage}
+          type={toastType}
+          onDismiss={() => setToastVisible(false)}
+        />
 
-      <Toast
-        visible={toastVisible}
-        message={toastMessage}
-        type={toastType}
-        onDismiss={() => setToastVisible(false)}
-      />
-
-      {/* <View style={styles.customerContainer}>
+        {/* <View style={styles.customerContainer}>
         <LinearGradient
           colors={[colors.secondary, colors.primary]}
           start={{ x: 0, y: 0 }}
@@ -169,7 +168,7 @@ const ShowRoom = () => {
         </View>
       </View> */}
 
-      {/* <ColleagueBottomSheet
+        {/* <ColleagueBottomSheet
         title="انتخاب مشتری"
         visible={showColleagueSheet}
         onClose={() => setShowColleagueSheet(false)}

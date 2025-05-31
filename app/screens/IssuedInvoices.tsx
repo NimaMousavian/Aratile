@@ -459,28 +459,30 @@ const IssuedInvoices: React.FC = () => {
 
       const data: InvoiceApiResponse = await response.json();
 
-      // Map API data to our component's format
-      const mappedItems: InspectionItem[] = data.Items.map((item) => ({
-        id: item.InvoiceId.toString(),
-        buyerName: item.PersonFullName.trim() || "مشتری",
-        buyerPhone: item.PersonMobile,
-        invoiceNumber: item.InvoiceId.toString(),
-        date: item.ShamsiInvoiceDate,
-        sellerName: item.ApplicationUserName,
-        sellerPhone: "", // API doesn't provide seller phone
-        description: item.Description,
-        status: stateMap[item.State] || "صادر شده",
-        amount: item.TotalAmount,
-      }));
+      if (data.length !== 0) {
+        // Map API data to our component's format
+        const mappedItems: InspectionItem[] = data.Items.map((item) => ({
+          id: item.InvoiceId.toString(),
+          buyerName: item.PersonFullName.trim() || "مشتری",
+          buyerPhone: item.PersonMobile,
+          invoiceNumber: item.InvoiceId.toString(),
+          date: item.ShamsiInvoiceDate,
+          sellerName: item.ApplicationUserName,
+          sellerPhone: "", // API doesn't provide seller phone
+          description: item.Description,
+          status: stateMap[item.State] || "صادر شده",
+          amount: item.TotalAmount,
+        }));
 
-      setItems(mappedItems);
-      setTotalPages(data.TotalPages);
+        setItems(mappedItems);
+        setTotalPages(data.TotalPages);
+      }
     } catch (error) {
       console.error("Error fetching invoices:", error);
-      Alert.alert(
-        "خطا",
-        "مشکلی در دریافت اطلاعات فاکتورها رخ داده است. لطفا دوباره تلاش کنید."
-      );
+      // Alert.alert(
+      //   "خطا",
+      //   "مشکلی در دریافت اطلاعات فاکتورها رخ داده است. لطفا دوباره تلاش کنید."
+      // );
     } finally {
       setLoading(false);
       setRefreshing(false);

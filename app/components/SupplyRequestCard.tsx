@@ -44,7 +44,7 @@ interface PurchaseInfoCardProps {
   gradientColors?: string[];
   containerStyle?: ViewStyle;
   status?: number;
-  onPress?: (srID: number) => void;
+  onPress?: (srID: number, reqState: number) => void;
   onNotAllowedEdit?: () => void;
 }
 
@@ -102,10 +102,11 @@ const SupplyRequestCard: React.FC<PurchaseInfoCardProps> = ({
   return (
     <TouchableOpacity
       activeOpacity={0.8}
-      onPress={
-        supplyRequest.RequestState === 1
-          ? () => onPress?.(supplyRequest.ProductSupplyRequestId)
-          : () => onNotAllowedEdit?.()
+      onPress={() =>
+        onPress?.(
+          supplyRequest.ProductSupplyRequestId,
+          supplyRequest.RequestState
+        )
       }
     >
       <View
@@ -206,8 +207,8 @@ const SupplyRequestCard: React.FC<PurchaseInfoCardProps> = ({
             </>
           )} */}
 
-          <View style={styles.divider} />
-          <View style={styles.noteContainer}>
+          {/* <View style={styles.divider} /> */}
+          {/* <View style={styles.noteContainer}>
             <MaterialIcons
               name="error-outline"
               size={18}
@@ -219,8 +220,8 @@ const SupplyRequestCard: React.FC<PurchaseInfoCardProps> = ({
                 {supplyRequest.Description}
               </Text>
             </View>
-          </View>
-          <View style={{ flexDirection: "row-reverse", marginTop: 15 }}>
+          </View> */}
+          {/* <View style={{ flexDirection: "row-reverse", marginTop: 0 }}>
             <TouchableOpacity
               style={[
                 styles.iconCircleSmall,
@@ -245,7 +246,7 @@ const SupplyRequestCard: React.FC<PurchaseInfoCardProps> = ({
                 }
               />
             </TouchableOpacity>
-          </View>
+          </View> */}
         </View>
         {/* <View style={styles.buttonsContainter}>
           <AppButton

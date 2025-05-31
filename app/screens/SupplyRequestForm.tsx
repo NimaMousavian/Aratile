@@ -25,6 +25,12 @@ import Toast from "../components/Toast";
 import { ISupplyRequest } from "../config/types";
 import { ActivityIndicator } from "react-native-paper";
 import AppText from "../components/Text";
+import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
+import ScreenHeader from "../components/ScreenHeader";
+import { InputContainer } from "./FieldMarketer/B2BFieldMarketer/AddNewShop";
+import ProductSearchDrawer from "./IssuingNewInvoice/ProductSearchDrawer";
+import useProductScanner from "../Hooks/useProductScanner";
+import { AppNavigationProp } from "../StackNavigator";
 
 interface ISupplyRequestToPost {
   ProductSupplyRequestId: number;
@@ -48,27 +54,44 @@ const validationSchema = Yup.object().shape({
   description: Yup.string(),
 });
 
+type SupplyRequestFormRouteParams = {
+  supplyRequestform: {
+    product?: Product;
+    requestedValue_?: number;
+    description_?: string;
+    getAllSupplyRequest: () => void;
+    supplyRequestId?: number;
+    mode: "add" | "edit";
+    readonly?: boolean;
+  };
+};
+
 interface IProps {
-  visible: boolean;
-  closeDrawer: () => void;
   product?: Product;
   requestedValue_?: number;
   description_?: string;
   getAllSupplyRequest: () => void;
   supplyRequestId?: number;
   mode: "add" | "edit";
+  readonly?: boolean;
 }
 
-const SupplyRequestForm: React.FC<IProps> = ({
-  visible,
-  closeDrawer,
-  product,
-  requestedValue_,
-  description_,
-  getAllSupplyRequest,
-  supplyRequestId,
-  mode,
-}) => {
+const SupplyRequestForm: React.FC = () => {
+  const route =
+    useRoute<RouteProp<SupplyRequestFormRouteParams, "supplyRequestform">>();
+  const {
+    product,
+    requestedValue_,
+    description_,
+    getAllSupplyRequest,
+    supplyRequestId,
+    mode,
+    readonly,
+  } = route.params;
+
+  const navigation = useNavigation<AppNavigationProp>();
+
+  const [selectedProduct, setSelectedProduct] = useState<Product>();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [supplyRequest, setSupplyRequest] = useState<ISupplyRequest | null>(
     null
@@ -83,6 +106,8 @@ const SupplyRequestForm: React.FC<IProps> = ({
   );
 
   const [screenLoading, setScreenLoading] = useState<boolean>(false);
+  const [showProductSearchDrawer, setShowProductSearchDrawer] =
+    useState<boolean>(false);
 
   const [toastVisible, setToastVisible] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string>("");
@@ -99,6 +124,8 @@ const SupplyRequestForm: React.FC<IProps> = ({
     setToastVisible(true);
   };
 
+  const { searchProduct } = useProductScanner();
+
   useEffect(() => {
     console.log(mode);
 
@@ -112,14 +139,23 @@ const SupplyRequestForm: React.FC<IProps> = ({
       console.log("here");
     }
 
-    if (visible === false) {
-      setProductName("");
-      setRequestedValue(undefined);
-      setDescription("");
-    }
-  }, [visible]);
+    // if (visible === false) {
+    //   setProductName("");
+    //   setRequestedValue(undefined);
+    //   setDescription("");
+    // }
+  }, []);
+
+  const handleProductSelected = (product: Product) => {
+    setSelectedProduct(product);
+    setProductName(product.title);
+  };
 
   const validateForm = () => {
+    if (!selectedProduct) {
+      showToast("محصول انتخاب نشده است", "error");
+      return false;
+    }
     if (!requestedValue) {
       showToast("مقدار مورد درخواست وارد نشده است", "error");
       return false;
@@ -156,7 +192,7 @@ const SupplyRequestForm: React.FC<IProps> = ({
         ProductSupplyRequestId: 0,
         ApplicationUserId: 1,
         ApplicationUserName: null,
-        ProductId: product?.id || supplyRequest?.ProductId || 0,
+        ProductId: selectedProduct?.id || supplyRequest?.ProductId || 0,
         ProductName: null,
         ProductVariationId: null,
         ProductVariationName: null,
@@ -176,11 +212,11 @@ const SupplyRequestForm: React.FC<IProps> = ({
 
       if (response.status === 200) {
         showToast("درخواست با موفقیت ثبت شد", "success");
+        setSelectedProduct(undefined);
         setProductName("");
         setRequestedValue(undefined);
         setDescription("");
         getAllSupplyRequest();
-        closeDrawer();
       }
     } catch (error) {
       console.log(error);
@@ -196,7 +232,7 @@ const SupplyRequestForm: React.FC<IProps> = ({
         ProductSupplyRequestId: 0,
         ApplicationUserId: 1,
         ApplicationUserName: null,
-        ProductId: product?.id || supplyRequest?.ProductId || 0,
+        ProductId: supplyRequest?.ProductId || 0,
         ProductName: null,
         ProductVariationId: null,
         ProductVariationName: null,
@@ -209,7 +245,7 @@ const SupplyRequestForm: React.FC<IProps> = ({
 
       console.log(supReqToPost);
 
-      const response = await axios.post(
+      const response = await axios.put(
         `${appConfig.mobileApi}ProductSupplyRequest/Edit`,
         supReqToPost
       );
@@ -217,7 +253,6 @@ const SupplyRequestForm: React.FC<IProps> = ({
       if (response.status === 200) {
         showToast("ویرایش با موفقیت انجام شد", "success");
         getAllSupplyRequest();
-        closeDrawer();
       }
     } catch (error) {
       console.log(error);
@@ -236,27 +271,14 @@ const SupplyRequestForm: React.FC<IProps> = ({
   };
 
   return (
-    <Modal
-      visible={visible}
-      transparent={true}
-      animationType="none"
-      onRequestClose={closeDrawer}
-      statusBarTranslucent={true}
-    >
-      <Toast
-        visible={toastVisible}
-        message={toastMessage}
-        type={toastType}
-        onDismiss={() => setToastVisible(false)}
-      />
+    <>
       <View style={styles.modalContainer}>
-        <Animated.View style={[styles.backdrop]}>
-          <TouchableOpacity
-            style={styles.backdropTouchable}
-            activeOpacity={1}
-            onPress={closeDrawer}
-          />
-        </Animated.View>
+        <Toast
+          visible={toastVisible}
+          message={toastMessage}
+          type={toastType}
+          onDismiss={() => setToastVisible(false)}
+        />
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "position" : undefined}
           style={styles.keyboardAvoidingContainer}
@@ -264,96 +286,118 @@ const SupplyRequestForm: React.FC<IProps> = ({
           keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
           enabled={false}
         >
-          <Animated.View
-            style={[
-              styles.drawerContainer,
-              {
-                height: Platform.OS === "ios" ? height * 0.8 : "80%",
-                width: Platform.OS === "ios" ? width : "100%",
-              },
-            ]}
-          >
-            <LinearGradient
-              colors={[colors.secondary, colors.primary]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.header}
+          {/* <View style={styles.headerContent}>
+            <MaterialIcons name="shopping-cart" size={24} color="white" />
+            <Text style={styles.headerTitle}>درخواست تامین</Text>
+          </View> */}
+          <ScreenHeader title="درخواست تامین" />
+
+          <View style={styles.contentContainer}>
+            <ScrollView
+              style={styles.scrollView}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.scrollViewContent}
             >
-              <View style={styles.headerContent}>
-                <MaterialIcons name="shopping-cart" size={24} color="white" />
-                <Text style={styles.headerTitle}>درخواست تامین</Text>
-              </View>
-              <TouchableOpacity
-                onPress={closeDrawer}
-                style={styles.closeButton}
-              >
-                <MaterialIcons
-                  name="close"
-                  size={32}
-                  color="white"
-                  style={{ marginLeft: -4 }}
-                />
-              </TouchableOpacity>
-            </LinearGradient>
-            <View style={styles.contentContainer}>
-              <ScrollView
-                style={styles.scrollView}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.scrollViewContent}
-              >
-                {screenLoading ? (
-                  <View style={styles.centerContainer}>
-                    <ActivityIndicator size="large" color={colors.primary} />
-                    <AppText
-                      style={{
-                        marginTop: 15,
-                        fontSize: 20,
-                        color: colors.primary,
-                      }}
-                    >
-                      در حال بارگذاری اطلاعات
-                    </AppText>
-                  </View>
-                ) : (
-                  <>
-                    <View style={styles.productContainer}>
-                      <Text style={styles.productTitle}>{productName}</Text>
-                    </View>
-                    <View style={styles.productContainer}>
-                      {/* <AppTextInput
+              {screenLoading ? (
+                <View style={styles.centerContainer}>
+                  <ActivityIndicator size="large" color={colors.primary} />
+                  <AppText
+                    style={{
+                      marginTop: 15,
+                      fontSize: 20,
+                      color: colors.primary,
+                    }}
+                  >
+                    در حال بارگذاری اطلاعات
+                  </AppText>
+                </View>
+              ) : (
+                <>
+                  {/* <View style={styles.productContainer}>
+                    <Text style={styles.productTitle}>{productName}</Text>
+                  </View> */}
+                  <InputContainer
+                    title="محصول"
+                    showAddIcon
+                    onAddIconPress={() => setShowProductSearchDrawer(true)}
+                    showCameraIcon
+                    onCameraIconPress={() => {
+                      navigation.navigate("BarCodeScanner", {
+                        onReturn: (scannedProduct: Product) => {
+                          if (scannedProduct) {
+                            setSelectedProduct(scannedProduct);
+                            setProductName(scannedProduct.title);
+                          }
+                        },
+                      });
+                    }}
+                  >
+                    {productName ? (
+                      <AppText
+                        style={{
+                          color: colors.dark,
+                          fontSize: 18,
+                          marginRight: 10,
+                          marginBottom: 10,
+                          textAlign: "center",
+                          fontFamily: "Yekan_Bakh_Bold",
+                        }}
+                      >
+                        {productName}
+                      </AppText>
+                    ) : (
+                      <AppText
+                        style={{
+                          color: colors.medium,
+                          fontSize: 15,
+                          marginRight: 10,
+                          marginBottom: 10,
+                          textAlign: "center",
+                        }}
+                      >
+                        {"محصول انتخاب نشده است."}
+                      </AppText>
+                    )}
+                    <View></View>
+                  </InputContainer>
+                  <InputContainer title="سایر مشخصات">
+                    {/* <AppTextInput
                           autoCapitalize="none"
                           autoCorrect={false}
                           keyboardType="default"
                           placeholder="تنوع محصول"
                           onChangeText={() => {}}
                         ></AppTextInput> */}
-                      <AppTextInput
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                        keyboardType="number-pad"
-                        icon="10k"
-                        placeholder={`مقدار مورد درخواست ${""}`}
-                        onChangeText={(val) => setRequestedValue(Number(val))}
-                        value={requestedValue ? requestedValue?.toString() : ""}
-                      ></AppTextInput>
-                      <AppTextInput
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                        keyboardType="default"
-                        icon="text-snippet"
-                        placeholder="توضیحات"
-                        onChangeText={setDescription}
-                        multiline
-                        numberOfLines={5}
-                        height={150}
-                        textAlign="right"
-                        isLargeInput={true}
-                        value={description}
-                      ></AppTextInput>
-                    </View>
-                  </>
-                )}
-              </ScrollView>
+                    <AppTextInput
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      keyboardType="number-pad"
+                      icon="10k"
+                      placeholder={`مقدار مورد درخواست ${""}`}
+                      onChangeText={(val) => setRequestedValue(Number(val))}
+                      value={requestedValue ? requestedValue?.toString() : ""}
+                      readOnly={readonly}
+                    ></AppTextInput>
+                    <AppTextInput
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      keyboardType="default"
+                      icon="text-snippet"
+                      placeholder="توضیحات"
+                      onChangeText={setDescription}
+                      multiline
+                      numberOfLines={5}
+                      height={150}
+                      textAlign="right"
+                      isLargeInput={true}
+                      value={description}
+                      readOnly={readonly}
+                    ></AppTextInput>
+                  </InputContainer>
+                </>
+              )}
+            </ScrollView>
+            {readonly === false ? (
               <View style={styles.buttonContainer}>
                 <AppButton
                   title={
@@ -369,16 +413,23 @@ const SupplyRequestForm: React.FC<IProps> = ({
                 />
                 <AppButton
                   title="انصراف"
-                  onPress={closeDrawer}
+                  onPress={() => {}}
                   color="danger"
                   style={styles.actionButton}
                 />
               </View>
-            </View>
-          </Animated.View>
+            ) : null}
+          </View>
         </KeyboardAvoidingView>
       </View>
-    </Modal>
+      <ProductSearchDrawer
+        visible={showProductSearchDrawer}
+        onClose={() => setShowProductSearchDrawer(false)}
+        onProductSelect={handleProductSelected}
+        searchProduct={searchProduct}
+        onError={showToast}
+      />
+    </>
   );
 };
 
@@ -387,6 +438,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     justifyContent: "flex-end",
     zIndex: 9999,
+    backgroundColor: colors.background,
   },
   keyboardAvoidingContainer: {
     flex: 1,
