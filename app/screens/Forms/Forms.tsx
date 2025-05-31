@@ -92,7 +92,7 @@ const Forms = () => {
             </AppText>
           </View>
         ) : (
-          <ScrollView>
+          <ScrollView showsVerticalScrollIndicator={false}>
             {Object.entries(groupedForms).map(([groupId, fields]) => (
               <InputContainer
                 key={groupId}
@@ -102,8 +102,7 @@ const Forms = () => {
                     : "سایر فرم ها"
                 }
                 showFilterIcon={true}
-                isGradient={false}
-                filterIconName={fields[0].FormGroupIconName || "edit-note"} 
+                filterIconName={fields[0].FormGroupIconName || "edit-note"}
               >
                 {fields.map((field) => renderItem(field))}
               </InputContainer>

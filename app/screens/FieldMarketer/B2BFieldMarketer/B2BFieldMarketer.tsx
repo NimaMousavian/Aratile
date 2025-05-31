@@ -95,6 +95,10 @@ const B2BFieldMarketer = () => {
     }, [onScreenFocus])
   );
 
+  const handleEditShop = (shop: IShopItem) => {
+    navigation.navigate("AddNewShop", { shop: shop });
+  };
+
   return (
     <>
       <ScreenHeader
@@ -103,7 +107,9 @@ const B2BFieldMarketer = () => {
           <View>
             <TouchableOpacity
               style={styles.headerIconContainer}
-              onPress={() => navigation.navigate("AddNewShop")}
+              onPress={() =>
+                navigation.navigate("AddNewShop", { shop: undefined })
+              }
             >
               <MaterialIcons name="add" size={24} color="white" />
             </TouchableOpacity>
@@ -123,7 +129,10 @@ const B2BFieldMarketer = () => {
           onSearch={() => getShopItemsWithFilter()}
           onClear={() => getShopItems()}
         />
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          showsVerticalScrollIndicator={false}
+        >
           {isLoading ? (
             <View style={styles.centerContainer}>
               <ActivityIndicator size="large" color={colors.primary} />
@@ -176,13 +185,13 @@ const B2BFieldMarketer = () => {
                   name: "call",
                   onPress: () => handlePhoneCall(shop.OwnerMobile),
                 }}
-                //   editIcon={{
-                //     name: "edit",
-                //     size: 22,
-                //     color: colors.warning,
-                //     onPress: () => handleEditProduct(product.id),
-                //     containerStyle: styles.iconCircleSmall, // اضافه کردن استایل دایره
-                //   }}
+                editIcon={{
+                  name: "edit",
+                  size: 22,
+                  color: colors.warning,
+                  onPress: () => handleEditShop(shop),
+                  containerStyle: styles.iconCircleSmall, // اضافه کردن استایل دایره
+                }}
                 //   deleteIcon={{
                 //     name: "delete",
                 //     size: 22,
@@ -202,7 +211,9 @@ const B2BFieldMarketer = () => {
                 //       showToast("محصول با موفقیت حذف شد", "info");
                 //     });
                 //   }}
-                onPress={() => {}}
+                onPress={() => {
+                  navigation.navigate("AddNewShop", { shop: shop });
+                }}
               />
             ))
           ) : (
@@ -241,14 +252,13 @@ const styles = StyleSheet.create({
   androidCardAdjustment: {
     borderWidth: 3,
     borderColor: "#e0e0e0",
-    marginVertical: 8,
+    marginVertical: 4,
   },
   centerContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     paddingVertical: 40,
-
   },
   emptyContainer: {
     flex: 1,
@@ -262,6 +272,17 @@ const styles = StyleSheet.create({
     color: "#6B7280",
     marginTop: 12,
     textAlign: "center",
+  },
+  iconCircleSmall: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+    marginHorizontal: 5,
+    borderWidth: 1,
+    borderColor: colors.warning,
+    backgroundColor: "white",
   },
 });
 

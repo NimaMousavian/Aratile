@@ -27,7 +27,7 @@ import ScreenHeader from "../../../components/ScreenHeader";
 import SelectionBottomSheet from "../../../components/SelectionDialog";
 import LocationService from "../../IssuingNewInvoice/api/LocationService";
 import Toast from "../../../components/Toast";
-import { IShopCustomField } from "../../../config/types";
+import { IShopCustomField, IShopItem } from "../../../config/types";
 import axios from "axios";
 import appConfig from "../../../../config";
 import { Formik, FormikProps } from "formik";
@@ -49,7 +49,9 @@ interface IInputContainerProps {
   onFilterIconPress?: () => void;
   isGradient?: boolean;
   headerColor?: string;
-  filterIconName?: string; 
+  filterIconName?: string;
+  showCameraIcon?: boolean;
+  onCameraIconPress?: () => void;
 }
 
 export const InputContainer: React.FC<IInputContainerProps> = ({
@@ -64,7 +66,9 @@ export const InputContainer: React.FC<IInputContainerProps> = ({
   showFilterIcon = false,
   onFilterIconPress,
   headerColor = colors.secondaryDark,
-  filterIconName = "edit-note", 
+  filterIconName = "edit-note",
+  showCameraIcon = false,
+  onCameraIconPress,
 }) => {
   return (
     <View style={styles.inputContainer}>
@@ -86,6 +90,28 @@ export const InputContainer: React.FC<IInputContainerProps> = ({
             >
               <MaterialIcons
                 name={showClearIcon ? "clear" : "search"}
+                size={22}
+                color={colors.primary}
+              />
+            </TouchableOpacity>
+          )}
+          {showCameraIcon && (
+            <TouchableOpacity
+              style={{
+                backgroundColor: "#e4edf8",
+                width: 36,
+                height: 36,
+                justifyContent: "center",
+                alignItems: "center",
+                borderRadius: 18,
+                position: "absolute",
+                left: 58,
+                zIndex: 1,
+              }}
+              onPress={onCameraIconPress}
+            >
+              <MaterialIcons
+                name={"camera-alt"}
                 size={22}
                 color={colors.primary}
               />
@@ -130,9 +156,9 @@ export const InputContainer: React.FC<IInputContainerProps> = ({
   );
 };
 
-
 type AddNewShopRouteParams = {
   recordings?: { uri: string; duration: number }[];
+  shop?: IShopItem;
 };
 
 interface FormValues {
@@ -171,7 +197,10 @@ const AddNewShop = () => {
   const navigation = useNavigation<AppNavigationProp>();
   const route =
     useRoute<RouteProp<Record<string, AddNewShopRouteParams>, string>>();
-  const [birthDateShow, setBirthDateShow] = useState<boolean>(false);
+  const shopFromRoute = route.params?.shop;
+  console.log("shop:", shopFromRoute);
+
+  const [shop, setShop] = useState<IShopItem>();
   const [recordings, setRecordings] = useState<
     { uri: string; duration: number }[]
   >([]);
@@ -220,6 +249,10 @@ const AddNewShop = () => {
   const [isLoadingform, setIsLoadingForm] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const { user } = useAuth();
+
+  useEffect(() => {
+    setShop(shopFromRoute);
+  }, [shopFromRoute]);
 
   useEffect(() => {
     const fetchProvinces = async () => {
@@ -347,22 +380,22 @@ const AddNewShop = () => {
   };
 
   // Initialize dynamic initial values and validation schema
-  const generateInitialValues = () => {
+  const generateInitialValues = (shop: IShopItem | undefined) => {
     const initialValues: FormValues = {
-      shopName: "",
-      province: "",
-      city: "",
-      shopAddress: "",
-      shopArea: "",
-      shopOwnershipType: "",
-      shopHistoryInYears: "",
-      firstName: "",
-      lastName: "",
-      mobileNumber: "",
-      hasWarehouse: "",
-      warehouseOwnershipType: "",
-      warehouseArea: "",
-      notes: "",
+      shopName: shop?.ShopName || "",
+      province: shop?.ProvinceName || "",
+      city: shop?.CityName || "",
+      shopAddress: shop?.ShopAddress || "",
+      shopArea: shop?.ShopAreaInMeters.toString() || "",
+      shopOwnershipType: shop?.ShopOwnershipTypeStr || "",
+      shopHistoryInYears: shop?.ShopHistoryInYears.toString() || "",
+      firstName: shop?.OwnerFirstName || "",
+      lastName: shop?.OwnerLastName || "",
+      mobileNumber: shop?.OwnerMobile || "",
+      hasWarehouse: shop?.HasWarehouseStr || "",
+      warehouseOwnershipType: shop?.WarehouseOwnershipTypeStr || "",
+      warehouseArea: shop?.WarehouseAreaInMeters.toString() || "",
+      notes: shop?.Description || "",
     };
 
     // Add dynamic fields for customFieldType1, customFieldType2, customFieldType3
@@ -687,18 +720,23 @@ const AddNewShop = () => {
 
   return (
     <Formik<FormValues>
-      initialValues={generateInitialValues()}
+      initialValues={generateInitialValues(shop)}
       validationSchema={generateValidationSchema()}
       onSubmit={(values) => {
         console.log("Form Values:", values);
         // Alert.alert("موفق", "اطلاعات با موفقیت ثبت شد");
         // Implement API call or other submission logic here
-        postFormData(values);
+        if (shop) {
+          // editFormData(values)
+        } else {
+          postFormData(values);
+        }
       }}
+      enableReinitialize
     >
       {(formikProps) => (
         <>
-          <ScreenHeader title="ثبت فروشگاه جدید" />
+          <ScreenHeader title={shop ? "ویرایش فروشگاه" : "ثبت فروشگاه جدید"} />
           <Toast
             visible={toastVisible}
             message={toastMessage}
@@ -761,6 +799,7 @@ const AddNewShop = () => {
                               ? formikProps.errors.city
                               : undefined
                           }
+                          initialValues={[formikProps.values["city"]]}
                         />
                       </View>
                       <View style={styles.halfWidth}>
@@ -782,6 +821,7 @@ const AddNewShop = () => {
                               ? formikProps.errors.province
                               : undefined
                           }
+                          initialValues={[formikProps.values["province"]]}
                         />
                       </View>
                     </View>
@@ -1057,7 +1097,7 @@ const styles = StyleSheet.create({
     fontFamily: "Yekan_Bakh_Bold",
     fontSize: 20,
     color: colors.white,
-    marginRight: 4,
+    marginRight: 2,
   },
   titleWithIconsContainer: {
     flexDirection: "row",

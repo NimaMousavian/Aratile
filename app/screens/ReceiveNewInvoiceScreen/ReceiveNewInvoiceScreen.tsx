@@ -697,16 +697,16 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
 const styles = StyleSheet.create({
   safeAreaTop: {
     flex: 0,
-    backgroundColor: colors.light,
+    backgroundColor: colors.background,
   },
   safeAreaBottom: {
     flex: 1,
-    backgroundColor: colors.light,
+    backgroundColor: colors.background,
   },
   container: {
     flex: 1,
     paddingBottom: 0,
-    backgroundColor: colors.light,
+    backgroundColor: colors.background,
   },
   content: {
     flex: 1,

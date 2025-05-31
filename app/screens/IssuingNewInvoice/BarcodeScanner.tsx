@@ -122,30 +122,29 @@ const BarcodeScanner = () => {
         style={styles.camera}
         facing={facing}
         onBarcodeScanned={isScanning ? handleBarcodeScanned : undefined}
-      >
-        <View style={styles.overlay}>
-          <View style={styles.topOverlay} />
-          <View style={styles.middleOverlay}>
-            <View style={styles.leftOverlay} />
-            <View style={styles.scanSquare} />
-            <View style={styles.rightOverlay} />
-          </View>
-          <View style={styles.bottomOverlay} />
-          <Text style={styles.overlayText}>بارکد را در کادر وسط قرار دهید</Text>
+      ></CameraView>
+      <View style={styles.overlay}>
+        <View style={styles.topOverlay} />
+        <View style={styles.middleOverlay}>
+          <View style={styles.leftOverlay} />
+          <View style={styles.scanSquare} />
+          <View style={styles.rightOverlay} />
         </View>
+        <View style={styles.bottomOverlay} />
+        <Text style={styles.overlayText}>بارکد را در کادر وسط قرار دهید</Text>
+      </View>
 
-        {!isScanning && (
-          <View style={styles.processingOverlay}>
-            <Text style={styles.processingText}>در حال پردازش بارکد...</Text>
-          </View>
-        )}
-        <AppButton
-          title="بازگشت"
-          onPress={() => navigation.goBack()}
-          color="danger"
-          style={styles.backButton}
-        />
-      </CameraView>
+      {!isScanning && (
+        <View style={styles.processingOverlay}>
+          <Text style={styles.processingText}>در حال پردازش بارکد...</Text>
+        </View>
+      )}
+      <AppButton
+        title="بازگشت"
+        onPress={() => navigation.goBack()}
+        color="danger"
+        style={styles.backButton}
+      />
 
       {/* <View style={styles.loadingContainer}>
         <Text style={styles.permissionText}>
@@ -165,8 +164,8 @@ const BarcodeScanner = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
-    justifyContent: "center",
+    // backgroundColor: colors.background,
+    // justifyContent: "center",
   },
   loadingContainer: {
     flex: 1,

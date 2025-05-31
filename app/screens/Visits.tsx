@@ -127,7 +127,7 @@ const Visits = () => {
 
   return (
     <View style={styles.container}>
-      <ScreenHeader title="بازدید ها" />
+      <ScreenHeader title="بازدید های شوروم" />
       <Toast
         visible={toastVisible}
         message={toastMessage}
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
   androidCardAdjustment: {
     borderWidth: 3,
     borderColor: "#e0e0e0",
-    marginVertical: 8,
+    marginVertical: 4,
   },
   centerContainer: {
     flex: 1,

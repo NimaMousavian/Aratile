@@ -25,6 +25,8 @@ import SelectionBottomSheet from "../components/SelectionDialog";
 import Toast from "../components/Toast";
 import { getFontFamily } from "./IssuedInvoices";
 import { Feather } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { AppNavigationProp } from "../StackNavigator";
 
 const statusStr = [
   "بررسی نشده",
@@ -38,8 +40,7 @@ const statusStr = [
 const SupplyRequest = () => {
   const [supplyRequests, setSupplyRequests] = useState<ISupplyRequest[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
-  const [showProductSearchDrawer, setShowProductSearchDrawer] =
-    useState<boolean>(false);
+
   const [showSupplyRequestForm, setShowSupplyRequestForm] =
     useState<boolean>(false);
 
@@ -57,11 +58,15 @@ const SupplyRequest = () => {
   const [supplyRequestId, setSupplyRequestId] = useState<number | undefined>(
     undefined
   );
+  const [supplyRequestState, setSupplyRequestState] = useState<
+    number | undefined
+  >(undefined);
 
   const [formMode, setFormMode] = useState<"add" | "edit">("add");
 
   const [searchText, setSearchText] = useState<string>("");
   const [refreshing, setRefreshing] = useState<boolean>(false);
+  const naviagtion = useNavigation<AppNavigationProp>();
 
   const showToast = (
     message: string,
@@ -70,20 +75,6 @@ const SupplyRequest = () => {
     setToastMessage(message);
     setToastType(type);
     setToastVisible(true);
-  };
-
-  const {
-    isLoading,
-    selectedProducts,
-    searchProduct,
-    removeProduct,
-    addProduct,
-  } = useProductScanner();
-
-  const handleProductSelected = (product: Product) => {
-    setSelectedProduct(product);
-    setFormMode("add");
-    setShowSupplyRequestForm(true);
   };
 
   const getSupplyRequest = async () => {
@@ -148,10 +139,18 @@ const SupplyRequest = () => {
     getSupplyRequest();
   }, []);
 
-  const handleSupplyRequestPress = (srID: number) => {
+  const handleSupplyRequestPress = (srID: number, reqState: number) => {
+    setSupplyRequestState(reqState);
     setSupplyRequestId(srID);
-    setFormMode("edit");
-    setShowSupplyRequestForm(true);
+    // setFormMode("edit");
+    // setShowSupplyRequestForm(true);
+    naviagtion.navigate("SupplyRequestForm", {
+      product: selectedProduct,
+      getAllSupplyRequest: () => getSupplyRequest(),
+      supplyRequestId: srID,
+      mode: "edit",
+      readonly: reqState !== 1,
+    });
   };
 
   const handleSearch = () => {
@@ -181,8 +180,13 @@ const SupplyRequest = () => {
           <TouchableOpacity
             style={styles.addIconContainer}
             onPress={() => {
-              setFormMode("add");
-              setShowProductSearchDrawer(true);
+              naviagtion.navigate("SupplyRequestForm", {
+                product: selectedProduct,
+                getAllSupplyRequest: () => getSupplyRequest(),
+                supplyRequestId: undefined,
+                mode: "add",
+                readonly: false,
+              });
             }}
           >
             <MaterialIcons name="add" size={24} color="white" />
@@ -305,22 +309,15 @@ const SupplyRequest = () => {
           </View>
         )}
 
-        <ProductSearchDrawer
-          visible={showProductSearchDrawer}
-          onClose={() => setShowProductSearchDrawer(false)}
-          onProductSelect={handleProductSelected}
-          searchProduct={searchProduct}
-          onError={showToast}
-        />
-
-        <SupplyRequestForm
+        {/* <SupplyRequestForm
           visible={showSupplyRequestForm}
           closeDrawer={() => setShowSupplyRequestForm(false)}
           product={selectedProduct}
           getAllSupplyRequest={() => getSupplyRequest()}
           supplyRequestId={supplyRequestId}
           mode={formMode}
-        />
+          readonly={supplyRequestState !== 1}
+        /> */}
       </View>
     </>
   );

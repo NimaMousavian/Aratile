@@ -23,11 +23,7 @@ const B2CFieldMarketer = () => {
         }
       />
       <View style={styles.container}>
-        <SearchInput
-          value=""
-          onChangeText={() => { }}
-          onSearch={() => navigation.navigate("CustomerInfo")}
-        />
+        <SearchInput value="" onChangeText={() => {}} onSearch={() => {}} />
       </View>
     </>
   );
@@ -38,18 +34,17 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: colors.background,
-  
   },
   addIconContainer: {
-   backgroundColor: colors.success,
-      width: 40,
-      height: 40,
-      marginLeft: 10,
-      marginTop:-4,
-      justifyContent: "center",
-      alignItems: "center",
-      borderRadius: 12,
-    }
+    backgroundColor: colors.success,
+    width: 40,
+    height: 40,
+    marginLeft: 10,
+    marginTop: -4,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 12,
+  },
 });
 
 export default B2CFieldMarketer;

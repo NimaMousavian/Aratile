@@ -19,7 +19,10 @@ import PersonGroupService, { PersonGroup } from "./api/PersonGroupService";
 import PersonManagementService, {
   CreatePersonDTO,
 } from "./api/PersonManagementService";
-import { InputContainer } from "../FieldMarketer/B2BFieldMarketer/AddNewShop";
+import {
+  groupBy,
+  InputContainer,
+} from "../FieldMarketer/B2BFieldMarketer/AddNewShop";
 import axios from "axios";
 import appConfig from "../../../config";
 import { RouteProp, useRoute } from "@react-navigation/native";
@@ -88,10 +91,10 @@ type CustomerInfoRouteParams = {
 // Generate initial values for Formik
 const generateInitialValues = (
   person: IPerson | undefined,
-  customFieldType1: IPersonCustomField[],
-  customFieldType2: IPersonCustomField[],
-  customFieldType3: IPersonCustomField[]
+  customFields: IPersonCustomField[]
 ) => {
+  console.log("person in generate:", person);
+
   const initialValues: FormValues = {
     firstName: person?.FirstName || "",
     lastName: person?.LastName || "",
@@ -110,26 +113,27 @@ const generateInitialValues = (
     },
   };
 
-  // Add dynamic fields for customFieldType1, customFieldType2, customFieldType3
-  [...customFieldType1, ...customFieldType2, ...customFieldType3].forEach(
-    (field) => {
-      initialValues[`custom_${field.PersonCustomFieldId}`] = "";
-    }
-  );
+  // Add dynamic fields
+  // customFields.forEach((field) => {
+  //   initialValues[`custom_${field.PersonCustomFieldId}`] =
+  //     person?.PersonCustomFieldList?.find(
+  //       (cf) => cf.PersonCustomFieldId === field.PersonCustomFieldId
+  //     )?.Value || "";
+  // });
+  customFields.forEach((field) => {
+    initialValues[`custom_${field.PersonCustomFieldId}`] = "";
+  });
 
   return initialValues;
 };
 
 // Generate Yup validation schema
-const generateValidationSchema = (
-  customFieldType1: IPersonCustomField[],
-  customFieldType2: IPersonCustomField[],
-  customFieldType3: IPersonCustomField[]
-) => {
+const generateValidationSchema = (customFields: IPersonCustomField[]) => {
   const shape: { [key: string]: any } = {
     firstName: Yup.string().required("لطفاً نام را وارد کنید"),
     lastName: Yup.string().required("لطفاً نام خانوادگی را وارد کنید"),
-    alias: Yup.string().required("لطفاً نام مستعار را وارد کنید"),
+    alias: Yup.string(),
+    // .required("لطفاً نام مستعار را وارد کنید"),
     mobile: Yup.string()
       .matches(/^09\d{9}$/, "شماره موبایل باید ۱۱ رقم و با ۰۹ شروع شود")
       .required("لطفاً شماره موبایل را وارد کنید"),
@@ -147,28 +151,26 @@ const generateValidationSchema = (
   };
 
   // Add validation for dynamic fields
-  [...customFieldType1, ...customFieldType2, ...customFieldType3].forEach(
-    (field) => {
-      if (field.IsRequired) {
-        if (field.FieldType === 2 || field.FieldType === 5) {
-          // Numeric field
-          shape[`custom_${field.PersonCustomFieldId}`] = Yup.string()
-            .matches(/^\d+$/, `${field.FieldName} باید عدد باشد`)
-            .required(`${field.FieldName} الزامی است`);
-        } else if (field.FieldType === 3) {
-          // Date field
-          shape[`custom_${field.PersonCustomFieldId}`] = Yup.string().required(
-            `${field.FieldName} الزامی است`
-          );
-        } else {
-          // Text or multi-select field
-          shape[`custom_${field.PersonCustomFieldId}`] = Yup.string().required(
-            `${field.FieldName} الزامی است`
-          );
-        }
+  customFields.forEach((field) => {
+    if (field.IsRequired) {
+      if (field.FieldType === 2 || field.FieldType === 5) {
+        // Numeric field
+        shape[`custom_${field.PersonCustomFieldId}`] = Yup.string()
+          .matches(/^\d+$/, `${field.FieldName} باید عدد باشد`)
+          .required(`${field.FieldName} الزامی است`);
+      } else if (field.FieldType === 3) {
+        // Date field
+        shape[`custom_${field.PersonCustomFieldId}`] = Yup.string().required(
+          `${field.FieldName} الزامی است`
+        );
+      } else {
+        // Text or multi-select field
+        shape[`custom_${field.PersonCustomFieldId}`] = Yup.string().required(
+          `${field.FieldName} الزامی است`
+        );
       }
     }
-  );
+  });
 
   return Yup.object().shape(shape);
 };
@@ -312,12 +314,12 @@ const CustomerInfo: React.FC = () => {
   const mode = route.params?.mode;
 
   const [person, setPerson] = useState<IPerson>();
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [mobile, setMobile] = useState("");
-  const [alias, setAlias] = useState("");
-  const [address, setAddress] = useState("");
-  const [description, setDescription] = useState("");
+  // const [firstName, setFirstName] = useState("");
+  // const [lastName, setLastName] = useState("");
+  // const [mobile, setMobile] = useState("");
+  // const [alias, setAlias] = useState("");
+  // const [address, setAddress] = useState("");
+  // const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [selectedCustomerTypes, setSelectedCustomerTypes] = useState<string[]>(
@@ -358,18 +360,49 @@ const CustomerInfo: React.FC = () => {
   const [loadingCustomerTypes, setLoadingCustomerTypes] = useState(true);
   const [loadingCustomerJob, setLoadingCustomerJob] = useState(true);
   const [isLoadingForm, setIsLoadingForm] = useState<boolean>(false);
+  const [personCustomField, setPersonCustomField] = useState<
+    IPersonCustomField[]
+  >([]);
   const [customFieldType1, setCustomFieldType1] = useState<
     IPersonCustomField[]
   >([]);
   const [customFieldType2, setCustomFieldType2] = useState<
     IPersonCustomField[]
   >([]);
-  const [customFieldType3, setCustomFieldType3] = useState<
-    IPersonCustomField[]
-  >([]);
   const [customFieldOtherTypes, setCustomFieldOtherTypes] = useState<
     Record<string, IPersonCustomField[]>
   >({});
+
+  const fetchPersonCustomField = async () => {
+    setIsLoadingForm(true);
+    try {
+      const response = await axios.get<{ Items: IPersonCustomField[] }>(
+        `${appConfig.mobileApi}PersonCustomField/GetAllActive`
+      );
+      const type1 = response.data.Items.filter(
+        (customField) => customField.PersonCustomFieldGroupId === 1
+      ).sort((a, b) => a.Form_ShowOrder - b.Form_ShowOrder);
+      const type2 = response.data.Items.filter(
+        (customField) => customField.PersonCustomFieldGroupId === 2
+      ).sort((a, b) => a.Form_ShowOrder - b.Form_ShowOrder);
+
+      const otherTypes = response.data.Items.filter(
+        (customField) =>
+          customField.PersonCustomFieldGroupId !== 1 &&
+          customField.PersonCustomFieldGroupId !== 2
+      );
+      const groupedFields = groupBy(otherTypes, "PersonCustomFieldGroupId");
+      setCustomFieldType1(type1);
+      setCustomFieldType2(type2);
+      setCustomFieldOtherTypes(groupedFields);
+      setPersonCustomField(response.data.Items);
+      console.log(groupedFields);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoadingForm(false);
+    }
+  };
 
   // دریافت مقادیر پیش‌فرض استان و شهر از اطلاعات ورود کاربر
   useEffect(() => {
@@ -409,6 +442,7 @@ const CustomerInfo: React.FC = () => {
   }, [provinces.length]);
 
   useEffect(() => {
+    fetchPersonCustomField();
     if (customerID) {
       getCustomer(Number(customerID));
     }
@@ -427,18 +461,6 @@ const CustomerInfo: React.FC = () => {
       );
 
       setPerson(person);
-      setFirstName(person.FirstName);
-      setLastName(person.LastName);
-      setMobile(person.Mobile);
-      setAlias(person.NickName);
-      setAddress(person.Address);
-      setDescription(person.Description);
-      setAddress(person.Address);
-      // setSelectedColleague({
-      //   id: person.Person_PersonGroup_List[0].PersonGroupId.toString(),
-      //   name: person.Person_PersonGroup_List[0].PersonGroupName,
-      //   phone: "",
-      // });
       setSelectedProvince(person.ProvinceName);
       setSelectedCity(person.CityName);
       setSelectedCustomerTypesString(
@@ -578,52 +600,52 @@ const CustomerInfo: React.FC = () => {
     setSelectedColleague(colleague);
   };
 
-  const validateForm = (): boolean => {
-    if (!firstName.trim()) {
-      showToast("لطفاً نام را وارد کنید", "error");
-      return false;
-    }
+  // const validateForm = (): boolean => {
+  //   if (!firstName.trim()) {
+  //     showToast("لطفاً نام را وارد کنید", "error");
+  //     return false;
+  //   }
 
-    if (!lastName.trim()) {
-      showToast("لطفاً نام خانوادگی را وارد کنید", "error");
-      return false;
-    }
-    if (!alias.trim()) {
-      showToast("لطفاً نام مستعار را وارد کنید", "error");
-      return false;
-    }
+  //   if (!lastName.trim()) {
+  //     showToast("لطفاً نام خانوادگی را وارد کنید", "error");
+  //     return false;
+  //   }
+  //   if (!alias.trim()) {
+  //     showToast("لطفاً نام مستعار را وارد کنید", "error");
+  //     return false;
+  //   }
 
-    if (!mobile.trim()) {
-      showToast("لطفاً شماره موبایل را وارد کنید", "error");
-      return false;
-    }
-    if (!selectedCustomerTypesString.trim()) {
-      showToast("لطفاً گروه مشتری را انتخاب کنید", "error");
-      return false;
-    }
-    if (!selectedCustomerJobString.trim()) {
-      showToast("لطفاً شغل مشتری را انتخاب کنید", "error");
-      return false;
-    }
+  //   if (!mobile.trim()) {
+  //     showToast("لطفاً شماره موبایل را وارد کنید", "error");
+  //     return false;
+  //   }
+  //   if (!selectedCustomerTypesString.trim()) {
+  //     showToast("لطفاً گروه مشتری را انتخاب کنید", "error");
+  //     return false;
+  //   }
+  //   if (!selectedCustomerJobString.trim()) {
+  //     showToast("لطفاً شغل مشتری را انتخاب کنید", "error");
+  //     return false;
+  //   }
 
-    const mobileRegex = /^09\d{9}$/;
-    if (!mobileRegex.test(mobile)) {
-      showToast("شماره موبایل باید ۱۱ رقم و با ۰۹ شروع شود", "error");
-      return false;
-    }
+  //   const mobileRegex = /^09\d{9}$/;
+  //   if (!mobileRegex.test(mobile)) {
+  //     showToast("شماره موبایل باید ۱۱ رقم و با ۰۹ شروع شود", "error");
+  //     return false;
+  //   }
 
-    if (!selectedProvince) {
-      showToast("لطفاً استان را انتخاب کنید", "error");
-      return false;
-    }
+  //   if (!selectedProvince) {
+  //     showToast("لطفاً استان را انتخاب کنید", "error");
+  //     return false;
+  //   }
 
-    if (!selectedCity) {
-      showToast("لطفاً شهر را انتخاب کنید", "error");
-      return false;
-    }
+  //   if (!selectedCity) {
+  //     showToast("لطفاً شهر را انتخاب کنید", "error");
+  //     return false;
+  //   }
 
-    return true;
-  };
+  //   return true;
+  // };
 
   const handleSubmit = async (data: FormValues): Promise<void> => {
     if (customerID) {
@@ -668,10 +690,10 @@ const CustomerInfo: React.FC = () => {
 
         const personToEdit: IPersonToEdit = {
           PersonId: Number(customerID),
-          FirstName: firstName,
-          LastName: lastName,
-          NickName: alias,
-          Mobile: mobile,
+          FirstName: data.firstName,
+          LastName: data.lastName,
+          NickName: data.alias,
+          Mobile: data.mobile,
           ProvinceId: provinceId,
           CityId: cityId,
           PersonJobId:
@@ -680,8 +702,8 @@ const CustomerInfo: React.FC = () => {
             )?.value || 0,
           MarketingChannelId: null,
           IntroducerPersonId: Number(selectedColleague.id),
-          Address: address,
-          Description: description,
+          Address: data.address,
+          Description: data.description,
           PersonGroupIdList: personGroupIds,
         };
 
@@ -741,6 +763,30 @@ const CustomerInfo: React.FC = () => {
           }
         }
 
+        const customFields: CreatePersonDTO["PersonCustomFieldList"] =
+          personCustomField
+            .filter((cf) => data[`custom_${cf.PersonCustomFieldId}`])
+            .map((customField) => {
+              // if (customField.FieldType === 4) {
+              //   return {
+              //     ShopId: 0,
+              //     ShopCustomFieldId: customField.ShopCustomFieldId,
+              //     ShopCustomFieldSelectiveValueId:
+              //       values[
+              //         `custom_${customField.ShopCustomFieldId}`
+              //       ].toString(),
+              //     Value: 0,
+              //   };
+              // }
+              return {
+                PersonId: 0,
+                PersonCustomFieldId: customField.PersonCustomFieldId,
+                Value:
+                  data[`custom_${customField.PersonCustomFieldId}`].toString(),
+                InsertDate: new Date().toISOString(),
+              };
+            });
+
         const personData: CreatePersonDTO = {
           PersonId: 0,
           FirstName: data.firstName,
@@ -751,20 +797,16 @@ const CustomerInfo: React.FC = () => {
           MarketingChannelId: null,
           Address: data.address,
           PersonGroupIdList: personGroupIds,
+          PersonCustomFieldList: customFields,
         };
+
+        console.log(personData);
 
         const newPersonId = await PersonManagementService.createPerson(
           personData
         );
 
         showToast(`مشتری با موفقیت ثبت شد.`, "success");
-
-        setFirstName("");
-        setLastName("");
-        setMobile("");
-        setAlias("");
-        setAddress("");
-        setDescription("");
 
         // بعد از ثبت موفق، مقادیر پیش‌فرض استان و شهر دوباره تنظیم شوند
         const loginResponse = await getLoginResponse();
@@ -803,17 +845,8 @@ const CustomerInfo: React.FC = () => {
         onDismiss={hideToast}
       />
       <Formik
-        initialValues={generateInitialValues(
-          person,
-          customFieldType1,
-          customFieldType2,
-          customFieldType3
-        )}
-        validationSchema={generateValidationSchema(
-          customFieldType1,
-          customFieldType2,
-          customFieldType3
-        )}
+        initialValues={generateInitialValues(person, personCustomField)}
+        validationSchema={generateValidationSchema(personCustomField)}
         onSubmit={handleSubmit}
         enableReinitialize
       >
@@ -1059,6 +1092,18 @@ const CustomerInfo: React.FC = () => {
                       renderInput(customField, formikProps)
                     )}
                   </InputContainer>
+                  {Object.entries(customFieldOtherTypes).map(
+                    ([groupId, fields]) => (
+                      <InputContainer
+                        key={groupId}
+                        title={fields[0].PersonCustomFieldGroupName}
+                      >
+                        {fields.map((customField) =>
+                          renderInput(customField, formikProps)
+                        )}
+                      </InputContainer>
+                    )
+                  )}
                   <InputContainer title="سایر اطلاعات">
                     <AppTextInput
                       placeholder="توضیحات"
@@ -1084,25 +1129,7 @@ const CustomerInfo: React.FC = () => {
                       renderInput(customField, formikProps)
                     )}
                   </InputContainer>
-                  {customFieldType3.length > 0 && (
-                    <InputContainer title="فیلدهای اضافی مشتری">
-                      {customFieldType3.map((customField) =>
-                        renderInput(customField, formikProps)
-                      )}
-                    </InputContainer>
-                  )}
-                  {Object.entries(customFieldOtherTypes).map(
-                    ([groupId, fields]) => (
-                      <InputContainer
-                        key={groupId}
-                        title={fields[0].PersonCustomFieldGroupName}
-                      >
-                        {fields.map((customField) =>
-                          renderInput(customField, formikProps)
-                        )}
-                      </InputContainer>
-                    )
-                  )}
+
                   <IconButton
                     text={isSubmitting ? "در حال ثبت..." : "ثبت"}
                     onPress={formikProps.handleSubmit}
