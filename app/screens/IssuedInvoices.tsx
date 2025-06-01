@@ -525,7 +525,7 @@ const IssuedInvoices: React.FC = () => {
       const data = response.data;
       console.log("datas", data);
 
-      if (data) {
+      if (data.length !== 0) {
         const mappedItems: InspectionItem[] = data.Items.map((item: any) => ({
           id: item.InvoiceId.toString(),
           buyerName: item.PersonFullName.trim() || "مشتری",
@@ -540,7 +540,7 @@ const IssuedInvoices: React.FC = () => {
         }));
 
         setItems(mappedItems);
-      }
+      } else if (data.length === 0) setItems([]);
     } catch (error) {
       console.log(error);
       showToast("خطا در دریافت اطلاعات فاکتور ها", "error");

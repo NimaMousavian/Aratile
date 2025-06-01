@@ -56,6 +56,7 @@ type VisitDetailRouteParams = {
 const VisitDetail = () => {
   const route = useRoute<RouteProp<VisitDetailRouteParams, "VisitDetail">>();
   const visitItem = route.params?.visitItem;
+  console.log(visitItem);
 
   const navigation = useNavigation<AppNavigationProp>();
 
@@ -70,7 +71,7 @@ const VisitDetail = () => {
 
   const [selectedColleague, setSelectedColleague] = useState<Colleague | null>({
     id: visitItem.ShowroomVisitId.toString(),
-    name: visitItem.PersonList[0].PersonFullName,
+    name: visitItem.PersonList[0]?.PersonFullName,
     phone: "",
   });
   const [showColleagueSheet, setShowColleagueSheet] = useState<boolean>(false);
@@ -120,41 +121,41 @@ const VisitDetail = () => {
     }
     return true;
   };
-  const handleSubmit = async () => {
-    if (!validateForm()) {
-      return;
-    } else {
-      try {
-        const objToEdit = {
-          ShowroomVisitId: visitItem.ShowroomVisitId,
-          ShowroomVisitResultId:
-            showRoomVisitResults.find(
-              (visitResult) => visitResult.Title === resultString
-            )?.ShowroomVisitResultId || 0,
-          Description: description,
-          VisitDate: visitItem.VisitDate,
-          StartTime: fromTime,
-          FinishTime: toTime,
-          PersonIdList: visitItem.PersonList.map((person) => person.PersonId),
-        };
+  // const handleSubmit = async () => {
+  //   if (!validateForm()) {
+  //     return;
+  //   } else {
+  //     try {
+  //       const objToEdit = {
+  //         ShowroomVisitId: visitItem.ShowroomVisitId,
+  //         ShowroomVisitResultId:
+  //           showRoomVisitResults.find(
+  //             (visitResult) => visitResult.Title === resultString
+  //           )?.ShowroomVisitResultId || 0,
+  //         Description: description,
+  //         VisitDate: visitItem.VisitDate,
+  //         StartTime: fromTime,
+  //         FinishTime: toTime,
+  //         PersonIdList: visitItem.PersonList.map((person) => person.PersonId),
+  //       };
 
-        console.log("objToEdit", objToEdit);
+  //       console.log("objToEdit", objToEdit);
 
-        const response = await axios.put(
-          `${appConfig.mobileApi}ShowroomVisit/Edit`,
-          objToEdit
-        );
+  //       const response = await axios.put(
+  //         `${appConfig.mobileApi}ShowroomVisit/Edit`,
+  //         objToEdit
+  //       );
 
-        if (response.status === 200) {
-          showToast("بازدید با موفقیت ثبت شد", "success");
-        }
-      } catch (error) {
-        console.log(error);
+  //       if (response.status === 200) {
+  //         showToast("بازدید با موفقیت ثبت شد", "success");
+  //       }
+  //     } catch (error) {
+  //       console.log(error);
 
-        showToast("خطا در ثبت بازدید");
-      }
-    }
-  };
+  //       showToast("خطا در ثبت بازدید");
+  //     }
+  //   }
+  // };
 
   const getVisitResults = async () => {
     setVisitResultLoading(true);
@@ -329,6 +330,7 @@ const VisitDetail = () => {
             customIconName={customField.IconName}
             url={`${appConfig.mobileApi}ShowroomVisitCustomFieldSelectiveValue/GetAll?customFieldId=${customField.ShowroomVisitCustomFieldId}&page=1&pageSize=1000`}
             formikProps={formikProps}
+            fieldName_={`custom_${customField.ShowroomVisitCustomFieldId}`}
           />
         );
       case 7:
@@ -408,6 +410,8 @@ const VisitDetail = () => {
               ].toString(),
           })),
       };
+
+      console.log("objToEdit", objToEdit);
 
       const response = await axios.put(
         `${appConfig.mobileApi}ShowroomVisit/Edit`,

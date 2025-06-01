@@ -7,7 +7,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   View,
-  Modal
+  Modal,
 } from "react-native";
 import { IForm, IFormField, IFormItem, IFormStep } from "../../config/types";
 import { Formik, FormikProps } from "formik";
@@ -31,6 +31,7 @@ import ProductSearchDrawer from "../IssuingNewInvoice/ProductSearchDrawer";
 import useProductScanner from "../../Hooks/useProductScanner";
 import ColleagueBottomSheet from "../IssuingNewInvoice/ColleagueSearchModal";
 import { toPersianDigits } from "../../utils/converters";
+import { Product } from "../IssuingNewInvoice/IssuingNewInvoice";
 
 // Interfaces for TypeScript
 interface Field {
@@ -244,6 +245,7 @@ const ProductInputField: React.FC<{
   customField: IFormField;
   formikProps: FormikProps<FormValues>;
 }> = ({ customField, formikProps }) => {
+  const navigation = useNavigation<AppNavigationProp>();
   const fieldName = `custom-${customField.FormFieldId}`;
   const [showProductSearchDrawer, setShowProductSearchDrawer] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState("");
@@ -251,7 +253,12 @@ const ProductInputField: React.FC<{
 
   return (
     <>
-      <View style={styles.customerContainer}>
+      <View
+        style={[
+          styles.customerContainer,
+          { marginBottom: formikProps.errors[fieldName] ? 0 : 15 },
+        ]}
+      >
         <View style={styles.customerGradient}>
           <View style={styles.customerRow}>
             <View style={styles.customerField}>
@@ -283,6 +290,25 @@ const ProductInputField: React.FC<{
               </TouchableOpacity> */}
               <TouchableOpacity
                 style={[styles.iconCircleSmall]}
+                onPress={() => {
+                  navigation.navigate("BarCodeScanner", {
+                    onReturn: (scannedProduct: Product) => {
+                      if (scannedProduct) {
+                        setSelectedProduct(scannedProduct.title);
+                        formikProps.setFieldValue(fieldName, scannedProduct.id);
+                      }
+                    },
+                  });
+                }}
+              >
+                <MaterialIcons
+                  name="camera-alt"
+                  size={22}
+                  color={colors.white}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.iconCircleSmall]}
                 onPress={() => setShowProductSearchDrawer(true)}
               >
                 <MaterialIcons name="search" size={22} color={colors.white} />
@@ -303,6 +329,11 @@ const ProductInputField: React.FC<{
           )}
         </View>
       </View>
+      {formikProps.errors[fieldName] && (
+        <AppText style={styles.errorText}>
+          {formikProps.errors[fieldName]}
+        </AppText>
+      )}
       <ProductSearchDrawer
         visible={showProductSearchDrawer}
         onClose={() => setShowProductSearchDrawer(false)}
@@ -328,7 +359,12 @@ const PersonInputField: React.FC<{
 
   return (
     <>
-      <View style={styles.customerContainer}>
+      <View
+        style={[
+          styles.customerContainer,
+          { marginBottom: formikProps.errors[fieldName] ? 0 : 15 },
+        ]}
+      >
         <View style={styles.customerGradient}>
           <View style={styles.customerRow}>
             <View style={styles.customerField}>
@@ -359,6 +395,11 @@ const PersonInputField: React.FC<{
           )}
         </View>
       </View>
+      {formikProps.errors[fieldName] && (
+        <AppText style={styles.errorText}>
+          {formikProps.errors[fieldName]}
+        </AppText>
+      )}
 
       <Modal
         transparent={true}
@@ -543,6 +584,7 @@ const renderInput = (
           customIconName={customField.IconName}
           url={`${appConfig.mobileApi}Form/GetSelectiveValues?formFieldId=${customField.FormFieldId}&page=1&pageSize=1000`}
           formikProps={formikProps}
+          fieldName_={`custom-${customField.FormFieldId}`}
         />
       );
 
@@ -551,17 +593,14 @@ const renderInput = (
         <IconButton
           text="موقعیت جغرافیایی"
           iconName="location-pin"
-          onPress={() => { }}
+          onPress={() => {}}
           backgroundColor={colors.primary}
           flex={1}
         />
       );
     case 11:
       return (
-        
-
-          <PersonInputField customField={customField} formikProps={formikProps} />
-
+        <PersonInputField customField={customField} formikProps={formikProps} />
       );
     case 12:
       return (
@@ -632,10 +671,13 @@ const StepScreen: React.FC<StepScreenProps> = ({
 
   const validationSchema = createValidationSchema(fields);
 
+  const log = (msg: any) => {
+    console.log(msg);
+    return <View></View>;
+  };
+
   return (
-    <Animated.View
-      style={[styles.stepContainer, { transform: [{ translateX: slideAnim }] }]}
-    >
+    <View style={[styles.stepContainer]}>
       <ScrollView>
         <Formik
           initialValues={initialValues}
@@ -647,6 +689,8 @@ const StepScreen: React.FC<StepScreenProps> = ({
         >
           {(FormikProps) => (
             <View>
+              {log(FormikProps.errors)}
+
               {step.StepSectionList.map((section) => (
                 <InputContainer key={section.Title} title={section.Title}>
                   {section.FormFieldList.map((formField) =>
@@ -696,7 +740,7 @@ const StepScreen: React.FC<StepScreenProps> = ({
           )}
         </Formik>
       </ScrollView>
-    </Animated.View>
+    </View>
   );
 };
 
@@ -865,7 +909,7 @@ const FormItem: React.FC = () => {
         </AppText>
         <AppButton
           title="بازگشت به لیست فرم ها"
-          onPress={() => navigation.navigate("Forms")}
+          onPress={() => navigation.goBack()}
           style={{ width: "100%" }}
         />
       </View>
@@ -952,7 +996,6 @@ const styles = StyleSheet.create({
   },
   customerContainerDropDown: {
     justifyContent: "flex-end",
-
   },
   stepIcon: {
     width: 60,
@@ -1048,11 +1091,11 @@ const styles = StyleSheet.create({
   },
   customerContainer: {
     flexDirection: "column",
-    marginBottom: 15,
+    marginBottom: 0,
     backgroundColor: colors.white,
     borderRadius: 12,
     overflow: "hidden",
- 
+
     borderWidth: 1,
     borderColor: colors.gray,
   },
@@ -1108,6 +1151,14 @@ const styles = StyleSheet.create({
     color: colors.medium,
     fontFamily: "Yekan_Bakh_Bold",
     textAlign: "center",
+  },
+  errorText: {
+    /* Added error text style */ color: colors.danger,
+    fontSize: 12,
+    marginTop: 5,
+    marginBottom: 15,
+    textAlign: "right",
+    fontFamily: "Yekan_Bakh_Regular",
   },
 });
 

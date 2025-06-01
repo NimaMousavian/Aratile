@@ -1110,8 +1110,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 12,
     justifyContent: "center",
-    borderTopRightRadius: 12,
-    borderTopLeftRadius: 12,
+    borderTopRightRadius: 10,
+    borderTopLeftRadius: 10,
     position: "relative",
   },
   rightIconsContainer: {

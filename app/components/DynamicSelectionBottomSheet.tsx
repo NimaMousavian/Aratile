@@ -13,6 +13,7 @@ interface DynamicSelectionBottomSheetProps<T extends object> {
   customIconName?: string;
   url: string;
   formikProps: FormikProps<T>;
+  fieldName_?: string;
 }
 
 const DynamicSelectionBottomSheet = <T extends object>({
@@ -21,8 +22,9 @@ const DynamicSelectionBottomSheet = <T extends object>({
   customIconName,
   url,
   formikProps,
+  fieldName_ = `custom_${customFieldId}`,
 }: DynamicSelectionBottomSheetProps<T>) => {
-  const fieldName = `custom_${customFieldId}`;
+  const fieldName = fieldName_;
   const [options, setOptions] = useState<
     { Item: string; Value: string | number }[]
   >([]);
@@ -74,7 +76,7 @@ const DynamicSelectionBottomSheet = <T extends object>({
       error={
         error ||
         (formikProps.touched[fieldName] && formikProps.errors[fieldName]
-          ? (formikProps.errors[fieldName] as string)
+          ? formikProps.errors[fieldName]
           : undefined)
       }
     />

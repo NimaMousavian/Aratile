@@ -154,7 +154,7 @@ const SupplyRequestCard: React.FC<PurchaseInfoCardProps> = ({
               <View style={styles.noteTextContainer}>
                 <Text style={styles.noteLabel}> محصول:</Text>
                 <Text style={styles.noteContent}>
-                  {supplyRequest.ProductName}
+                  {toPersianDigits(supplyRequest.ProductName)}
                 </Text>
               </View>
             </View>
@@ -172,7 +172,7 @@ const SupplyRequestCard: React.FC<PurchaseInfoCardProps> = ({
               <View style={styles.purchaseTextContainer}>
                 <Text style={styles.secondaryLabel}>مقدار مورد درخواست:</Text>
                 <Text style={styles.secondaryValue}>
-                  {supplyRequest.RequestedValue}
+                  {toPersianDigits(supplyRequest.RequestedValue.toString())}
                 </Text>
               </View>
             </View>
