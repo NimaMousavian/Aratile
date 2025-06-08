@@ -27,11 +27,11 @@ import ColleagueBottomSheet, {
 import AppText from "../components/Text";
 import axios from "axios";
 import Toast from "../components/Toast";
+import { useAuth } from "../screens/AuthContext";
 
 type FontWeight = "700" | "600" | "500" | "bold" | "semi-bold" | string;
 type StatusType = "صادر شده" | "ارجاع از صندوق" | "پیش فاکتور" | "لغو شده";
 
-// API response interface based on the JSON file
 interface InvoiceApiResponse {
   Items: InvoiceItem[];
   Page: number;
@@ -56,14 +56,12 @@ interface InvoiceItem {
   InsertDate: string;
 }
 
-// New interface for the count API response
 interface InvoiceCountItem {
   State: number;
   StateName: string;
   InvoiceCount: number;
 }
 
-// Mapping payment types and states to human-readable values
 const paymentTypeMap: Record<number, string> = {
   1: "نقدی",
   2: "اعتباری",
@@ -88,6 +86,7 @@ interface InspectionItem {
   description?: string;
   status?: StatusType;
   amount?: number;
+  applicationUserId: number;
 }
 
 export const getFontFamily = (baseFont: string, weight: FontWeight): string => {
@@ -116,7 +115,6 @@ const convertToPersianNumbers = (text: string | number): string => {
   );
 };
 
-// Format currency in Toman with Persian digits
 const formatCurrency = (amount: number): string => {
   return convertToPersianNumbers(
     amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
@@ -142,6 +140,7 @@ interface PurchaseInfoCardProps {
   containerStyle?: ViewStyle;
   status?: StatusType;
   onPress?: () => void;
+  isCurrentUserSeller?: boolean;
 }
 
 const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
@@ -158,6 +157,7 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
   containerStyle,
   status,
   onPress,
+  isCurrentUserSeller = false,
 }) => {
   const handlePhoneCall = (phoneNumber: string): void => {
     if (phoneNumber) {
@@ -194,7 +194,6 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
         ]}
       >
         <LinearGradient
-          // @ts-ignore: type issues with LinearGradient colors prop
           colors={gradientColors}
           style={styles.purchaseHeader}
           start={{ x: 0, y: 0 }}
@@ -206,7 +205,9 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
               size={22}
               color={colors.white || "#fff"}
             />
-            <Text style={styles.purchaseHeaderText}>{headerTitle}</Text>
+            <Text style={styles.purchaseHeaderText}>
+              {isCurrentUserSeller ? `فاکتور ${convertToPersianNumbers(invoiceNumber)}` : headerTitle}
+            </Text>
           </View>
 
           {status && (
@@ -222,23 +223,6 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
         </LinearGradient>
 
         <View style={styles.purchaseContent}>
-          {/* Invoice Number Section */}
-          {/* {invoiceNumber && (
-            <View style={styles.purchaseRow}>
-              <View style={styles.purchaseItem}>
-                <MaterialIcons
-                  name="receipt"
-                  size={18}
-                  color={colors.secondary || "#6c5ce7"}
-                />
-                <View style={styles.purchaseTextContainer}>
-                  <Text style={styles.secondaryLabel}>شماره:</Text>
-                  <Text style={styles.secondaryValue}>{convertToPersianNumbers(invoiceNumber)}</Text>
-                </View>
-              </View>
-            </View>
-          )} */}
-
           <View style={styles.purchaseRow}>
             <View style={styles.purchaseItem}>
               <MaterialIcons
@@ -247,7 +231,9 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
                 color={colors.secondary || "#6c5ce7"}
               />
               <View style={styles.purchaseTextContainer}>
-                <Text style={styles.secondaryLabel}>خریدار:</Text>
+                <Text style={styles.secondaryLabel}>
+                  {isCurrentUserSeller ? "خریدار:" : "خریدار:"}
+                </Text>
                 <Text style={styles.secondaryValue}>
                   {buyer.name || "نامشخص"}
                 </Text>
@@ -268,10 +254,8 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
           </View>
           <View style={styles.divider} />
 
-          {/* Date Section on a separate row */}
           {date && (
             <>
-              {/* <View style={styles.divider} /> */}
               <View style={styles.purchaseRow}>
                 <View style={styles.purchaseItem}>
                   <MaterialIcons
@@ -290,32 +274,36 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
             </>
           )}
 
-          <View style={styles.divider} />
-          <View style={styles.purchaseRow}>
-            <View style={styles.purchaseItem}>
-              <MaterialIcons
-                name="store"
-                size={18}
-                color={colors.secondary || "#6c5ce7"}
-              />
-              <View style={styles.purchaseTextContainer}>
-                <Text style={styles.secondaryLabel}>فروشنده:</Text>
-                <Text style={styles.secondaryValue}>{seller.name}</Text>
+          {!isCurrentUserSeller && (
+            <>
+              <View style={styles.divider} />
+              <View style={styles.purchaseRow}>
+                <View style={styles.purchaseItem}>
+                  <MaterialIcons
+                    name="store"
+                    size={18}
+                    color={colors.secondary || "#6c5ce7"}
+                  />
+                  <View style={styles.purchaseTextContainer}>
+                    <Text style={styles.secondaryLabel}>فروشنده:</Text>
+                    <Text style={styles.secondaryValue}>{seller.name}</Text>
+                  </View>
+                </View>
+                {seller.phone && (
+                  <TouchableOpacity
+                    style={styles.callButtonCircle}
+                    onPress={() => handlePhoneCall(seller.phone)}
+                  >
+                    <MaterialIcons
+                      name="call"
+                      size={25}
+                      color={colors.success || "#4CAF50"}
+                    />
+                  </TouchableOpacity>
+                )}
               </View>
-            </View>
-            {seller.phone && (
-              <TouchableOpacity
-                style={styles.callButtonCircle}
-                onPress={() => handlePhoneCall(seller.phone)}
-              >
-                <MaterialIcons
-                  name="call"
-                  size={25}
-                  color={colors.success || "#4CAF50"}
-                />
-              </TouchableOpacity>
-            )}
-          </View>
+            </>
+          )}
 
           {amount > 0 && (
             <>
@@ -379,6 +367,7 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
 
 const IssuedInvoices: React.FC = () => {
   const navigation = useNavigation<AppNavigationProp>();
+  const { user } = useAuth();
 
   const [items, setItems] = useState<InspectionItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -387,12 +376,11 @@ const IssuedInvoices: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [refreshing, setRefreshing] = useState<boolean>(false);
-  // New state for storing tab counts
   const [statusCounts, setStatusCounts] = useState<Record<number, number>>({
-    1: 0, // پیش فاکتور
-    2: 0, // صادر شده
-    3: 0, // ارجاع از صندوق
-    4: 0, // لغو شده
+    1: 0,
+    2: 0,
+    3: 0,
+    4: 0,
   });
 
   const [fromDate, setFromDate] = useState<string>("");
@@ -418,12 +406,15 @@ const IssuedInvoices: React.FC = () => {
     setToastVisible(true);
   };
 
+  const isCurrentUserSeller = (applicationUserId: number) => {
+    return user?.UserId === applicationUserId;
+  };
+
   useEffect(() => {
     fetchInvoices();
     fetchInvoiceCounts();
   }, [currentPage]);
 
-  // New function to fetch invoice counts
   const fetchInvoiceCounts = async () => {
     try {
       const response = await fetch(`${appConfig.mobileApi}Invoice/GetCount`);
@@ -434,7 +425,6 @@ const IssuedInvoices: React.FC = () => {
 
       const data: InvoiceCountItem[] = await response.json();
 
-      // Convert the array to a record for easier access
       const countsRecord: Record<number, number> = {};
       data.forEach((item) => {
         countsRecord[item.State] = item.InvoiceCount;
@@ -460,7 +450,6 @@ const IssuedInvoices: React.FC = () => {
       const data: InvoiceApiResponse = await response.json();
 
       if (data.length !== 0) {
-        // Map API data to our component's format
         const mappedItems: InspectionItem[] = data.Items.map((item) => ({
           id: item.InvoiceId.toString(),
           buyerName: item.PersonFullName.trim() || "مشتری",
@@ -468,10 +457,11 @@ const IssuedInvoices: React.FC = () => {
           invoiceNumber: item.InvoiceId.toString(),
           date: item.ShamsiInvoiceDate,
           sellerName: item.ApplicationUserName,
-          sellerPhone: "", // API doesn't provide seller phone
+          sellerPhone: "",
           description: item.Description,
           status: stateMap[item.State] || "صادر شده",
           amount: item.TotalAmount,
+          applicationUserId: item.ApplicationUserId,
         }));
 
         setItems(mappedItems);
@@ -479,10 +469,6 @@ const IssuedInvoices: React.FC = () => {
       }
     } catch (error) {
       console.error("Error fetching invoices:", error);
-      // Alert.alert(
-      //   "خطا",
-      //   "مشکلی در دریافت اطلاعات فاکتورها رخ داده است. لطفا دوباره تلاش کنید."
-      // );
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -494,10 +480,8 @@ const IssuedInvoices: React.FC = () => {
     try {
       console.log("filterParams:", filterParams);
 
-      // Initialize query string with required parameters
       let queryString = "page=1&pageSize=1000";
 
-      // Add filterParams if they exist
       if (filterParams) {
         if (filterParams.filterPersonId) {
           queryString += `&filterPersonId=${encodeURIComponent(
@@ -533,10 +517,11 @@ const IssuedInvoices: React.FC = () => {
           invoiceNumber: item.InvoiceId.toString(),
           date: item.ShamsiInvoiceDate,
           sellerName: item.ApplicationUserName,
-          sellerPhone: "", // API doesn't provide seller phone
+          sellerPhone: "",
           description: item.Description,
           status: stateMap[item.State] || "صادر شده",
           amount: item.TotalAmount,
+          applicationUserId: item.ApplicationUserId,
         }));
 
         setItems(mappedItems);
@@ -553,7 +538,6 @@ const IssuedInvoices: React.FC = () => {
     try {
       let queryString = "";
 
-      // Add filterParams if they exist
       if (filterParams) {
         if (filterParams.filterPersonId) {
           queryString += `&filterPersonId=${encodeURIComponent(
@@ -583,7 +567,6 @@ const IssuedInvoices: React.FC = () => {
       const data: InvoiceCountItem[] = response.data;
       console.log("data", data);
 
-      // Convert the array to a record for easier access
       const countsRecord: Record<number, number> = {};
       data.forEach((item) => {
         countsRecord[item.State] = item.InvoiceCount;
@@ -638,14 +621,11 @@ const IssuedInvoices: React.FC = () => {
     return filtered;
   };
 
-  // Modified function to get count by status using the API data
   const getCountByStatus = (status: StatusType | null) => {
     if (status === null) {
-      // Sum all counts for "all" tab
       return Object.values(statusCounts).reduce((sum, count) => sum + count, 0);
     }
 
-    // Find the state number for this status name
     const stateNumber = Object.entries(stateMap).find(
       ([_, stateName]) => stateName === status
     )?.[0];
@@ -669,6 +649,8 @@ const IssuedInvoices: React.FC = () => {
   };
 
   const renderItem = ({ item }: { item: InspectionItem }) => {
+    const isSeller = isCurrentUserSeller(item.applicationUserId);
+
     return (
       <PurchaseInfoCard
         headerTitle={`فاکتور ${convertToPersianNumbers(item.invoiceNumber)}`}
@@ -681,6 +663,7 @@ const IssuedInvoices: React.FC = () => {
         status={item.status}
         amount={item.amount}
         gradientColors={getColorsByStatus(item.status)}
+        isCurrentUserSeller={isSeller}
         onPress={() =>
           navigation.navigate("ReceiveNewInvoice", {
             invoicId: Number(item.id),
@@ -794,12 +777,10 @@ const IssuedInvoices: React.FC = () => {
           visible={isColleagueBottomSheetVisible}
           onClose={() => setIsColleagueBottomSheetVisible(false)}
           onSelectColleague={handleSelectColleague}
-          // isCustomer
           title="انتخاب خریدار"
         />
 
         <View style={styles.tabContainer}>
-          {/* Updated tab for "لغو شده" (Canceled) instead of "در حال ویرایش" (Editing) */}
           <TouchableOpacity
             style={[
               styles.tab,
@@ -975,6 +956,7 @@ const styles = StyleSheet.create({
 
   searchOuterContainer: {
     margin: 20,
+    marginTop: 0,
     marginBottom: 5,
   },
 

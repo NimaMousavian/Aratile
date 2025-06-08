@@ -23,10 +23,13 @@ import DynamicModal from "../../components/DynamicModal";
 import IconButton from "../../components/IconButton";
 import PurchaseInfoCard from "../../components/PurchaseInfoCard";
 import ScreenHeader from "../../components/ScreenHeader";
+import InvoiceDetailsSummary from "./InvoiceDetailsSummary";
 import axios from "axios";
 import appConfig from "../../../config";
 import { IInvoic } from "../../config/types";
 import { toPersianDigits } from "../../utils/converters";
+import { useAuth } from "../AuthContext";
+
 interface PurchaseData {
   buyer: {
     name: string;
@@ -61,6 +64,7 @@ export const getFontFamily = (baseFont: string, weight: FontWeight): string => {
   }
   return baseFont;
 };
+
 const purchaseData: PurchaseData = {
   buyer: {
     name: "نمت",
@@ -122,6 +126,7 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
   const route = useRoute();
   const params = route.params as { invoicId: number };
   const invoicId = params.invoicId;
+  const { user } = useAuth();
 
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [modalType, setModalType] = useState<ModalType>(ModalType.None);
@@ -165,6 +170,11 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const isCurrentUserSeller = () => {
+    if (!invoic || !user?.UserId) return false;
+    return invoic.ApplicationUserId === user.UserId;
   };
 
   useEffect(() => {
@@ -374,14 +384,6 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                 iconColor: colors.info,
               },
             ]}
-            // inputs={[
-            //   {
-            //     id: "suspendReason",
-            //     label: "دلیل تعلیق",
-            //     placeholder: "دلیل تعلیق فاکتور را وارد کنید",
-            //     show: true,
-            //   },
-            // ]}
             buttons={[
               {
                 id: "confirm",
@@ -389,42 +391,6 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                 color: "#F39C12",
                 icon: "pause-circle-outline",
                 onPress: handleSuspension,
-              },
-              {
-                id: "cancel",
-                text: "انصراف",
-                color: colors.danger,
-                icon: "close",
-                onPress: () => setModalVisible(false),
-              },
-            ]}
-          />
-        );
-
-      case ModalType.Refer:
-        return (
-          <DynamicModal
-            visible={modalVisible}
-            onClose={() => setModalVisible(false)}
-            headerConfig={{
-              title: modalData.title,
-              icon: modalData.icon,
-              colors: modalData.colors,
-            }}
-            messages={[
-              {
-                text: modalData.message,
-                icon: "info-outline",
-                iconColor: colors.info,
-              },
-            ]}
-            buttons={[
-              {
-                id: "confirm",
-                text: "ارجاع به فروشنده",
-                color: colors.secondary,
-                icon: "send",
-                onPress: handleReferral,
               },
               {
                 id: "cancel",
@@ -539,18 +505,34 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                   </View>
                 </View>
 
-                <PurchaseInfoCard
-                  headerTitle="اطلاعات خرید"
-                  headerIcon="person"
-                  buyer={{
-                    name: invoic.PersonFullName,
-                    phone: invoic.PersonMobile,
-                  }}
-                  seller={{ name: invoic.ApplicationUserName, phone: "" }}
-                  address={""}
-                  note={invoic.Description}
-                  gradientColors={[colors.secondary, colors.primary]}
-                />
+                {!isCurrentUserSeller() && (
+                  <PurchaseInfoCard
+                    headerTitle="اطلاعات خرید"
+                    headerIcon="person"
+                    buyer={{
+                      name: invoic.PersonFullName,
+                      phone: invoic.PersonMobile,
+                    }}
+                    seller={{ name: invoic.ApplicationUserName, phone: "" }}
+                    address={""}
+                    note={invoic.Description}
+                    gradientColors={[colors.secondary, colors.primary]}
+                  />
+                )}
+
+                {isCurrentUserSeller() && (
+                  <PurchaseInfoCard
+                    headerTitle="اطلاعات خریدار"
+                    headerIcon="person"
+                    buyer={{
+                      name: invoic.PersonFullName,
+                      phone: invoic.PersonMobile,
+                    }}
+                    address={""}
+                    note={invoic.Description}
+                    gradientColors={[colors.secondary, colors.primary]}
+                  />
+                )}
 
                 <View style={styles.productsSection}>
                   <View style={styles.sectionHeader}>
@@ -568,10 +550,6 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                     <ProductCard
                       key={invoicItem.InvoiceItemId}
                       title={invoicItem.ProductName}
-                      // titleIcon={{
-                      //   name: "inventory",
-                      //   color: colors.primary,
-                      // }}
                       fields={[
                         {
                           icon: "qr-code",
@@ -585,9 +563,8 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                           label: "مقدار:",
                           value: `${invoicItem.ProductQuantity.toFixed(
                             2
-                          ).toString()} ${
-                            invoicItem.ProductMeasurementUnitName
-                          }`,
+                          ).toString()} ${invoicItem.ProductMeasurementUnitName
+                            }`,
                         },
                         {
                           icon: "shopping-bag",
@@ -631,31 +608,20 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                   ))}
                 </View>
 
-                {/* <View
-              style={[
-                styles.sellerCard,
-                Platform.OS === "android" && styles.androidCardAdjustment,
-              ]}
-            >
-              <Text style={styles.sellerLabel}>نام فروشنده</Text>
-
-              <View style={styles.qrPlaceholder}>
-                <View style={styles.qrCodeRectangle}>
-                  <MaterialIcons
-                    name="qr-code-2"
-                    size={100}
-                    color={colors.gray}
+                {/* اضافه کردن خلاصه فاکتور */}
+                {invoic && (
+                  <InvoiceDetailsSummary
+                    invoic={invoic}
+                    containerStyle={Platform.OS === "android" ? styles.androidCardAdjustment : {}}
                   />
-                </View>
-              </View>
-            </View> */}
+                )}
 
                 <View style={styles.bottomSpacer} />
               </ScrollView>
             )
           )}
 
-          <View style={styles.actionsContainer}>
+          {/* <View style={styles.actionsContainer}>
             <View style={styles.actionButtonsRow}>
               <IconButtonSquare
                 text="تایید نهایی"
@@ -685,7 +651,7 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                 onPress={showCancelModal}
               />
             </View>
-          </View>
+          </View> */}
 
           {getModalContent()}
         </View>
@@ -711,7 +677,6 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 16,
-    // paddingTop: Platform.OS === "android" ? 60 : 20,
   },
   androidContentAdjustment: {
     marginTop: 0,
@@ -756,9 +721,9 @@ const styles = StyleSheet.create({
   },
   invoiceNumberValue: {
     fontSize: 15,
-    fontWeight: "bold",
+
     color: colors.info,
-    fontFamily: getFontFamily("Yekan_Bakh_Bold", "bold"),
+    fontFamily: getFontFamily("Yekan_Bakh_Bold", "700"),
   },
   invoiceDate: {
     flexDirection: "row-reverse",
@@ -863,14 +828,12 @@ const styles = StyleSheet.create({
   },
   noteLabel: {
     fontSize: 15,
-    // color: colors.danger,
     fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
     marginLeft: 8,
   },
   noteContent: {
     fontSize: 15,
     fontFamily: getFontFamily("Yekan_Bakh_Bold", "500"),
-    // color: colors.danger,
     flex: 1,
     textAlign: "right",
   },
@@ -898,7 +861,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    // elevation: 2,
     overflow: "hidden",
     borderWidth: 1,
     borderColor: "#e1e1e1",
@@ -908,8 +870,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderBottomWidth: 1,
     borderBottomColor: "#e1e1e1",
-    // borderRightWidth: 3,
-    // borderRightColor: colors.secondary,
   },
   productTitleRow: {
     flexDirection: "row-reverse",

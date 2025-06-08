@@ -1,4 +1,4 @@
-// InvoiceTotalCalculator.tsx - بدون اسکرول داخلی
+
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View, Text } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -65,7 +65,7 @@ const InvoiceTotalCalculator: React.FC<InvoiceTotalProps> = ({
       >
         <View style={styles.headerContent}>
           <MaterialIcons name="calculate" size={24} color="white" />
-          <Text style={styles.headerTitle}>خلاصه فاکتور</Text>
+          <Text style={styles.headerTitle} numberOfLines={1}>خلاصه فاکتور</Text>
         </View>
       </LinearGradient>
 
@@ -132,16 +132,21 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingVertical: 12,
+    minHeight: 48, // اضافه شده برای تضمین ارتفاع مناسب
   },
   headerContent: {
     flexDirection: "row-reverse",
     alignItems: "center",
+    flex: 1, // اضافه شده
+    justifyContent: "center", // اضافه شده
   },
   headerTitle: {
     fontSize: 18,
     color: colors.white,
     marginRight: 8,
     fontFamily: "Yekan_Bakh_Bold",
+    textAlign: "center", // اضافه شده
+    flexShrink: 1, // اضافه شده تا در صورت نیاز کوچک شود
   },
   contentContainer: {
     padding: 16,

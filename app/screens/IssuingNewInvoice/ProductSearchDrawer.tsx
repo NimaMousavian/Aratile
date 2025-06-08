@@ -33,6 +33,15 @@ import appConfig from "../../../config";
 const API_BASE_URL = appConfig.mobileApi;
 const { height } = Dimensions.get("window");
 
+// Z-Index constants for better layering
+const Z_INDEX = {
+  MODAL_BACKDROP: 9999,
+  MODAL_CONTENT: 10000,
+  MODAL_HEADER: 10001,
+  MODAL_BUTTONS: 10002,
+  TOAST: 10100,
+} as const;
+
 interface APIProduct {
   ProductId: number;
   ProductName: string;
@@ -48,7 +57,11 @@ interface ProductSearchDrawerProps {
   visible: boolean;
   onClose: () => void;
   onProductSelect: (product: Product) => void;
-  searchProduct: (query: string) => Promise<APIProduct[]>;
+  searchProduct: (query: string, page?: number, pageSize?: number) => Promise<{
+    items: APIProduct[];
+    totalCount: number;
+    hasMore: boolean;
+  }>;
   onError?: (
     message: string,
     type: "success" | "error" | "warning" | "info"
@@ -68,6 +81,15 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
   const [hasSearched, setHasSearched] = useState<boolean>(false);
   const [searching, setSearching] = useState<boolean>(false);
   const [keyboardOpen, setKeyboardOpen] = useState<boolean>(false);
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [hasMoreData, setHasMoreData] = useState<boolean>(false);
+  const [loadingMore, setLoadingMore] = useState<boolean>(false);
+  const [totalCount, setTotalCount] = useState<number>(0);
+
+  const pageSize = 20;
+  const currentQuery = useRef<string>("");
 
   const [toastVisible, setToastVisible] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string>("");
@@ -97,12 +119,21 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
 
   useEffect(() => {
     if (visible) {
-      setSearchQuery("");
-      setDisplaySearchQuery("");
-      setSearchResults([]);
-      setHasSearched(false);
+      resetSearchState();
     }
   }, [visible]);
+
+  const resetSearchState = () => {
+    setSearchQuery("");
+    setDisplaySearchQuery("");
+    setSearchResults([]);
+    setHasSearched(false);
+    setCurrentPage(1);
+    setHasMoreData(false);
+    setLoadingMore(false);
+    setTotalCount(0);
+    currentQuery.current = "";
+  };
 
   // Monitor keyboard visibility
   useEffect(() => {
@@ -128,19 +159,21 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
   useEffect(() => {
     if (visible) {
       slideAnimation.setValue(0);
-      Animated.parallel([
-        Animated.timing(slideAnimation, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-          easing: Easing.out(Easing.ease),
-        }),
-        Animated.timing(backdropOpacity, {
-          toValue: 1,
-          duration: 250,
-          useNativeDriver: true,
-        }),
-      ]).start();
+      setTimeout(() => {
+        Animated.parallel([
+          Animated.timing(slideAnimation, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: true,
+            easing: Easing.out(Easing.ease),
+          }),
+          Animated.timing(backdropOpacity, {
+            toValue: 1,
+            duration: 250,
+            useNativeDriver: true,
+          }),
+        ]).start();
+      }, 0);
     }
   }, [visible, slideAnimation, backdropOpacity]);
 
@@ -160,10 +193,7 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
       }),
     ]).start(() => {
       onClose();
-      setSearchQuery("");
-      setDisplaySearchQuery("");
-      setSearchResults([]);
-      setHasSearched(false);
+      resetSearchState();
     });
   };
 
@@ -172,38 +202,102 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
     setSearchQuery(text);
   };
 
-  const handleSearch = async () => {
-    if (searchQuery.trim().length >= 3) {
+  const handleSearch = async (isNewSearch: boolean = true) => {
+    const query = searchQuery.trim();
+
+    if (query.length < 3) {
+      if (query.length > 0) {
+        showToast("لطفاً حداقل ۳ کاراکتر وارد کنید", "warning");
+      }
+      return;
+    }
+
+    if (isNewSearch) {
       setSearching(true);
+      setCurrentPage(1);
+      setSearchResults([]);
+      setHasMoreData(false);
+      currentQuery.current = query;
+    } else {
+      setLoadingMore(true);
+    }
 
-      try {
-        const englishQuery = toEnglishDigits(searchQuery);
-        const results = await searchProduct(englishQuery);
+    try {
+      const englishQuery = toEnglishDigits(query);
+      const page = isNewSearch ? 1 : currentPage;
 
-        setSearchResults(results || []);
-        setHasSearched(true);
+      const result = await searchProduct(englishQuery, page, pageSize);
 
-        if (!results || results.length === 0) {
+      if (result && result.items) {
+        if (isNewSearch) {
+          setSearchResults(result.items);
+          setHasSearched(true);
+          setTotalCount(result.totalCount || 0);
+        } else {
+          // Remove duplicates when adding new items
+          setSearchResults(prevResults => {
+            const existingIds = new Set(prevResults.map(item => item.ProductId));
+            const newUniqueItems = result.items.filter(item => !existingIds.has(item.ProductId));
+            return [...prevResults, ...newUniqueItems];
+          });
+        }
+
+        setHasMoreData(result.hasMore || false);
+
+        if (isNewSearch && result.items.length === 0) {
           showToast("محصولی با این مشخصات یافت نشد", "info");
         }
-      } catch (error) {
-        showToast("خطا در جستجوی محصول", "error");
-        console.log(error);
-      } finally {
-        setSearching(false);
+      } else {
+        if (isNewSearch) {
+          setSearchResults([]);
+          setHasSearched(true);
+          setTotalCount(0);
+          showToast("محصولی با این مشخصات یافت نشد", "info");
+        }
+        setHasMoreData(false);
       }
+    } catch (error) {
+      showToast("خطا در جستجوی محصول", "error");
+      console.log(error);
+      setHasMoreData(false);
+    } finally {
+      if (isNewSearch) {
+        setSearching(false);
+      } else {
+        setLoadingMore(false);
+      }
+    }
 
-      Keyboard.dismiss();
-    } else if (searchQuery.trim().length > 0) {
-      showToast("لطفاً حداقل ۳ کاراکتر وارد کنید", "warning");
+    Keyboard.dismiss();
+  };
+
+  const loadMoreThrottleRef = useRef<boolean>(false);
+
+  const handleLoadMore = () => {
+    if (loadMoreThrottleRef.current || !hasMoreData || loadingMore || searching) {
+      return;
+    }
+
+    if (searchQuery.trim() === currentQuery.current) {
+      loadMoreThrottleRef.current = true;
+
+      setCurrentPage(prevPage => {
+        const nextPage = prevPage + 1;
+        // Call handleSearch with the next page
+        setTimeout(() => {
+          handleSearch(false);
+          // Reset throttle after a delay
+          setTimeout(() => {
+            loadMoreThrottleRef.current = false;
+          }, 1000);
+        }, 100);
+        return nextPage;
+      });
     }
   };
 
   const handleClearSearch = () => {
-    setSearchQuery("");
-    setDisplaySearchQuery("");
-    setSearchResults([]);
-    setHasSearched(false);
+    resetSearchState();
   };
 
   const handleProductSelect = (item: APIProduct) => {
@@ -300,43 +394,62 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
     fetchCompleteProductData();
   };
 
-  const renderProductItem = ({ item }: ListRenderItemInfo<APIProduct>) => (
-    <ProductCard
-      title={toPersianDigits(item.ProductName)}
-      onPress={() => handleProductSelect(item)}
-      fields={[
-        {
-          icon: "qr-code",
-          iconColor: colors.secondary,
-          label: "کد:",
-          value: toPersianDigits(item.SKU),
-        },
-        {
-          icon: "attach-money",
-          iconColor: colors.secondary,
-          label: "قیمت:",
-          value:
-            item.Price !== null
-              ? toPersianDigits(item.Price.toLocaleString()) + " ریال"
-              : "0 ریال",
-        },
-        {
-          icon: "check-circle",
-          iconColor: colors.secondary,
-          label: "وضعیت:",
-          value: item.ActiveStr,
-          valueColor: item.Active ? colors.success : colors.danger,
-        },
-      ]}
-      qrConfig={{
-        show: true,
-        icon: "qr-code-2",
-        iconSize: 36,
-        iconColor: colors.secondary,
-      }}
-      containerStyle={styles.productCard}
-    />
+  const renderProductItem = React.useMemo(() =>
+    ({ item, index }: ListRenderItemInfo<APIProduct>) => (
+      <View style={styles.productItemWrapper}>
+        <ProductCard
+          key={`product-${item.ProductId}-${index}`}
+          title={toPersianDigits(item.ProductName)}
+          onPress={() => handleProductSelect(item)}
+          fields={[
+            {
+              icon: "qr-code",
+              iconColor: colors.secondary,
+              label: "کد:",
+              value: toPersianDigits(item.SKU),
+            },
+            {
+              icon: "attach-money",
+              iconColor: colors.secondary,
+              label: "قیمت:",
+              value:
+                item.Price !== null
+                  ? toPersianDigits(item.Price.toLocaleString()) + " ریال"
+                  : "0 ریال",
+            },
+            {
+              icon: "check-circle",
+              iconColor: colors.secondary,
+              label: "وضعیت:",
+              value: item.ActiveStr,
+              valueColor: item.Active ? colors.success : colors.danger,
+            },
+          ]}
+          qrConfig={{
+            show: true,
+            icon: "qr-code-2",
+            iconSize: 36,
+            iconColor: colors.secondary,
+          }}
+          containerStyle={styles.productCard}
+        />
+      </View>
+    ), [colors]
   );
+
+  const renderFooter = () => {
+    if (!loadingMore) return null;
+
+    return (
+      <View style={styles.footerLoader}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  };
+
+  const renderResultsHeader = () => {
+    if (!hasSearched || searchResults.length === 0) return null;
+  };
 
   const animatedStyle = {
     transform: [
@@ -359,15 +472,18 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
       transparent={true}
       animationType="none"
       onRequestClose={closeDrawer}
+      statusBarTranslucent={true}
+      supportedOrientations={['portrait']}
+      presentationStyle="overFullScreen"
     >
-      <Toast
-        visible={toastVisible}
-        message={toastMessage}
-        type={toastType}
-        onDismiss={() => setToastVisible(false)}
-      />
-
       <View style={styles.modalContainer}>
+        <Toast
+          visible={toastVisible}
+          message={toastMessage}
+          type={toastType}
+          onDismiss={() => setToastVisible(false)}
+        />
+
         <Animated.View style={[styles.backdrop, backdropStyle]}>
           <TouchableOpacity
             style={styles.backdropTouchable}
@@ -416,7 +532,7 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
                     style={[
                       styles.searchInput,
                       Platform.OS === "android" &&
-                        keyboardOpen && { height: 40 },
+                      keyboardOpen && { height: 40 },
                     ]}
                     placeholder="جستجوی نام یا کد محصول"
                     placeholderTextColor="#999"
@@ -426,7 +542,7 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
                     allowFontScaling={false}
                     autoCapitalize="none"
                     autoCorrect={false}
-                    onSubmitEditing={handleSearch}
+                    onSubmitEditing={() => handleSearch(true)}
                   />
 
                   <TouchableOpacity
@@ -441,7 +557,7 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
 
                 <TouchableOpacity
                   style={styles.searchButton}
-                  onPress={handleSearch}
+                  onPress={() => handleSearch(true)}
                 >
                   <Feather name="search" size={20} color="#fff" />
                 </TouchableOpacity>
@@ -454,14 +570,26 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
                 <Text style={styles.loadingText}>در حال جستجو...</Text>
               </View>
             ) : searchResults.length > 0 ? (
-              <FlatList
-                data={searchResults}
-                keyExtractor={(item) => item.ProductId.toString()}
-                renderItem={renderProductItem}
-                contentContainerStyle={styles.listContainer}
-                showsVerticalScrollIndicator={true}
-                keyboardShouldPersistTaps="handled"
-              />
+              <>
+                {renderResultsHeader()}
+                <FlatList
+                  data={searchResults}
+                  keyExtractor={(item, index) => `${item.ProductId}-${index}`}
+                  renderItem={renderProductItem}
+                  contentContainerStyle={styles.listContainer}
+                  showsVerticalScrollIndicator={true}
+                  keyboardShouldPersistTaps="handled"
+                  onEndReached={handleLoadMore}
+                  onEndReachedThreshold={0.3}
+                  ListFooterComponent={renderFooter}
+                  removeClippedSubviews={true}
+                  maxToRenderPerBatch={10}
+                  windowSize={10}
+                  initialNumToRender={10}
+                  getItemLayout={undefined}
+                  style={styles.flatList}
+                />
+              </>
             ) : (
               <View style={styles.centerContainer}>
                 <Text style={styles.emptyResultText}>
@@ -496,11 +624,14 @@ const styles = StyleSheet.create({
   modalContainer: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: "flex-end",
-    zIndex: 1000,
+    zIndex: Z_INDEX.MODAL_BACKDROP,
+    elevation: Platform.OS === 'android' ? Z_INDEX.MODAL_BACKDROP / 100 : 0,
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
+    zIndex: Z_INDEX.MODAL_BACKDROP,
+    elevation: Platform.OS === 'android' ? Z_INDEX.MODAL_BACKDROP / 100 : 0,
   },
   backdropTouchable: {
     flex: 1,
@@ -514,9 +645,11 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: -3 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
-    elevation: 16,
+    elevation: Platform.OS === 'android' ? Z_INDEX.MODAL_CONTENT / 100 : 16,
     height: "80%",
     paddingBottom: Platform.OS === "android" ? 20 : 0,
+    zIndex: Z_INDEX.MODAL_CONTENT,
+    position: 'relative',
   },
   header: {
     flexDirection: "row-reverse",
@@ -525,6 +658,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
     height: 65,
+    zIndex: Z_INDEX.MODAL_HEADER,
+    elevation: Platform.OS === 'android' ? Z_INDEX.MODAL_HEADER / 100 : 0,
+    position: 'relative',
   },
   headerContent: {
     flexDirection: "row-reverse",
@@ -542,13 +678,21 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     padding: 0,
+    zIndex: Z_INDEX.MODAL_BUTTONS,
+    elevation: Platform.OS === 'android' ? Z_INDEX.MODAL_BUTTONS / 100 : 0,
   },
   body: {
     padding: 16,
     flex: 1,
+    zIndex: Z_INDEX.MODAL_CONTENT,
+    elevation: Platform.OS === 'android' ? Z_INDEX.MODAL_CONTENT / 100 : 0,
+    position: 'relative',
   },
   searchContainer: {
     marginBottom: 16,
+    zIndex: Z_INDEX.MODAL_BUTTONS,
+    elevation: Platform.OS === 'android' ? Z_INDEX.MODAL_BUTTONS / 100 : 0,
+    position: 'relative',
   },
   searchInputWrapper: {
     flexDirection: "row-reverse",
@@ -561,8 +705,9 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
-    elevation: 1,
+    elevation: Platform.OS === 'android' ? 5 : 1,
     height: 56,
+    zIndex: Z_INDEX.MODAL_BUTTONS,
   },
   textInputContainer: {
     flex: 1,
@@ -580,6 +725,8 @@ const styles = StyleSheet.create({
   },
   clearButton: {
     padding: 5,
+    zIndex: Z_INDEX.MODAL_BUTTONS,
+    elevation: Platform.OS === 'android' ? Z_INDEX.MODAL_BUTTONS / 100 : 0,
   },
   searchButton: {
     backgroundColor: colors.primary,
@@ -590,12 +737,26 @@ const styles = StyleSheet.create({
     marginRight: 8,
     width: 40,
     height: 40,
+    zIndex: Z_INDEX.MODAL_BUTTONS,
+    elevation: Platform.OS === 'android' ? Z_INDEX.MODAL_BUTTONS / 100 : 0,
+  },
+  flatList: {
+    flex: 1,
+    zIndex: 1,
+    elevation: Platform.OS === 'android' ? 1 : 0,
+  },
+  productItemWrapper: {
+    zIndex: 1,
+    elevation: Platform.OS === 'android' ? 1 : 0,
+    position: 'relative',
   },
   centerContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     paddingVertical: 40,
+    zIndex: 1,
+    elevation: Platform.OS === 'android' ? 1 : 0,
   },
   loadingText: {
     marginTop: 10,
@@ -612,9 +773,14 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     paddingBottom: 20,
+    zIndex: 1,
+    elevation: Platform.OS === 'android' ? 1 : 0,
   },
   productCard: {
     marginBottom: 10,
+    zIndex: 1,
+    elevation: Platform.OS === 'android' ? 2 : 0,
+    position: 'relative',
   },
   searchTipsContainer: {
     marginTop: 20,
@@ -634,6 +800,43 @@ const styles = StyleSheet.create({
     color: colors.medium,
     marginBottom: 4,
     textAlign: "center",
+  },
+  resultsHeader: {
+    backgroundColor: colors.light,
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: colors.primary + "20",
+  },
+  resultsText: {
+    fontSize: 14,
+    fontFamily: "Yekan_Bakh_Bold",
+    color: colors.primary,
+    textAlign: "center",
+  },
+  moreResultsText: {
+    fontSize: 12,
+    fontFamily: "Yekan_Bakh_Regular",
+    color: colors.medium,
+    textAlign: "center",
+    marginTop: 4,
+  },
+  footerLoader: {
+    paddingVertical: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 8,
+    marginTop: 10,
+    marginHorizontal: 5,
+    zIndex: 1,
+    elevation: Platform.OS === 'android' ? 1 : 0,
+  },
+  footerLoaderText: {
+    marginTop: 8,
+    fontSize: 14,
+    fontFamily: "Yekan_Bakh_Regular",
+    color: colors.medium,
   },
 });
 

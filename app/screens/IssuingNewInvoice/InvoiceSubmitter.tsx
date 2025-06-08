@@ -17,11 +17,13 @@ interface Colleague {
   name: string;
 }
 
+type ModalType = 'success' | 'error' | 'warning';
+
 interface ModalConfig {
   title: string;
   message: string;
   icon: string;
-  isError: boolean;
+  type: ModalType;
 }
 
 interface InvoiceSubmitterProps {
@@ -52,18 +54,24 @@ const InvoiceSubmitter: React.FC<InvoiceSubmitterProps> = ({
     title: '',
     message: '',
     icon: '',
-    isError: false
+    type: 'success'
   });
 
   /**
    * نمایش مودال برای نمایش وضعیت ارسال فاکتور
    */
-  const showModal = (title: string, message: string, icon: string, isError: boolean = false): void => {
+  const showModal = (title: string, message: string, type: ModalType = 'success', customIcon?: string): void => {
+    const iconMap = {
+      success: 'check-circle',
+      error: 'error',
+      warning: 'warning'
+    };
+
     setModalConfig({
       title,
       message,
-      icon,
-      isError
+      icon: customIcon || iconMap[type],
+      type
     });
     setModalVisible(true);
   };
@@ -75,7 +83,7 @@ const InvoiceSubmitter: React.FC<InvoiceSubmitterProps> = ({
     setModalVisible(false);
 
     // در صورت موفقیت، کالبک موفقیت را صدا بزنیم
-    if (!modalConfig.isError && onSuccess) {
+    if (modalConfig.type === 'success' && onSuccess) {
       onSuccess();
     }
   };
@@ -86,6 +94,11 @@ const InvoiceSubmitter: React.FC<InvoiceSubmitterProps> = ({
   const submitInvoice = async (): Promise<void> => {
     // بررسی اعتبارسنجی اولیه
     if (!selectedColleague) {
+      showModal(
+        "هشدار",
+        "لطفاً ابتدا مشتری را انتخاب کنید",
+        "warning"
+      );
       if (onError) {
         onError("لطفاً ابتدا مشتری را انتخاب کنید", "warning");
       }
@@ -93,6 +106,11 @@ const InvoiceSubmitter: React.FC<InvoiceSubmitterProps> = ({
     }
 
     if (selectedProducts.length === 0) {
+      showModal(
+        "هشدار",
+        "لطفاً حداقل یک محصول به فاکتور اضافه کنید",
+        "warning"
+      );
       if (onError) {
         onError("لطفاً حداقل یک محصول به فاکتور اضافه کنید", "warning");
       }
@@ -129,15 +147,15 @@ const InvoiceSubmitter: React.FC<InvoiceSubmitterProps> = ({
         showModal(
           "موفقیت",
           "فاکتور با موفقیت ثبت شد.",
-          "check-circle"
+          "success",
+          " [colors.success, colors.success]"
         );
       } else {
         // نمایش پیام خطا
         showModal(
           "خطا",
           `خطا در ثبت فاکتور: ${result.error}`,
-          "error",
-          true
+          "error"
         );
 
         if (onError) {
@@ -151,8 +169,7 @@ const InvoiceSubmitter: React.FC<InvoiceSubmitterProps> = ({
       showModal(
         "خطا",
         "خطایی در فرآیند ثبت فاکتور رخ داد. لطفاً دوباره تلاش کنید.",
-        "error",
-        true
+        "error"
       );
 
       if (onError) {
@@ -168,6 +185,38 @@ const InvoiceSubmitter: React.FC<InvoiceSubmitterProps> = ({
    */
   const calculateTotal = () => {
     return InvoiceService.calculateTotal(selectedProducts, discount, extra);
+  };
+
+  /**
+   * دریافت استایل آیکون بر اساس نوع مودال
+   */
+  const getIconStyle = (type: ModalType) => {
+    switch (type) {
+      case 'success':
+        return styles.iconSuccess;
+      case 'error':
+        return styles.iconError;
+      case 'warning':
+        return styles.iconWarning;
+      default:
+        return styles.iconSuccess;
+    }
+  };
+
+  /**
+   * دریافت رنگ دکمه بر اساس نوع مودال
+   */
+  const getButtonStyle = (type: ModalType) => {
+    switch (type) {
+      case 'success':
+        return styles.modalButtonSuccess;
+      case 'error':
+        return styles.modalButtonError;
+      case 'warning':
+        return styles.modalButtonWarning;
+      default:
+        return styles.modalButtonSuccess;
+    }
   };
 
   const { finalTotal } = calculateTotal();
@@ -201,10 +250,10 @@ const InvoiceSubmitter: React.FC<InvoiceSubmitterProps> = ({
           <View style={styles.modalContent}>
             <View style={[
               styles.iconCircle,
-              modalConfig.isError ? styles.iconError : styles.iconSuccess
+              getIconStyle(modalConfig.type)
             ]}>
               <MaterialIcons
-                name={modalConfig.icon || (modalConfig.isError ? "error" : "check-circle")}
+                name={modalConfig.icon || 'info'}
                 size={40}
                 color="#FFFFFF"
               />
@@ -214,7 +263,7 @@ const InvoiceSubmitter: React.FC<InvoiceSubmitterProps> = ({
             <Text style={styles.modalMessage}>{toPersianDigits(modalConfig.message)}</Text>
 
             <TouchableOpacity
-              style={styles.modalButton}
+              style={[styles.modalButton, getButtonStyle(modalConfig.type)]}
               onPress={closeModal}
             >
               <Text style={styles.modalButtonText}>تایید</Text>
@@ -264,6 +313,11 @@ const styles = StyleSheet.create({
     padding: 20,
     width: '80%',
     alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   iconCircle: {
     width: 70,
@@ -272,12 +326,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 15,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
   },
   iconSuccess: {
-    backgroundColor: colors.success,
+    backgroundColor: '#4CAF50', // سبز
   },
   iconError: {
-    backgroundColor: colors.danger,
+    backgroundColor: '#F44336', // قرمز
+  },
+  iconWarning: {
+    backgroundColor: '#FF9800', // زرد/نارنجی
   },
   modalTitle: {
     fontSize: 20,
@@ -295,10 +357,23 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   modalButton: {
-    backgroundColor: colors.primary,
     paddingHorizontal: 30,
     paddingVertical: 10,
     borderRadius: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
+  },
+  modalButtonSuccess: {
+    backgroundColor: '#4CAF50', // سبز
+  },
+  modalButtonError: {
+    backgroundColor: '#F44336', // قرمز
+  },
+  modalButtonWarning: {
+    backgroundColor: '#FF9800', // زرد/نارنجی
   },
   modalButtonText: {
     color: colors.white,

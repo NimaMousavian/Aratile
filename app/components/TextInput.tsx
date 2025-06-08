@@ -10,6 +10,7 @@ import {
   Keyboard,
   KeyboardEvent,
   EmitterSubscription,
+  TouchableOpacity,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -141,6 +142,13 @@ const AppTextInput: React.FC<AppTextInputProps> = ({
     }
   };
 
+  // تابع برای فعال کردن اینپوت با کلیک
+  const handleContainerPress = () => {
+    if (inputRef) {
+      inputRef.focus();
+    }
+  };
+
   return (
     <View
       style={[
@@ -151,7 +159,9 @@ const AppTextInput: React.FC<AppTextInputProps> = ({
     >
       {label && <Text style={[styles.inputLabel, labelStyle]}>{label}</Text>}
       {isLargeInput ? (
-        <View
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={handleContainerPress}
           style={[
             styles.textInputContainer,
             inputContainerStyle,
@@ -186,9 +196,13 @@ const AppTextInput: React.FC<AppTextInputProps> = ({
             allowFontScaling={false}
             {...otherProps}
           />
-        </View>
+        </TouchableOpacity>
       ) : (
-        <View style={[styles.textInputContainer, inputContainerStyle]}>
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={handleContainerPress}
+          style={[styles.textInputContainer, inputContainerStyle]}
+        >
           {icon && (
             <MaterialIcons
               name={icon as any}
@@ -216,7 +230,7 @@ const AppTextInput: React.FC<AppTextInputProps> = ({
             allowFontScaling={false}
             {...otherProps}
           />
-        </View>
+        </TouchableOpacity>
       )}
       {error && <Text style={styles.errorText}>{error}</Text>}
       {/* Render error */}

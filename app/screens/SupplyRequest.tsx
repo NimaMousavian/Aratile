@@ -326,7 +326,9 @@ const SupplyRequest = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: 0,
     padding: 20,
+    paddingBottom:50,
     backgroundColor: colors.background,
   },
   addIconContainer: {

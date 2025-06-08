@@ -21,6 +21,7 @@ import Toast from "../../components/Toast";
 import ProductPropertiesDrawer from "./ProductProperties";
 import InvoiceTotalCalculator from "./InvoiceTotalCalculator";
 import InvoiceService from "./api/InvoiceService";
+import ReusableModal from "../../components/Modal";
 
 import colors from "../../config/colors";
 import { toPersianDigits } from "../../utils/numberConversions";
@@ -56,6 +57,27 @@ interface AppNavigationProp {
   setParams: (params: any) => void;
 }
 
+interface ModalConfig {
+  visible: boolean;
+  headerConfig: {
+    title: string;
+    icon: React.ComponentProps<typeof MaterialIcons>["name"];
+    colors: string[];
+  };
+  messages: Array<{
+    text: string;
+    icon?: React.ComponentProps<typeof MaterialIcons>["name"];
+    iconColor?: string;
+  }>;
+  buttons: Array<{
+    id: string;
+    text: string;
+    color: string;
+    icon?: React.ComponentProps<typeof MaterialIcons>["name"];
+    onPress: (inputValues: Record<string, string>) => void;
+  }>;
+}
+
 const getFontFamily = (baseFont: string, weight: string): string => {
   if (Platform.OS === "android") {
     switch (weight) {
@@ -84,8 +106,6 @@ const IssuingNewInvoice: React.FC = () => {
     searchProduct,
     removeProduct,
     addProduct,
-    renderModal,
-    showModal,
     showRemoveConfirmation,
     editProduct,
   } = useProductScanner();
@@ -103,6 +123,18 @@ const IssuingNewInvoice: React.FC = () => {
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
+  // Modal state
+  const [modalConfig, setModalConfig] = useState<ModalConfig>({
+    visible: false,
+    headerConfig: {
+      title: "",
+      icon: "info",
+      colors: [colors.primary, colors.secondary],
+    },
+    messages: [],
+    buttons: [],
+  });
+
   const [toastVisible, setToastVisible] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string>("");
   const [toastType, setToastType] = useState<
@@ -116,6 +148,125 @@ const IssuingNewInvoice: React.FC = () => {
     setToastMessage(message);
     setToastType(type);
     setToastVisible(true);
+  };
+
+  // Generic modal function
+  const showModal = (
+    title: string,
+    message: string,
+    icon: React.ComponentProps<typeof MaterialIcons>["name"] = "info",
+    headerColors: string[] = [colors.primary, colors.secondary],
+    buttonColor: string = colors.primary
+  ) => {
+    setModalConfig({
+      visible: true,
+      headerConfig: {
+        title,
+        icon,
+        colors: headerColors,
+      },
+      messages: [{ text: message }],
+      buttons: [
+        {
+          id: "ok",
+          text: "تأیید",
+          color: buttonColor,
+          onPress: () => setModalConfig(prev => ({ ...prev, visible: false })),
+        },
+      ],
+    });
+  };
+
+  // Success modal with green header
+  const showSuccessModal = (title: string, message: string) => {
+    setModalConfig({
+      visible: true,
+      headerConfig: {
+        title,
+        icon: "check-circle",
+        colors: [colors.success, "#4ade80"], // Green gradient
+      },
+      messages: [{
+        text: message,
+        icon: "check-circle",
+        iconColor: colors.success
+      }],
+      buttons: [
+        {
+          id: "ok",
+          text: "تأیید",
+          color: colors.success,
+          onPress: () => setModalConfig(prev => ({ ...prev, visible: false })),
+        },
+      ],
+    });
+  };
+
+  // Error modal with red header
+  const showErrorModal = (title: string, message: string) => {
+    setModalConfig({
+      visible: true,
+      headerConfig: {
+        title,
+        icon: "error",
+        colors: [colors.danger, "#ef4444"], // Red gradient
+      },
+      messages: [{
+        text: message,
+        icon: "error",
+        iconColor: colors.danger
+      }],
+      buttons: [
+        {
+          id: "ok",
+          text: "تأیید",
+          color: colors.danger,
+          onPress: () => setModalConfig(prev => ({ ...prev, visible: false })),
+        },
+      ],
+    });
+  };
+
+  // Confirmation modal
+  const showConfirmationModal = (
+    title: string,
+    message: string,
+    onConfirm: () => void,
+    onCancel?: () => void
+  ) => {
+    setModalConfig({
+      visible: true,
+      headerConfig: {
+        title,
+        icon: "help",
+        colors: [colors.warning, "#f59e0b"], // Orange gradient
+      },
+      messages: [{
+        text: message,
+        icon: "help",
+        iconColor: colors.warning
+      }],
+      buttons: [
+        {
+          id: "cancel",
+          text: "انصراف",
+          color: colors.medium,
+          onPress: () => {
+            setModalConfig(prev => ({ ...prev, visible: false }));
+            if (onCancel) onCancel();
+          },
+        },
+        {
+          id: "confirm",
+          text: "تأیید",
+          color: colors.warning,
+          onPress: () => {
+            setModalConfig(prev => ({ ...prev, visible: false }));
+            onConfirm();
+          },
+        },
+      ],
+    });
   };
 
   const handleProductSelected = (product: Product) => {
@@ -147,6 +298,12 @@ const IssuingNewInvoice: React.FC = () => {
     manualCalculation: boolean,
     boxCount?: number
   ) => {
+    // بررسی قیمت محصول - اگر صفر یا تعریف نشده باشد
+    if (!product.price || product.price === 0) {
+      showToast("قیمت محصول باید بیشتر از صفر باشد", "warning");
+      return false;
+    }
+
     let totalArea = product.totalArea;
     if (boxCount && !totalArea && product.rectifiedValue) {
       const rectifiedValue = parseFloat(product.rectifiedValue);
@@ -182,6 +339,17 @@ const IssuingNewInvoice: React.FC = () => {
       setProductToShow(null);
       setIsEditing(false);
     }, 500);
+  };
+
+  const handleRemoveProduct = (productId: number) => {
+    showConfirmationModal(
+      "حذف محصول",
+      "آیا از حذف این محصول از فاکتور اطمینان دارید؟",
+      () => {
+        removeProduct(productId);
+        showToast("محصول با موفقیت حذف شد", "info");
+      }
+    );
   };
 
   const submitInvoice = async () => {
@@ -223,22 +391,22 @@ const IssuingNewInvoice: React.FC = () => {
       setIsSubmitting(false);
 
       if (result.success) {
-        // نمایش پیام موفقیت با مدال اصلی
-        showModal("موفقیت", "فاکتور با موفقیت ثبت شد.", "check-circle");
+        // نمایش پیام موفقیت با مدال سبز
+        showSuccessModal("موفقیت", "فاکتور با موفقیت ثبت شد.");
 
         // بازگشت به صفحه قبل پس از چند ثانیه
         setTimeout(() => {
           navigation.navigate("IssuedInvoices", { refresh: true });
         }, 2000);
       } else {
-        // نمایش پیام خطا
-        showToast(`خطا در ثبت فاکتور: ${result.error}`, "error");
+        // نمایش پیام خطا با مدال قرمز
+        showErrorModal("خطا در ثبت فاکتور", result.error || "خطای نامشخص");
       }
     } catch (error) {
       setIsSubmitting(false);
-      showToast(
-        "خطایی در فرآیند ثبت فاکتور رخ داد. لطفاً دوباره تلاش کنید.",
-        "error"
+      showErrorModal(
+        "خطا",
+        "خطایی در فرآیند ثبت فاکتور رخ داد. لطفاً دوباره تلاش کنید."
       );
       console.error("خطا در ارسال فاکتور:", error);
     }
@@ -283,9 +451,8 @@ const IssuingNewInvoice: React.FC = () => {
         if (!isNaN(rectifiedValue) && rectifiedValue > 0) {
           const totalArea =
             product.totalArea || product.boxCount * rectifiedValue;
-          totalAreaText = ` (${toPersianDigits(totalArea.toFixed(2))}${
-            product.measurementUnitName ? ` ${product.measurementUnitName}` : ""
-          })`;
+          totalAreaText = ` (${toPersianDigits(totalArea.toFixed(2))}${product.measurementUnitName ? ` ${product.measurementUnitName}` : ""
+            })`;
         }
       }
 
@@ -333,7 +500,14 @@ const IssuingNewInvoice: React.FC = () => {
         onDismiss={() => setToastVisible(false)}
       />
 
-      {renderModal()}
+      {/* Reusable Modal */}
+      <ReusableModal
+        visible={modalConfig.visible}
+        onClose={() => setModalConfig(prev => ({ ...prev, visible: false }))}
+        headerConfig={modalConfig.headerConfig}
+        messages={modalConfig.messages}
+        buttons={modalConfig.buttons}
+      />
 
       <View style={styles.container}>
         <View style={styles.customerContainer}>
@@ -450,21 +624,13 @@ const IssuingNewInvoice: React.FC = () => {
                   name: "delete",
                   size: 22,
                   color: colors.danger,
-                  onPress: () => {
-                    showRemoveConfirmation(product.id, () => {
-                      showToast("محصول با موفقیت حذف شد", "info");
-                    });
-                  },
+                  onPress: () => handleRemoveProduct(product.id),
                   containerStyle: styles.iconCircleSmall, // اضافه کردن استایل دایره
                 }}
                 containerStyle={
                   Platform.OS === "android" ? styles.androidCardAdjustment : {}
                 }
-                onLongPress={() => {
-                  showRemoveConfirmation(product.id, () => {
-                    showToast("محصول با موفقیت حذف شد", "info");
-                  });
-                }}
+                onLongPress={() => handleRemoveProduct(product.id)}
               />
             ))}
 
@@ -550,6 +716,12 @@ const IssuingNewInvoice: React.FC = () => {
                   navigation.navigate("BarCodeScanner", {
                     onReturn: (scannedProduct: Product) => {
                       if (scannedProduct) {
+                        // بررسی قیمت محصول اسکن شده
+                        if (!scannedProduct.price || scannedProduct.price === 0) {
+                          showToast("قیمت محصول باید بیشتر از صفر باشد", "warning");
+                          return;
+                        }
+
                         // افزودن محصول اسکن شده به لیست محصولات
                         const success = addProduct(scannedProduct);
                         if (success) {
@@ -810,7 +982,7 @@ const styles = StyleSheet.create({
   },
   submitButtonContainer: {
     marginTop: 0,
-    marginBottom: 0,
+    marginBottom: 30,
   },
   submitButton: {
     backgroundColor: colors.success,

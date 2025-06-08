@@ -156,6 +156,9 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
   };
 
   const handleSearch = () => {
+    // بستن کیبورد
+    Keyboard.dismiss();
+
     const trimmedQuery = searchQuery.trim();
     const englishQuery = convertToEnglishNumbers(trimmedQuery);
 
@@ -272,10 +275,8 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
     if (isLoadingMore) {
       return (
         <View style={styles.loaderContainer}>
-          <ActivityIndicator size="small" color={colors.primary} />
-          <Text style={styles.loadingMoreText}>
-            در حال بارگذاری موارد بیشتر...
-          </Text>
+          <ActivityIndicator size="large" color={colors.primary} />
+
         </View>
       );
     }
@@ -286,138 +287,145 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
   if (!visible) return null;
 
   return (
-    <View style={styles.container}>
-      <Animated.View style={[styles.backdrop, { opacity: backdropOpacity }]}>
-        <TouchableOpacity
-          style={styles.backdropTouchable}
-          activeOpacity={1}
-          onPress={onClose}
-        />
-      </Animated.View>
-
-      <Animated.View
-        style={[
-          styles.bottomSheet,
-          {
-            transform: [{ translateY }],
-            paddingBottom: keyboardHeight > 0 ? keyboardHeight : 20,
-            height: "80%",
-          },
-        ]}
-      >
-        <LinearGradient
-          colors={[colors.secondary, colors.primary]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.header}
-        >
-          <View style={styles.headerContent}>
-            <MaterialIcons name="person-search" size={24} color="white" />
-            <Text style={styles.headerTitle}>{title}</Text>
-          </View>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <MaterialIcons name="close" size={28} color="white" />
-          </TouchableOpacity>
-        </LinearGradient>
-
-        <View style={styles.body}>
-          <SearchInput
-            placeholder="نام یا شماره تماس را وارد کنید"
-            value={searchQuery}
-            onChangeText={handleChangeText}
-            onSearch={handleSearch}
-            containerStyle={styles.searchContainer}
+    <Modal
+      visible={visible}
+      transparent
+      animationType="none"
+      onRequestClose={onClose}
+      statusBarTranslucent
+    >
+      <View style={styles.container}>
+        <Animated.View style={[styles.backdrop, { opacity: backdropOpacity }]}>
+          <TouchableOpacity
+            style={styles.backdropTouchable}
+            activeOpacity={1}
+            onPress={onClose}
           />
+        </Animated.View>
 
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator
-                size="large"
-                color={colors.secondary}
-                style={styles.spinner}
-              />
-              <Text style={styles.loadingText}>در حال بارگذاری...</Text>
+        <Animated.View
+          style={[
+            styles.bottomSheet,
+            {
+              transform: [{ translateY }],
+              paddingBottom: keyboardHeight > 0 ? keyboardHeight : 20,
+            },
+          ]}
+        >
+          <LinearGradient
+            colors={[colors.secondary, colors.primary]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.header}
+          >
+            <View style={styles.headerContent}>
+              <MaterialIcons name="person-search" size={24} color="white" />
+              <Text style={styles.headerTitle}>{title}</Text>
             </View>
-          ) : filteredColleagues.length > 0 ? (
-            <FlatList
-              ref={flatListRef}
-              showsVerticalScrollIndicator={false}
-              data={filteredColleagues}
-              keyExtractor={(item, index) => `${item.id}-${index}`}
-              style={styles.resultList}
-              renderItem={({ item, index }) => (
-                <TouchableOpacity
-                  key={`colleague-${item.id}-${index}`}
-                  style={styles.resultItem}
-                  onPress={() => handleSelectColleague(item)}
-                >
-                  <View style={styles.resultItemContent}>
-                    <View style={styles.nameSection}>
-                      <Text style={styles.resultName}>
-                        {toPersianDigits(item.name)}
-                      </Text>
-                      <View style={styles.groupContainer}>
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <MaterialIcons name="close" size={28} color="white" />
+            </TouchableOpacity>
+          </LinearGradient>
+
+          <View style={styles.body}>
+            <SearchInput
+              placeholder="نام یا شماره تماس را وارد کنید"
+              value={searchQuery}
+              onChangeText={handleChangeText}
+              onSearch={handleSearch}
+              containerStyle={styles.searchContainer}
+            />
+
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator
+                  size="large"
+                  color={colors.secondary}
+                  style={styles.spinner}
+                />
+                <Text style={styles.loadingText}>در حال بارگذاری...</Text>
+              </View>
+            ) : filteredColleagues.length > 0 ? (
+              <FlatList
+                ref={flatListRef}
+                showsVerticalScrollIndicator={false}
+                data={filteredColleagues}
+                keyExtractor={(item, index) => `${item.id}-${index}`}
+                style={styles.resultList}
+                renderItem={({ item, index }) => (
+                  <TouchableOpacity
+                    key={`colleague-${item.id}-${index}`}
+                    style={styles.resultItem}
+                    onPress={() => handleSelectColleague(item)}
+                  >
+                    <View style={styles.resultItemContent}>
+                      <View style={styles.nameSection}>
+                        <Text style={styles.resultName}>
+                          {toPersianDigits(item.name)}
+                        </Text>
+                        <View style={styles.groupContainer}>
+                          <MaterialIcons
+                            name="person"
+                            size={18}
+                            color="#bfbfbf"
+                            style={styles.personIcon}
+                          />
+                          {item.groups && item.groups.length > 0 && (
+                            <Text style={styles.resultGroups}>
+                              {toPersianDigits(item.groups[0])}
+                            </Text>
+                          )}
+                        </View>
+                      </View>
+                      <View style={styles.phoneSection}>
                         <MaterialIcons
-                          name="person"
+                          name="smartphone"
                           size={18}
                           color="#bfbfbf"
-                          style={styles.personIcon}
+                          style={styles.phoneIcon}
                         />
-                        {item.groups && item.groups.length > 0 && (
-                          <Text style={styles.resultGroups}>
-                            {toPersianDigits(item.groups[0])}
-                          </Text>
-                        )}
+                        <Text style={styles.resultPhone}>
+                          {toPersianDigits(item.phone)}
+                        </Text>
                       </View>
                     </View>
-                    <View style={styles.phoneSection}>
-                      <MaterialIcons
-                        name="smartphone"
-                        size={18}
-                        color="#bfbfbf"
-                        style={styles.phoneIcon}
-                      />
-                      <Text style={styles.resultPhone}>
-                        {toPersianDigits(item.phone)}
-                      </Text>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              )}
-              onEndReached={handleLoadMore}
-              onEndReachedThreshold={0.5}
-              ListFooterComponent={renderFooter}
-              initialNumToRender={pageSize}
-              maxToRenderPerBatch={pageSize / 2}
-              windowSize={10}
-            />
-          ) : searchPerformed ? (
-            <View style={styles.noResultsContainer}>
-              <MaterialIcons
-                name="search-off"
-                size={48}
-                color={colors.medium}
+                  </TouchableOpacity>
+                )}
+                onEndReached={handleLoadMore}
+                onEndReachedThreshold={0.5}
+                ListFooterComponent={renderFooter}
+                initialNumToRender={pageSize}
+                maxToRenderPerBatch={pageSize / 2}
+                windowSize={10}
               />
-              <Text style={styles.noResultsText}>نتیجه‌ای یافت نشد</Text>
-              {isCustomer && (
-                <AppButton
-                  title="ثبت خریدار جدید"
-                  onPress={() => navigation.navigate("CustomerInfo", {})}
-                  color="success"
-                  style={{ width: "100%", marginTop: 15 }}
+            ) : searchPerformed ? (
+              <View style={styles.noResultsContainer}>
+                <MaterialIcons
+                  name="search-off"
+                  size={48}
+                  color={colors.medium}
                 />
-              )}
-            </View>
-          ) : (
-            <View style={styles.initialStateContainer}>
-              <Text style={styles.initialStateText}>
-                برای جستجو، عبارت مورد نظر را وارد کنید و دکمه جستجو را بزنید
-              </Text>
-            </View>
-          )}
-        </View>
-      </Animated.View>
-    </View>
+                <Text style={styles.noResultsText}>نتیجه‌ای یافت نشد</Text>
+                {isCustomer && (
+                  <AppButton
+                    title="ثبت خریدار جدید"
+                    onPress={() => navigation.navigate("CustomerInfo", {})}
+                    color="success"
+                    style={{ width: "100%", marginTop: 15 }}
+                  />
+                )}
+              </View>
+            ) : (
+              <View style={styles.initialStateContainer}>
+                <Text style={styles.initialStateText}>
+                  برای جستجو، عبارت مورد نظر را وارد کنید و دکمه جستجو را بزنید
+                </Text>
+              </View>
+            )}
+          </View>
+        </Animated.View>
+      </View>
+    </Modal>
   );
 };
 
@@ -425,16 +433,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "flex-end",
-    // FIXED: Removed problematic styles that caused positioning issues
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
-    zIndex: 9999,
-    elevation: 999,
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
@@ -447,9 +445,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    height: "auto",
-    maxHeight: "80%",
-    minHeight: "60%",
+    height: "80%",
     overflow: "hidden",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -3 },
@@ -483,7 +479,6 @@ const styles = StyleSheet.create({
   body: {
     padding: 16,
     flex: 1,
-    minHeight: 300,
   },
   searchContainer: {
     marginBottom: 16,
@@ -491,7 +486,6 @@ const styles = StyleSheet.create({
   },
   resultList: {
     flex: 1,
-    minHeight: 300,
   },
   resultItem: {
     flexDirection: "row-reverse",
@@ -584,7 +578,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     padding: 30,
-    minHeight: 250,
     borderRadius: 8,
     margin: 20,
     flex: 1,

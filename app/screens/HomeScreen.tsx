@@ -53,23 +53,222 @@ const getFontFamily = (baseFont: string, weight: FontWeight): string => {
   return baseFont;
 };
 
+// Add this new function that uses a more direct approach
+const openMianCheckDirectly = async () => {
+  if (Platform.OS !== "android") return false;
+
+  console.log("Trying direct method to open MianCheck...");
+
+  // Try the most likely package names
+  const likelyPackages = [
+    // "com.pirooze.miancheck",
+    "com.pirooze.MianCheck",
+    // "com.pirooze.mianchek",
+    // "ir.pirooze.miancheck"
+  ];
+
+  // Try a reliable intent URL format that works on most Android devices
+  for (const pkg of likelyPackages) {
+    try {
+      // This is a more reliable intent format for Android
+      const url = `intent:#Intent;component=${pkg}/.MainActivity;end`;
+      await Linking.openURL(url);
+      console.log(`Direct method succeeded with ${pkg}`);
+      return true;
+    } catch (e) {
+      console.log(`Direct method failed with ${pkg}: ${e}`);
+    }
+  }
+
+  // Try a custom URL scheme approach (many apps register URL schemes)
+  for (const pkg of likelyPackages) {
+    try {
+      // Many apps register their package name as a URL scheme
+      const url = `${pkg.split('.').pop().toLowerCase()}://`;
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+        console.log(`URL scheme method succeeded with ${url}`);
+        return true;
+      }
+    } catch (e) {
+      console.log(`URL scheme method failed: ${e}`);
+    }
+  }
+
+  // Try with specific activity names that are common in Android apps
+  for (const pkg of likelyPackages) {
+    for (const activity of [
+      "MainActivity",
+      "SplashActivity",
+      "StartActivity",
+      "LauncherActivity"
+    ]) {
+      try {
+        const intentUrl = `intent:#Intent;component=${pkg}/.${activity};end`;
+        await Linking.openURL(intentUrl);
+        console.log(`Activity-specific method succeeded with ${pkg}/.${activity}`);
+        return true;
+      } catch (e) {
+        // Continue silently
+      }
+    }
+  }
+
+  return false;
+};
+
 const openAppByPackageName = async () => {
   if (Platform.OS === "android") {
-    try {
-      await IntentLauncher.startActivityAsync("android.intent.action.VIEW", {
-        data: "package:com.pirooze.MianCheck", // Change this to the package you want
-      });
-    } catch (error) {
-      Alert.alert("Error", "App not found or cannot be opened.");
+    // Try multiple package name variations with different capitalizations
+    const possiblePackages = [
+      "com.pirooze.MianCheck",
+      // "com.pirooze.miancheck",
+      // "com.pirooze.Miancheck",
+      // "com.pirooze.mianCheck",
+      // "com.pirooze.mianchk",
+      // "com.pirooze.mianchek",
+      // "com.pirooze.mianch",
+      // "ir.pirooze.MianCheck",
+      // "ir.pirooze.miancheck"
+    ];
+
+    console.log("Attempting to open MianCheck app with different package names...");
+
+    // Method 1: Using Linking.openURL with deep link patterns
+    for (const packageName of possiblePackages) {
+      try {
+        console.log(`Trying to open with package: ${packageName}`);
+        const deepLink = `${packageName}://`;
+        const canOpenDeepLink = await Linking.canOpenURL(deepLink);
+
+        if (canOpenDeepLink) {
+          console.log(`Deep link can be opened for: ${packageName}`);
+          await Linking.openURL(deepLink);
+          console.log(`✅ MianCheck opened successfully with deep link`);
+          return;
+        }
+      } catch (error) {
+        console.log(`Deep link attempt failed for ${packageName}: ${error}`);
+      }
     }
-  } else {
-    Alert.alert("Unsupported", "This only works on Android.");
+
+    // Method 2: Using android-app scheme
+    for (const packageName of possiblePackages) {
+      try {
+        const androidAppUrl = `android-app://${packageName}`;
+        const canOpen = await Linking.canOpenURL(androidAppUrl);
+
+        if (canOpen) {
+          await Linking.openURL(androidAppUrl);
+          console.log(`✅ MianCheck opened successfully with android-app scheme`);
+          return;
+        }
+      } catch (error) {
+        console.log(`android-app scheme failed for ${packageName}`);
+      }
+    }
+
+    // Method 3: Using intent scheme (most reliable for app launching)
+    for (const packageName of possiblePackages) {
+      try {
+        // This format has better success with various Android versions
+        const intentUrl = `intent:#Intent;package=${packageName};action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;end`;
+        const canOpen = await Linking.canOpenURL(intentUrl);
+
+        if (canOpen) {
+          await Linking.openURL(intentUrl);
+          console.log(`✅ MianCheck opened successfully with intent scheme`);
+          return;
+        }
+      } catch (error) {
+        console.log(`Intent scheme failed for ${packageName}`);
+      }
+    }
+
+    // Method 4: Direct attempt with IntentLauncher
+    for (const packageName of possiblePackages) {
+      try {
+        await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
+          data: `${packageName}://`,
+          flags: 268435456, // FLAG_ACTIVITY_NEW_TASK
+        });
+        console.log(`✅ MianCheck opened successfully with IntentLauncher VIEW`);
+        return;
+      } catch (error) {
+        console.log(`IntentLauncher VIEW failed for ${packageName}`);
+      }
+    }
+
+    // Method 5: Try a more basic approach with Intent.ACTION_MAIN but without category
+    for (const packageName of possiblePackages) {
+      try {
+        await IntentLauncher.startActivityAsync('android.intent.action.MAIN', {
+          packageName: packageName,
+          flags: 268435456, // FLAG_ACTIVITY_NEW_TASK
+        });
+        console.log(`✅ MianCheck opened successfully with basic IntentLauncher`);
+        return;
+      } catch (error) {
+        // Continue to next package
+      }
+    }
+
+    console.log("❌ All app-opening methods failed, trying app stores");
+
+    // If all methods fail, try to open the app in app stores
+    try {
+      // Try Bazaar (Iran's popular app store)
+      const bazaarUrl = "bazaar://details?id=com.pirooze.miancheck";
+      const canOpenBazaar = await Linking.canOpenURL(bazaarUrl);
+
+      if (canOpenBazaar) {
+        console.log("Opening Bazaar store");
+        await Linking.openURL(bazaarUrl);
+        return;
+      }
+
+      // Try Google Play as fallback
+      const playStoreUrl = "market://details?id=com.pirooze.miancheck";
+      const canOpenPlayStore = await Linking.canOpenURL(playStoreUrl);
+
+      if (canOpenPlayStore) {
+        console.log("Opening Play Store");
+        await Linking.openURL(playStoreUrl);
+        return;
+      }
+
+      // Last resort: web URL
+      console.log("Opening web URL as last resort");
+      await Linking.openURL("https://cafebazaar.ir/search?q=میانچک");
+
+    } catch (error) {
+      console.log("Failed to open app stores:", error);
+
+      // Final fallback: Show alert
+      Alert.alert(
+        "میانچک",
+        "نمی‌توان برنامه میانچک را باز کرد. آیا می‌خواهید آن را نصب کنید؟",
+        [
+          { text: "خیر", style: "cancel" },
+          {
+            text: "نصب برنامه",
+            onPress: async () => {
+              try {
+                await Linking.openURL("https://cafebazaar.ir/search?q=میانچک");
+              } catch (e) {
+                Alert.alert("خطا", "نمی‌توان مرورگر را باز کرد. لطفاً برنامه میانچک را دستی نصب کنید.");
+              }
+            }
+          }
+        ]
+      );
+    }
   }
 };
 
 const openApp = async (packageName: string) => {
   if (Platform.OS === "android") {
-    // Construct the intent URI for Android
     const url = `intent://open#Intent;package=${packageName};end`;
     try {
       const supported = await Linking.canOpenURL(url);
@@ -89,99 +288,123 @@ const openApp = async (packageName: string) => {
 const openCalculator = async () => {
   if (Platform.OS === "android") {
     try {
-      const calculatorIntent = "android.intent.action.MAIN";
-      const calculatorCategory = "android.intent.category.APP_CALCULATOR";
-
+      // روش اول: استفاده از Intent برای باز کردن ماشین حساب
       try {
-        await IntentLauncher.startActivityAsync(calculatorIntent, {
-          category: calculatorCategory,
+        console.log("تلاش برای باز کردن ماشین حساب با Intent...");
+        await IntentLauncher.startActivityAsync("android.intent.action.MAIN", {
+          category: "android.intent.category.APP_CALCULATOR",
+          flags: 268435456, // FLAG_ACTIVITY_NEW_TASK
         });
+        console.log("✅ ماشین حساب با موفقیت باز شد");
         return;
       } catch (intentError) {
-        console.log("Intent launcher failed, trying Linking...");
+        console.log("Intent launcher ناموفق، تلاش با روش‌های دیگر...");
       }
 
+      // روش دوم: تلاش با package name های مختلف ماشین حساب
       const calculatorPackages = [
-        "com.google.android.calculator", 
-        "com.android.calculator2", 
-        "com.sec.android.app.popupcalculator", 
-        "com.miui.calculator",
-        "com.oneplus.calculator",
-        "com.huawei.calculator",
-        "calculator://", 
+        "com.google.android.calculator",      // Google Calculator
+        "com.android.calculator2",            // Android Calculator
+        "com.sec.android.app.popupcalculator", // Samsung Calculator
+        "com.miui.calculator",                 // MIUI Calculator (Xiaomi)
+        "com.oneplus.calculator",              // OnePlus Calculator
+        "com.huawei.calculator",               // Huawei Calculator
+        "com.oppo.calculator",                 // OPPO Calculator
+        "com.vivo.calculator",                 // Vivo Calculator
+        "com.coloros.calculator",              // ColorOS Calculator
+        "com.asus.calculator",                 // ASUS Calculator
+        "com.motorola.calculator",             // Motorola Calculator
+        "com.htc.android.calculator",          // HTC Calculator
+        "com.lge.calculator",                  // LG Calculator
       ];
 
+      // تلاش با Intent برای هر package
       for (const packageName of calculatorPackages) {
         try {
-          let url;
-          if (packageName.startsWith("calculator://")) {
-            url = packageName;
-          } else {
-            url = `intent://open#Intent;package=${packageName};end`;
-          }
+          const intentUrl = `intent:#Intent;package=${packageName};action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;end`;
+          const canOpen = await Linking.canOpenURL(intentUrl);
 
-          const canOpen = await Linking.canOpenURL(url);
           if (canOpen) {
-            await Linking.openURL(url);
+            await Linking.openURL(intentUrl);
+            console.log(`✅ ماشین حساب باز شد با ${packageName}`);
             return;
           }
         } catch (error) {
-          console.log(`Failed to open calculator with package: ${packageName}`);
+          console.log(`ناموفق برای ${packageName}`);
           continue;
         }
       }
 
+      // روش سوم: تلاش با Linking برای package name ها
+      for (const packageName of calculatorPackages) {
+        try {
+          const url = `intent://open#Intent;package=${packageName};end`;
+          const canOpen = await Linking.canOpenURL(url);
+
+          if (canOpen) {
+            await Linking.openURL(url);
+            console.log(`✅ ماشین حساب باز شد با Linking: ${packageName}`);
+            return;
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+
+      // روش چهارم: تلاش با URL scheme
+      try {
+        const calculatorUrl = "calculator://";
+        const canOpen = await Linking.canOpenURL(calculatorUrl);
+
+        if (canOpen) {
+          await Linking.openURL(calculatorUrl);
+          console.log("✅ ماشین حساب باز شد با URL scheme");
+          return;
+        }
+      } catch (error) {
+        console.log("URL scheme ناموفق");
+      }
+
+      // روش پنجم: تلاش با IntentLauncher برای package های مختلف
+      for (const packageName of calculatorPackages) {
+        try {
+          await IntentLauncher.startActivityAsync("android.intent.action.VIEW", {
+            packageName: packageName,
+            flags: 268435456, // FLAG_ACTIVITY_NEW_TASK
+          });
+          console.log(`✅ ماشین حساب باز شد با IntentLauncher: ${packageName}`);
+          return;
+        } catch (error) {
+          continue;
+        }
+      }
+
+      // اگر هیچ روشی کار نکرد، پیام خطا نمایش بده
+      console.log("❌ هیچ ماشین حسابی پیدا نشد");
       Alert.alert(
-        "خطا",
+        "ماشین حساب",
         "ماشین حساب پیدا نشد. لطفاً از فهرست برنامه‌ها ماشین حساب را باز کنید.",
         [{ text: "باشه", style: "default" }]
       );
 
     } catch (error) {
-      console.error("Error opening calculator:", error);
+      console.error("خطا در باز کردن ماشین حساب:", error);
       Alert.alert(
         "خطا",
         "خطا در باز کردن ماشین حساب. لطفاً دستی باز کنید.",
         [{ text: "باشه", style: "default" }]
       );
     }
-  } else if (Platform.OS === "ios") {
-    try {
-      const calculatorURL = "calc://";
-      const canOpen = await Linking.canOpenURL(calculatorURL);
-
-      if (canOpen) {
-        await Linking.openURL(calculatorURL);
-      } else {
-        const shortcutsURL = "shortcuts://run-shortcut?name=Calculator";
-        const canOpenShortcuts = await Linking.canOpenURL(shortcutsURL);
-
-        if (canOpenShortcuts) {
-          await Linking.openURL(shortcutsURL);
-        } else {
-          Alert.alert(
-            "ماشین حساب",
-            "ماشین حساب را از Control Center یا صفحه اصلی باز کنید.",
-            [{ text: "باشه", style: "default" }]
-          );
-        }
-      }
-    } catch (error) {
-      console.error("Error opening calculator on iOS:", error);
-      Alert.alert(
-        "ماشین حساب",
-        "ماشین حساب را از Control Center یا صفحه اصلی باز کنید.",
-        [{ text: "باشه", style: "default" }]
-      );
-    }
   } else {
+    console.log("این قابلیت فقط برای Android پشتیبانی می‌شود");
     Alert.alert(
-      "پشتیبانی نشده",
-      "این ویژگی فقط روی موبایل قابل استفاده است.",
+      "iOS",
+      "در iOS امکان باز کردن مستقیم ماشین حساب وجود ندارد. لطفاً از Control Center استفاده کنید.",
       [{ text: "باشه", style: "default" }]
     );
   }
 };
+
 const safeNavigate = (navigation: any, screenName: string, params?: any) => {
   console.log(`Attempting to navigate to: ${screenName}`);
 
@@ -248,6 +471,7 @@ const initialItems: MenuItem[] = [
     name: "راس گیر چک",
     icon: "account-balance",
     iconColor: "#1C3F64",
+    // No screenName property as we want to use openAppByPackageName function directly
   },
   {
     id: 4,
@@ -306,12 +530,7 @@ const HomeScreen: React.FC = () => {
     userData?.AvatarImageFileName
   );
   const [hasTodayTasks, setHasTodayTasks] = useState(false);
-  const checklistButtonColorValue = useRef(new Animated.Value(0)).current;
-
-  const checklistButtonColor = checklistButtonColorValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: [colors.secondary, "#FFFFFF"],
-  });
+  const checklistButtonOpacity = useRef(new Animated.Value(1)).current;
 
   const isDraggingRef = useRef(false);
   const draggedItemRef = useRef<MenuItem | null>(null);
@@ -363,8 +582,8 @@ const HomeScreen: React.FC = () => {
   const pendingGridCalculation = useRef(false);
   const autoScrollTimerId = useRef<NodeJS.Timeout | null>(null);
   const blinkTimerId = useRef<NodeJS.Timeout | null>(null);
+  const apiCheckTimerId = useRef<NodeJS.Timeout | null>(null);
 
-  // Safely update states
   const safeUpdateDraggingState = (value: boolean) => {
     isDraggingRef.current = value;
     InteractionManager.runAfterInteractions(() => {
@@ -400,7 +619,6 @@ const HomeScreen: React.FC = () => {
     });
   };
 
-  // Function to check if there are any tasks for today
   const checkTodayTasks = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}Task/IsAnyTasksForToday`);
@@ -412,43 +630,37 @@ const HomeScreen: React.FC = () => {
   };
 
   const blinkChecklistButton = () => {
-    // First blink
     Animated.sequence([
-      Animated.timing(checklistButtonColorValue, {
-        toValue: 1, // به رنگ سفید تغییر می‌کند
+      Animated.timing(checklistButtonOpacity, {
+        toValue: 0.3,
         duration: 300,
-        useNativeDriver: false,
+        useNativeDriver: true,
       }),
-      Animated.timing(checklistButtonColorValue, {
-        toValue: 0, // به رنگ اصلی برمی‌گردد
+      Animated.timing(checklistButtonOpacity, {
+        toValue: 1,
         duration: 300,
-        useNativeDriver: false,
+        useNativeDriver: true,
       }),
-      // Small pause between blinks
       Animated.delay(200),
-      // Second blink
-      Animated.timing(checklistButtonColorValue, {
-        toValue: 1, // به رنگ سفید تغییر می‌کند
+      Animated.timing(checklistButtonOpacity, {
+        toValue: 0.3,
         duration: 300,
-        useNativeDriver: false,
+        useNativeDriver: true,
       }),
-      Animated.timing(checklistButtonColorValue, {
-        toValue: 0, // به رنگ اصلی برمی‌گردد
+      Animated.timing(checklistButtonOpacity, {
+        toValue: 1,
         duration: 300,
-        useNativeDriver: false,
+        useNativeDriver: true,
       }),
     ]).start();
   };
 
   useEffect(() => {
     if (hasTodayTasks) {
-      // Initial blink
       blinkChecklistButton();
-
-      // Set up timer to blink every 10 seconds
       blinkTimerId.current = setInterval(() => {
         blinkChecklistButton();
-      }, 5000);
+      }, 10000);
     }
 
     return () => {
@@ -457,6 +669,20 @@ const HomeScreen: React.FC = () => {
       }
     };
   }, [hasTodayTasks]);
+
+  useEffect(() => {
+    checkTodayTasks();
+
+    apiCheckTimerId.current = setInterval(() => {
+      checkTodayTasks();
+    }, 5 * 60 * 1000);
+
+    return () => {
+      if (apiCheckTimerId.current) {
+        clearInterval(apiCheckTimerId.current);
+      }
+    };
+  }, []);
 
   const fetchUserData = async () => {
     const storedData = await getLoginResponse();
@@ -467,11 +693,9 @@ const HomeScreen: React.FC = () => {
     }
   };
 
-  // Load or download avatar image
   useEffect(() => {
     const loadAvatar = async () => {
       try {
-        // If userData or AvatarImageURL is not available, fall back to default
         if (!userData?.AvatarImageURL) {
           setAvatarUri(undefined);
           return;
@@ -485,7 +709,6 @@ const HomeScreen: React.FC = () => {
           return;
         }
 
-        // Check if image exists in AsyncStorage
         const cachedUri = await AsyncStorage.getItem(avatarCacheKey);
         if (cachedUri) {
           const fileInfo = await FileSystem.getInfoAsync(avatarLocalPath).catch(
@@ -497,7 +720,6 @@ const HomeScreen: React.FC = () => {
           }
         }
 
-        // If not cached, download and cache the image
         const downloadResult = await FileSystem.downloadAsync(
           userData.AvatarImageURL,
           avatarLocalPath
@@ -544,7 +766,6 @@ const HomeScreen: React.FC = () => {
   useEffect(() => {
     loadSavedLayout();
     fetchUserData();
-    checkTodayTasks(); // Check for today's tasks when component mounts
   }, []);
 
   useEffect(() => {
@@ -574,7 +795,7 @@ const HomeScreen: React.FC = () => {
       }
     }
 
-    return () => {};
+    return () => { };
   }, [isDragging]);
 
   useEffect(() => {
@@ -689,7 +910,6 @@ const HomeScreen: React.FC = () => {
           ...TIMING_CONFIG,
         }),
       ]).start(() => {
-        // Defer state updates until after animation completes
         InteractionManager.runAfterInteractions(() => {
           safeUpdateDraggingState(false);
           safeUpdateDraggedItem(null);
@@ -819,7 +1039,6 @@ const HomeScreen: React.FC = () => {
     newItems[fromIndex] = newItems[toIndex];
     newItems[toIndex] = temp;
 
-    // Update items outside of the event handler
     InteractionManager.runAfterInteractions(() => {
       setItems(newItems);
       safeUpdateDraggedIndex(toIndex);
@@ -925,7 +1144,7 @@ const HomeScreen: React.FC = () => {
 
       const distance = Math.sqrt(
         Math.pow(position.x - currentPosition.x, 2) +
-          Math.pow(position.y - currentPosition.y, 2)
+        Math.pow(position.y - currentPosition.y, 2)
       );
 
       if (distance < minDistance) {
@@ -1076,7 +1295,6 @@ const HomeScreen: React.FC = () => {
     };
 
     const startDragging = () => {
-      // First animate
       Animated.spring(scale, {
         toValue: 1.1,
         ...SPRING_CONFIG,
@@ -1088,13 +1306,11 @@ const HomeScreen: React.FC = () => {
         useNativeDriver: true,
       }).start();
 
-      // Set ref values immediately to use in gestures
       isDraggingRef.current = true;
       draggedItemRef.current = item;
       draggedIndexRef.current = index;
       showSaveButtonRef.current = true;
 
-      // Then update states outside of the event handler
       InteractionManager.runAfterInteractions(() => {
         setIsDragging(true);
         setDraggedItem(item);
@@ -1133,10 +1349,8 @@ const HomeScreen: React.FC = () => {
         const closestIndex = findClosestItem(currentPosition);
 
         if (closestIndex !== -1 && closestIndex !== index) {
-          // Update ref directly
           hoveredIndexRef.current = closestIndex;
 
-          // Then schedule state update
           InteractionManager.runAfterInteractions(() => {
             setHoveredIndex(closestIndex);
           });
@@ -1145,10 +1359,8 @@ const HomeScreen: React.FC = () => {
             debouncedSwapItems(index, closestIndex);
           }
         } else if (hoveredIndexRef.current !== null) {
-          // Update ref directly
           hoveredIndexRef.current = null;
 
-          // Then schedule state update
           InteractionManager.runAfterInteractions(() => {
             setHoveredIndex(null);
           });
@@ -1295,7 +1507,6 @@ const HomeScreen: React.FC = () => {
             onPress={() => {
               if (!isDragging) {
                 if (item.id === 4) openCalculator();
-                // else if (item.id === 3) openApp("com.pirooze.MianCheck");
                 else if (item.id === 3) openAppByPackageName();
                 else if (item.screenName) {
                   console.log("Navigating to:", item.screenName);
@@ -1347,21 +1558,20 @@ const HomeScreen: React.FC = () => {
         </TouchableOpacity>
 
         <View style={styles.iconsContainer}>
-          <TouchableOpacity
-            style={[
-              styles.iconButton,
-              { backgroundColor: checklistButtonColor },
-            ]}
-            onPress={() => {
-              safeNavigate(navigation, "TaskManagement");
-            }}
-          >
-            <MaterialIcons
-              name="checklist-rtl"
-              size={25}
-              color={colors.light}
-            />
-          </TouchableOpacity>
+          <Animated.View style={{ opacity: checklistButtonOpacity }}>
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={() => {
+                safeNavigate(navigation, "TaskManagement");
+              }}
+            >
+              <MaterialIcons
+                name="checklist-rtl"
+                size={25}
+                color={colors.light}
+              />
+            </TouchableOpacity>
+          </Animated.View>
 
           <TouchableOpacity
             style={styles.iconButton}
@@ -1548,7 +1758,6 @@ const styles = StyleSheet.create({
   iconsContainer: {
     flexDirection: "row-reverse",
     alignItems: "center",
-    // gap: -2,
   },
   iconButton: {
     justifyContent: "center",
@@ -1556,12 +1765,9 @@ const styles = StyleSheet.create({
     width: 43,
     height: 43,
     borderRadius: 25,
-    marginLeft: 0,
+    marginLeft: -4,
     marginRight: 7,
     backgroundColor: colors.secondary,
-    // backgroundColor: "#faf2f6",
-    // borderWidth: 2,
-    // borderColor: colors.secondary,
   },
   infoBox: {
     flexDirection: "row-reverse",
@@ -1583,7 +1789,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1,
     borderColor: "#e0e0e0",
-    marginRight: 0,
+    marginRight: -5,
   },
   columnWrapper: {
     flexDirection: "row-reverse",

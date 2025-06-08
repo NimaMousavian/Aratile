@@ -437,201 +437,204 @@ const VisitDetail = () => {
       enableReinitialize
     >
       {(formikProps) => (
-        <View style={styles.container}>
+        <>
+
           <ScreenHeader title="جزئیات بازدید" />
-          <Toast
-            visible={toastVisible}
-            message={toastMessage}
-            type={toastType}
-            onDismiss={() => setToastVisible(false)}
-          />
-          <View style={styles.customerContainer}>
-            <LinearGradient
-              colors={[colors.secondary, colors.primary]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.customerGradient}
-            >
-              <View style={styles.customerRow}>
-                <View style={styles.customerField}>
-                  <MaterialIcons
-                    name="person"
-                    size={24}
-                    color="white"
-                    style={styles.customerIcon}
-                  />
-                  <AppText style={styles.customerLabel}>بازدید کننده</AppText>
-                </View>
-                <View style={styles.customerButtonsContainer}>
-                  {selectedColleague && (
-                    <TouchableOpacity
-                      style={[
-                        styles.iconCircleSmall,
-                        { backgroundColor: "#fef2e0" },
-                      ]}
-                      onPress={() =>
-                        navigation.navigate("CustomerInfo", {
-                          customer: selectedColleague,
-                          mode: "visitor",
-                        })
-                      }
-                    >
-                      <MaterialIcons
-                        name="edit"
-                        size={22}
-                        color={colors.warning}
-                      />
-                    </TouchableOpacity>
-                  )}
-                </View>
-              </View>
-            </LinearGradient>
-            <View style={styles.selectedCustomerContainer}>
-              {selectedColleague ? (
-                <AppText style={styles.selectedCustomerName}>
-                  {visitItem.PersonList.map(
-                    (person) => person.PersonFullName
-                  ).join("، ")}
-                </AppText>
-              ) : (
-                <AppText style={styles.noCustomerText}>
-                  مشتری انتخاب نشده است.
-                </AppText>
-              )}
-            </View>
-          </View>
-          {isLoadingForm ? (
-            <View style={styles.centerContainer}>
-              <ActivityIndicator size="large" color={colors.primary} />
-              <AppText
-                style={{
-                  marginTop: 15,
-                  fontSize: 20,
-                  color: colors.primary,
-                }}
+          <View style={styles.container}>
+            <Toast
+              visible={toastVisible}
+              message={toastMessage}
+              type={toastType}
+              onDismiss={() => setToastVisible(false)}
+            />
+            <View style={styles.customerContainer}>
+              <LinearGradient
+                colors={[colors.secondary, colors.primary]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.customerGradient}
               >
-                در حال بارگذاری فرم
-              </AppText>
+                <View style={styles.customerRow}>
+                  <View style={styles.customerField}>
+                    <MaterialIcons
+                      name="person"
+                      size={24}
+                      color="white"
+                      style={styles.customerIcon}
+                    />
+                    <AppText style={styles.customerLabel}>بازدید کننده</AppText>
+                  </View>
+                  <View style={styles.customerButtonsContainer}>
+                    {selectedColleague && (
+                      <TouchableOpacity
+                        style={[
+                          styles.iconCircleSmall,
+                          { backgroundColor: "#fef2e0" },
+                        ]}
+                        onPress={() =>
+                          navigation.navigate("CustomerInfo", {
+                            customer: selectedColleague,
+                            mode: "visitor",
+                          })
+                        }
+                      >
+                        <MaterialIcons
+                          name="edit"
+                          size={22}
+                          color={colors.warning}
+                        />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                </View>
+              </LinearGradient>
+              <View style={styles.selectedCustomerContainer}>
+                {selectedColleague ? (
+                  <AppText style={styles.selectedCustomerName}>
+                    {visitItem.PersonList.map(
+                      (person) => person.PersonFullName
+                    ).join("، ")}
+                  </AppText>
+                ) : (
+                  <AppText style={styles.noCustomerText}>
+                    مشتری انتخاب نشده است.
+                  </AppText>
+                )}
+              </View>
             </View>
-          ) : (
-            <>
-              <InputContainer title="اطلاعات بازدید">
-                <View
+            {isLoadingForm ? (
+              <View style={styles.centerContainer}>
+                <ActivityIndicator size="large" color={colors.primary} />
+                <AppText
                   style={{
-                    flexDirection: "row-reverse",
-                    justifyContent: "space-between",
-                    gap: 10,
+                    marginTop: 15,
+                    fontSize: 20,
+                    color: colors.primary,
                   }}
                 >
-                  <TimePickerField
-                    label="ساعت شروع"
-                    time={formikProps.values.fromTime}
-                    onTimeChange={(value) =>
-                      formikProps.setFieldValue("fromTime", value)
-                    }
-                    customStyles={{ infoItem: { width: "48%" } }}
-                    error={
-                      formikProps.touched.fromTime &&
-                      formikProps.errors.fromTime
-                        ? formikProps.errors.fromTime
-                        : undefined
-                    }
-                  />
-                  <TimePickerField
-                    label="ساعت پایان"
-                    time={formikProps.values.toTime}
-                    onTimeChange={(value) =>
-                      formikProps.setFieldValue("toTime", value)
-                    }
-                    customStyles={{ infoItem: { width: "48%" } }}
-                    error={
-                      formikProps.touched.toTime && formikProps.errors.toTime
-                        ? formikProps.errors.toTime
-                        : undefined
-                    }
-                  />
-                </View>
-                <SelectionBottomSheet
-                  placeholderText={formikProps.values.resultString || "نتیجه"}
-                  title="نتیجه"
-                  iconName="question-mark"
-                  options={showRoomVisitResults.map(
-                    (visitResult) => visitResult.Title
-                  )}
-                  onSelect={(value) =>
-                    formikProps.setFieldValue("resultString", value[0])
-                  }
-                  loading={visitResultsLoading}
-                  initialValues={[visitItem.ShowroomVisitResultTitle]}
-                  error={
-                    formikProps.touched.resultString &&
-                    formikProps.errors.resultString
-                      ? formikProps.errors.resultString
-                      : undefined
-                  }
-                />
-                {customFieldType1.map((customField) =>
-                  renderInput(customField, formikProps)
-                )}
-              </InputContainer>
-              <InputContainer title="شرح بازدید">
-                <AppTextInput
-                  autoCorrect={false}
-                  placeholder="توضیحات"
-                  keyboardType="default"
-                  icon="notes"
-                  multiline
-                  numberOfLines={10}
-                  height={200}
-                  textAlign="right"
-                  isLargeInput={true}
-                  onChangeText={formikProps.handleChange("description")}
-                  value={formikProps.values.description}
-                  error={
-                    formikProps.touched.description &&
-                    formikProps.errors.description
-                      ? formikProps.errors.description
-                      : undefined
-                  }
-                />
-                {customFieldType2.map((customField) =>
-                  renderInput(customField, formikProps)
-                )}
-              </InputContainer>
-              {Object.entries(customFieldOtherTypes).map(
-                ([groupId, fields]) => (
-                  <InputContainer
-                    key={groupId}
-                    title={fields[0].ShowroomVisitCustomFieldGroupName}
+                  در حال بارگذاری فرم
+                </AppText>
+              </View>
+            ) : (
+              <>
+                <InputContainer title="اطلاعات بازدید">
+                  <View
+                    style={{
+                      flexDirection: "row-reverse",
+                      justifyContent: "space-between",
+                      gap: 10,
+                    }}
                   >
-                    {fields.map((customField) =>
-                      renderInput(customField, formikProps)
+                    <TimePickerField
+                      label="ساعت شروع"
+                      time={formikProps.values.fromTime}
+                      onTimeChange={(value) =>
+                        formikProps.setFieldValue("fromTime", value)
+                      }
+                      customStyles={{ infoItem: { width: "48%" } }}
+                      error={
+                        formikProps.touched.fromTime &&
+                          formikProps.errors.fromTime
+                          ? formikProps.errors.fromTime
+                          : undefined
+                      }
+                    />
+                    <TimePickerField
+                      label="ساعت پایان"
+                      time={formikProps.values.toTime}
+                      onTimeChange={(value) =>
+                        formikProps.setFieldValue("toTime", value)
+                      }
+                      customStyles={{ infoItem: { width: "48%" } }}
+                      error={
+                        formikProps.touched.toTime && formikProps.errors.toTime
+                          ? formikProps.errors.toTime
+                          : undefined
+                      }
+                    />
+                  </View>
+                  <SelectionBottomSheet
+                    placeholderText={formikProps.values.resultString || "نتیجه"}
+                    title="نتیجه"
+                    iconName="question-mark"
+                    options={showRoomVisitResults.map(
+                      (visitResult) => visitResult.Title
                     )}
-                  </InputContainer>
-                )
-              )}
-              <IconButton
-                text={isSubmitting ? "در حال ثبت..." : "ثبت"}
-                onPress={formikProps.handleSubmit}
-                iconName="done"
-                iconSize={28}
-                backgroundColor={colors.success}
-                style={styles.submitButton}
-                disabled={isSubmitting}
-              />
-            </>
-          )}
-          <ColleagueBottomSheet
-            title="انتخاب مشتری"
-            visible={showColleagueSheet}
-            onClose={() => setShowColleagueSheet(false)}
-            onSelectColleague={(colleague) => {
-              setSelectedColleague(colleague);
-              setShowColleagueSheet(false);
-              showToast(`مشتری ${colleague.name} انتخاب شد`, "success");
-            }}
-          />
-        </View>
+                    onSelect={(value) =>
+                      formikProps.setFieldValue("resultString", value[0])
+                    }
+                    loading={visitResultsLoading}
+                    initialValues={[visitItem.ShowroomVisitResultTitle]}
+                    error={
+                      formikProps.touched.resultString &&
+                        formikProps.errors.resultString
+                        ? formikProps.errors.resultString
+                        : undefined
+                    }
+                  />
+                  {customFieldType1.map((customField) =>
+                    renderInput(customField, formikProps)
+                  )}
+                </InputContainer>
+                <InputContainer title="شرح بازدید">
+                  <AppTextInput
+                    autoCorrect={false}
+                    placeholder="توضیحات"
+                    keyboardType="default"
+                    icon="notes"
+                    multiline
+                    numberOfLines={10}
+                    height={200}
+                    textAlign="right"
+                    isLargeInput={true}
+                    onChangeText={formikProps.handleChange("description")}
+                    value={formikProps.values.description}
+                    error={
+                      formikProps.touched.description &&
+                        formikProps.errors.description
+                        ? formikProps.errors.description
+                        : undefined
+                    }
+                  />
+                  {customFieldType2.map((customField) =>
+                    renderInput(customField, formikProps)
+                  )}
+                </InputContainer>
+                {Object.entries(customFieldOtherTypes).map(
+                  ([groupId, fields]) => (
+                    <InputContainer
+                      key={groupId}
+                      title={fields[0].ShowroomVisitCustomFieldGroupName}
+                    >
+                      {fields.map((customField) =>
+                        renderInput(customField, formikProps)
+                      )}
+                    </InputContainer>
+                  )
+                )}
+                <IconButton
+                  text={isSubmitting ? "در حال ثبت..." : "ثبت"}
+                  onPress={formikProps.handleSubmit}
+                  iconName="done"
+                  iconSize={28}
+                  backgroundColor={colors.success}
+                  style={styles.submitButton}
+                  disabled={isSubmitting}
+                />
+              </>
+            )}
+            <ColleagueBottomSheet
+              title="انتخاب مشتری"
+              visible={showColleagueSheet}
+              onClose={() => setShowColleagueSheet(false)}
+              onSelectColleague={(colleague) => {
+                setSelectedColleague(colleague);
+                setShowColleagueSheet(false);
+                showToast(`مشتری ${colleague.name} انتخاب شد`, "success");
+              }}
+            />
+          </View>
+        </>
       )}
     </Formik>
   );
@@ -853,7 +856,7 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     position: "absolute",
-    bottom: 10,
+    bottom: 40,
     right: 0,
     left: 0,
     marginHorizontal: 15,
