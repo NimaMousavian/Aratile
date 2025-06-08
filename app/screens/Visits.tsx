@@ -172,13 +172,13 @@ const Visits = () => {
                     icon: "access-time",
                     iconColor:"#F48400",
                     label: "ساعت:",
-                    value: visit.StartTime
+                    value: visit.StartTime && visit.FinishTime
                       ? ` از ${toPersianDigits(
-                        visit.StartTime.slice(0, 5) || ""
+                        (visit.StartTime || "").slice(0, 5)
                       )} تا ${toPersianDigits(
-                        visit.FinishTime.slice(0, 5) || ""
+                        (visit.FinishTime || "").slice(0, 5)
                       )}`
-                      : "-",
+                    : "-",
                   },
                   {
                     icon: "question-mark",

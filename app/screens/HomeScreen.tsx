@@ -422,7 +422,7 @@ const safeNavigate = (navigation: any, screenName: string, params?: any) => {
     ReceiveNewInvoic: "ReceiveNewInvoice",
     StatusFilterScree: "StatusFilterScreen",
     FieldMarketer: "FieldMarketer",
-    ShowRoom: "ShowRoom",
+    ShowRoom: "visits",
     Forms: "Forms",
     Checklist: "TaskManagement",
   };

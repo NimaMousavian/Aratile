@@ -260,7 +260,7 @@ const AppStack = () => {
       <Stack.Screen name="AddNewShop" component={AddNewShop} />
       <Stack.Screen name="VoiceRecording" component={VoiceRecordingScreen} />
       <Stack.Screen name="AddNewProject" component={AddNewProject} />
-      <Stack.Screen name="ShowRoom" component={ShowRoom} />
+      <Stack.Screen name="ShowRoom" component={Visits} />
       <Stack.Screen name="Visits" component={Visits} />
       <Stack.Screen name="LabelRequest" component={LabelRequest} />
       <Stack.Screen name="VisitDetail" component={VisitDetail} />
