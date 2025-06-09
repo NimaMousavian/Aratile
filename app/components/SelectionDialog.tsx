@@ -210,10 +210,27 @@ const SelectionBottomSheet: React.FC<SelectionBottomSheetProps> = ({
     setSearchQuery("");
   };
 
+  // تابع renderPlaceholderText اصلاح شده:
+
   const renderPlaceholderText = () => {
-    if (selectedValues.length === 0) return placeholderText;
-    if (multiSelect) return selectedValues.join("، ");
-    return selectedValues[0];
+    // اگر مقدار انتخاب شده وجود دارد و خالی نیست
+    if (selectedValues.length > 0 && selectedValues[0] && selectedValues[0].trim() !== "") {
+      if (multiSelect) return selectedValues.join("، ");
+      return selectedValues[0];
+    }
+    // در غیر این صورت placeholder را نمایش بده
+    return placeholderText;
+  };
+
+  // و همچنین تابع getPlaceholderStyle را نیز اصلاح کنیم:
+
+  const getPlaceholderStyle = () => {
+    // اگر مقدار انتخاب شده وجود دارد و خالی نیست
+    if (selectedValues.length > 0 && selectedValues[0] && selectedValues[0].trim() !== "") {
+      return styles.selectedText;
+    }
+    // در غیر این صورت استایل placeholder
+    return [styles.selectedText, { color: colors.darkGray }];
   };
 
   const animatedStyle = {
@@ -267,12 +284,12 @@ const SelectionBottomSheet: React.FC<SelectionBottomSheetProps> = ({
     ); // Adjust based on option count
   };
 
-  const getPlaceholderStyle = () => {
-    if (selectedValues.length === 0) {
-      return [styles.selectedText, { color: colors.darkGray }];
-    }
-    return styles.selectedText;
-  };
+  // const getPlaceholderStyle = () => {
+  //   if (selectedValues.length === 0) {
+  //     return [styles.selectedText, { color: colors.darkGray }];
+  //   }
+  //   return styles.selectedText;
+  // };
 
   const getInputContainerStyle = () => {
     return styles.inputContainer;

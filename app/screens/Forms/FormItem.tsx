@@ -454,6 +454,7 @@ const renderInput = (
     case 2:
       return (
         <AppTextInput
+          key={customField.FormFieldId}
           autoCapitalize="none"
           icon={
             customField.IconName as React.ComponentProps<
@@ -464,7 +465,7 @@ const renderInput = (
           keyboardType="default"
           multiline
           numberOfLines={10}
-          height={200}
+          height={150}
           textAlign="right"
           isLargeInput={true}
           placeholder={customField.FieldName}
@@ -480,6 +481,7 @@ const renderInput = (
     case 3:
       return (
         <AppTextInput
+          key={customField.FormFieldId}
           autoCapitalize="none"
           icon={
             customField.IconName as React.ComponentProps<
@@ -501,6 +503,7 @@ const renderInput = (
     case 4:
       return (
         <AppTextInput
+          key={customField.FormFieldId}
           autoCapitalize="none"
           icon={
             customField.IconName as React.ComponentProps<
@@ -522,6 +525,7 @@ const renderInput = (
     case 5:
       return (
         <AppTextInput
+          key={customField.FormFieldId}
           autoCapitalize="none"
           icon={
             customField.IconName as React.ComponentProps<
@@ -543,6 +547,7 @@ const renderInput = (
     case 6:
       return (
         <AppTextInput
+          key={customField.FormFieldId}
           autoCapitalize="none"
           icon={
             customField.IconName as React.ComponentProps<
@@ -588,16 +593,6 @@ const renderInput = (
         />
       );
 
-    case 10:
-      return (
-        <IconButton
-          text="موقعیت جغرافیایی"
-          iconName="location-pin"
-          onPress={() => {}}
-          backgroundColor={colors.primary}
-          flex={1}
-        />
-      );
     case 11:
       return (
         <PersonInputField customField={customField} formikProps={formikProps} />
@@ -612,6 +607,7 @@ const renderInput = (
     default:
       return (
         <AppTextInput
+          key={customField.FormFieldId}
           autoCapitalize="none"
           icon={
             customField.IconName as React.ComponentProps<

@@ -154,16 +154,30 @@ const useProductScanner = () => {
     }
   };
 
-  const searchProduct = async (query: string) => {
-    if (!query.trim()) return [];
+  const searchProduct = async (query: string, page: number = 1, pageSize: number = 20) => {
+    if (!query.trim()) {
+      return {
+        items: [],
+        totalCount: 0,
+        hasMore: false
+      };
+    }
 
     setIsLoading(true);
     try {
       const response = await axios.get(
-        `${API_BASE_URL}Product/SearchBySKUOrName?query=${query}&page=1&pageSize=20`
+        `${API_BASE_URL}Product/SearchBySKUOrName?query=${query}&page=${page}&pageSize=${pageSize}`
       );
 
-      return response.data?.Items || [];
+      const items = response.data?.Items || [];
+      const totalCount = response.data?.TotalCount || 0;
+      const hasMore = (page * pageSize) < totalCount;
+
+      return {
+        items,
+        totalCount,
+        hasMore
+      };
     } catch (error) {
       console.error("Error searching products:", error);
       showModal(
@@ -171,7 +185,11 @@ const useProductScanner = () => {
         "خطا در جستجوی محصولات. لطفاً دوباره تلاش کنید.",
         "error"
       );
-      return [];
+      return {
+        items: [],
+        totalCount: 0,
+        hasMore: false
+      };
     } finally {
       setIsLoading(false);
     }
@@ -269,6 +287,7 @@ const useProductScanner = () => {
       return true;
     }
   };
+
   const renderModal = () => {
     return (
       <ReusableModal

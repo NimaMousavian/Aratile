@@ -123,12 +123,16 @@ const B2BFieldMarketer = () => {
         onDismiss={() => setToastVisible(false)}
       />
       <View style={styles.container}>
+        <View style={styles.searchInput}>
+      
         <SearchInput
           value={filterShopName}
           onChangeText={setFilterShopName}
           onSearch={() => getShopItemsWithFilter()}
           onClear={() => getShopItems()}
-        />
+         
+          />
+          </View>
         <ScrollView
           contentContainerStyle={{ flexGrow: 1 }}
           showsVerticalScrollIndicator={false}
@@ -150,19 +154,19 @@ const B2BFieldMarketer = () => {
                 fields={[
                   {
                     icon: "person",
-                    iconColor: colors.secondary,
+                    iconColor: "#228DE1",
                     label: "مالک:",
                     value: `${shop.OwnerFirstName}  ${shop.OwnerLastName}`,
                   },
                   {
                     icon: "question-mark",
-                    iconColor: colors.secondary,
+                    iconColor: "#0F9058",
                     label: "نوع مالکیت:",
                     value: shop.ShopOwnershipTypeStr,
                   },
                   {
                     icon: "location-pin",
-                    iconColor: colors.secondary,
+                    iconColor: "#DB4437",
                     label: "مکان:",
                     value: `${shop.ProvinceName} / ${shop.CityName}`,
                   },
@@ -184,6 +188,18 @@ const B2BFieldMarketer = () => {
                 callIcon={{
                   name: "call",
                   onPress: () => handlePhoneCall(shop.OwnerMobile),
+                  containerStyle: {
+                    width: 36,
+                    height: 36,
+                    borderRadius: 18,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    // marginRight: -10, // حرکت به چپ
+                    marginLeft: -3,
+                    borderWidth: 2,
+                    borderColor: colors.success, // یا هر رنگی که می‌خواید
+                    backgroundColor: "white",
+                  }
                 }}
                 editIcon={{
                   name: "edit",
@@ -250,15 +266,19 @@ const styles = StyleSheet.create({
   },
 
   androidCardAdjustment: {
-    borderWidth: 3,
+    borderWidth: 1,
     borderColor: "#e0e0e0",
     marginVertical: 4,
+    
+  },
+  searchInput: {
+    marginBottom: 10,
   },
   centerContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: 40,
+    paddingVertical: 20,
   },
   emptyContainer: {
     flex: 1,
@@ -279,8 +299,9 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     justifyContent: "center",
     alignItems: "center",
-    marginHorizontal: 5,
-    borderWidth: 1,
+    marginLeft: 2,
+    marginRight: -20, 
+    borderWidth: 2,
     borderColor: colors.warning,
     backgroundColor: "white",
   },

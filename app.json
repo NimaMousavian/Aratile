@@ -4,32 +4,30 @@
     "slug": "aratile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/logo-aratile-2.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": false,
-    "jsEngine": "hermes",
+    "runtimeVersion": "1.0.0",
+
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "runtimeVersion": {
-        "policy": "appVersion"
-      }
+      "icon": "./assets/logo-aratile-2.png",
+      "bundleIdentifier": "com.aratile.app",
+      "buildNumber": "1.0.0",
+      "runtimeVersion": "1.0.0"
     },
     "android": {
       "package": "com.aratile",
       "versionCode": 1,
+      "icon": "./assets/logo-aratile-2.png",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon.png",
+        "foregroundImage": "./assets/logo-aratile-2.png",
         "backgroundColor": "#ffffff"
       },
-      "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.INTERNET",
-        "android.permission.ACCESS_NETWORK_STATE"
-      ],
       "runtimeVersion": "1.0.0"
     },
     "web": {
-      "favicon": "./assets/logo-aratile-1.png"
+      "favicon": "./assets/logo-aratile-2.png"
     },
     "plugins": [
       [
@@ -41,7 +39,6 @@
         }
       ],
       "expo-font"
-   
     ],
     "extra": {
       "eas": {

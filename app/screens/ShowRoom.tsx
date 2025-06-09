@@ -96,7 +96,7 @@ const ShowRoom = () => {
       <ScreenHeader title="شوروم" />
       <View style={styles.container}>
         <View style={styles.gridContainer}>
-          {showRoomItems.map((item, index) => renderItem(item, index))}
+          {showRoomItems?.length > 0 && showRoomItems.map((item, index) => renderItem(item, index))}
         </View>
 
         <Toast

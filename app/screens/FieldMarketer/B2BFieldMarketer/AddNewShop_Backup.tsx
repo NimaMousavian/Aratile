@@ -744,6 +744,7 @@ const styles = StyleSheet.create({
   },
   gridContainer: {
     padding: 15,
+    paddingTop: 0,  
   },
   titleContainer: {},
   title: {
