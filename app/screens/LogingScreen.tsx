@@ -136,7 +136,7 @@ const LoginScreen = () => {
           <View style={styles.logoContainer}>
             <Image
               style={styles.logo}
-              source={require("../../assets/logo-01.png")}
+              source={require("../../assets/logo-aratile-3.png")}
               resizeMode="contain"
             />
             <AppText style={styles.headerTitle}>ورود به حساب کاربری</AppText>

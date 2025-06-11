@@ -64,14 +64,14 @@ export const safeNavigate = (
 const marketingItems: MenuItem[] = [
   {
     id: 1,
-    name: "بازاریابی میدانی B2B",
+    name: "فروشگاه ها",
     icon: "business",
     iconColor: "#1C3F64",
     screenName: "B2BFieldMarketer",
   },
   {
     id: 2,
-    name: "بازاریابی میدانی B2C",
+    name: "پروژه ها",
     icon: "business-center",
     iconColor: "#1C3F64",
     screenName: "B2CFieldMarketer",

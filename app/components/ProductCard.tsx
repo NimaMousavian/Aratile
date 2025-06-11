@@ -247,7 +247,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                   style={{ marginLeft: 8 }}
                 />
               )}
-              {typeof title === 'string' ? (
+              {typeof title === "string" ? (
                 <Text style={[styles.productTitle, titleStyle]}>{title}</Text>
               ) : (
                 title // اگر title یک ReactNode باشد، مستقیماً رندر می‌شود
@@ -281,7 +281,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                   styles.fieldContainer,
                   field.containerStyle,
                   index < fieldsBeforePrice.length - 1 &&
-                  styles.fieldMarginBottom,
+                    styles.fieldMarginBottom,
                 ]}
               >
                 {field.icon && (
@@ -383,7 +383,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     styles.fieldContainer,
                     field.containerStyle,
                     index < fieldsAfterPrice.length - 1 &&
-                    styles.fieldMarginBottom,
+                      styles.fieldMarginBottom,
                   ]}
                 >
                   {field.icon && (
@@ -457,7 +457,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
               )}
             </View>
 
-            {typeof note === 'string' ? (
+            {typeof note === "string" ? (
               <Text style={[styles.regularNoteContent, noteConfig.valueStyle]}>
                 {note ? note : "-"}
               </Text>

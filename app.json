@@ -7,6 +7,11 @@
     "icon": "./assets/logo-aratile-2.png",
     "userInterfaceStyle": "light",
     "runtimeVersion": "1.0.0",
+    "splash": {
+      "image": "./assets/logo-aratile.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
 
     "assetBundlePatterns": ["**/*"],
     "ios": {

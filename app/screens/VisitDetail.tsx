@@ -61,16 +61,18 @@ const VisitDetail = () => {
   const navigation = useNavigation<AppNavigationProp>();
 
   const [fromTime, setFromTime] = useState(
-    visitItem.StartTime.slice(0, 5) || ""
+    visitItem.StartTime ? visitItem.StartTime?.slice(0, 5) : ""
   );
-  const [toTime, setToTime] = useState(visitItem.FinishTime.slice(0, 5) || "");
+  const [toTime, setToTime] = useState(
+    visitItem.FinishTime ? visitItem.FinishTime?.slice(0, 5) : ""
+  );
   const [resultString, setResultString] = useState<string>(
     visitItem.ShowroomVisitResultTitle || ""
   );
   const [description, setDescription] = useState<string>("");
 
   const [selectedColleague, setSelectedColleague] = useState<Colleague | null>({
-    id: visitItem.ShowroomVisitId.toString(),
+    id: visitItem.ShowroomVisitId?.toString() || "",
     name: visitItem.PersonList[0]?.PersonFullName,
     phone: "",
   });
@@ -217,10 +219,10 @@ const VisitDetail = () => {
   // Generate initial form values
   const generateInitialValues = () => {
     const initialValues: FormValues = {
-      fromTime: visitItem.StartTime.slice(0, 5) || "",
-      toTime: visitItem.FinishTime.slice(0, 5) || "",
+      fromTime: visitItem.StartTime ? visitItem.StartTime?.slice(0, 5) : "",
+      toTime: visitItem.FinishTime ? visitItem.FinishTime?.slice(0, 5) : "",
       resultString: visitItem.ShowroomVisitResultTitle || "",
-      description: "",
+      description: visitItem.Description ? visitItem.Description : "",
     };
 
     [...customFieldType1, ...customFieldType2].forEach((field) => {
@@ -394,7 +396,7 @@ const VisitDetail = () => {
             (visitResult) => visitResult.Title === values.resultString
           )?.ShowroomVisitResultId || 0,
         Description: values.description,
-        VisitDate: visitItem.VisitDate,
+        VisitDate: visitItem.VisitDate.split("T")[0],
         StartTime: values.fromTime,
         FinishTime: values.toTime,
         PersonIdList: visitItem.PersonList.map((person) => person.PersonId),
@@ -420,7 +422,7 @@ const VisitDetail = () => {
 
       if (response.status === 200) {
         showToast("بازدید با موفقیت ثبت شد", "success");
-        setTimeout(() => navigation.goBack(), 1500);
+        setTimeout(() => navigation.goBack(), 1000);
       } else {
         showToast("خطا در ثبت بازدید", "error");
       }
@@ -442,7 +444,6 @@ const VisitDetail = () => {
     >
       {(formikProps) => (
         <>
-
           <ScreenHeader title="جزئیات بازدید" />
           <View style={styles.container}>
             <Toast
@@ -538,7 +539,7 @@ const VisitDetail = () => {
                       customStyles={{ infoItem: { width: "48%" } }}
                       error={
                         formikProps.touched.fromTime &&
-                          formikProps.errors.fromTime
+                        formikProps.errors.fromTime
                           ? formikProps.errors.fromTime
                           : undefined
                       }
@@ -571,7 +572,7 @@ const VisitDetail = () => {
                     initialValues={[visitItem.ShowroomVisitResultTitle]}
                     error={
                       formikProps.touched.resultString &&
-                        formikProps.errors.resultString
+                      formikProps.errors.resultString
                         ? formikProps.errors.resultString
                         : undefined
                     }
@@ -595,7 +596,7 @@ const VisitDetail = () => {
                     value={formikProps.values.description}
                     error={
                       formikProps.touched.description &&
-                        formikProps.errors.description
+                      formikProps.errors.description
                         ? formikProps.errors.description
                         : undefined
                     }

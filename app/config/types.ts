@@ -305,7 +305,12 @@ export interface IShopItem {
   InsertDate: string;
   ShamsiInsertDate: string;
   LastUpdateDate: string;
-  ShopCustomFieldList: string;
+  ShopCustomFieldList: {
+    ShopId: number;
+    ShopCustomFieldId: number;
+    ShopCustomFieldSelectiveValueId: number;
+    Value: string;
+  }[];
 }
 
 export interface IProjectCustomField {
@@ -422,4 +427,25 @@ export interface ITask {
   ApplicationUserName: string;
   InsertDate: string;
   ShamsiInsertDate: string;
+}
+
+export interface IProjectItem {
+  PersonProjectId: number;
+  PersonId: number;
+  PersonFirstName: string;
+  PersonLastName: string;
+  PersonFullName: string;
+  PersonMobile: string;
+  CityId: number;
+  CityName: string;
+  ProvinceId: number;
+  ProvinceName: string;
+  ProjectName: string;
+  ApplicationUserId: number;
+  ApplicationUserName: string;
+  Description: string;
+  InsertDate: string;
+  ShamsiInsertDate: string;
+  LastUpdateDate: string;
+  PersonProjectCustomFieldList: [];
 }

@@ -12,12 +12,16 @@ import AppTextInput from "../../../components/TextInput";
 import SelectionBottomSheet from "../../../components/SelectionDialog";
 import IconButton from "../../../components/IconButton";
 import colors from "../../../config/colors";
-import { useNavigation } from "@react-navigation/native";
+import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { AppNavigationProp } from "../../../StackNavigator";
 import ScreenHeader from "../../../components/ScreenHeader";
 import LocationService from "../../IssuingNewInvoice/api/LocationService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { ILoginResponse, IProjectCustomField } from "../../../config/types";
+import {
+  ILoginResponse,
+  IProjectCustomField,
+  IProjectItem,
+} from "../../../config/types";
 import Toast from "../../../components/Toast";
 import axios, { AxiosError } from "axios";
 import appConfig from "../../../../config";
@@ -72,9 +76,18 @@ const getLoginResponse = async (): Promise<ILoginResponse | null> => {
   }
 };
 
+type AddNewProjectRouteParams = {
+  project?: IProjectItem;
+};
+
 const AddNewProject = () => {
   const navigation = useNavigation<AppNavigationProp>();
+  const route =
+    useRoute<RouteProp<Record<string, AddNewProjectRouteParams>, string>>();
+  const projectFromRoute = route.params?.project;
+  console.log("project", projectFromRoute);
 
+  const [project, setProject] = useState<IProjectItem>();
   // const [customerFirstName, setCustomerFirstName] = useState("");
   // const [customerLastName, setCustomerLastName] = useState("");
   // const [customerPhone, setCustomerPhone] = useState("");
@@ -141,6 +154,13 @@ const AddNewProject = () => {
   const hideToast = (): void => {
     setToastVisible(false);
   };
+
+  useEffect(() => {
+    if (projectFromRoute) {
+      getProjectById(projectFromRoute.PersonProjectId);
+    }
+  }, [projectFromRoute]);
+
   const fetchProjectCustomFields = async () => {
     setIsLoadingForm(true);
     try {
@@ -228,7 +248,7 @@ const AddNewProject = () => {
     };
 
     fetchProvinces();
-    // fetchProjectCustomFields();
+    fetchProjectCustomFields();
   }, []);
 
   const fetchCitiesByProvince = async (provinceName: string) => {
@@ -380,6 +400,19 @@ const AddNewProject = () => {
   //   setIsColleagueSheetVisible(false);
   // };
 
+  const getProjectById = async (id: number) => {
+    setIsLoadingForm(true);
+    try {
+      const response = await axios.get<IProjectItem>(
+        `${appConfig.mobileApi}PersonProject/Get?id=${id}`
+      );
+      setProject(response.data);
+    } catch (error) {
+    } finally {
+      setIsLoadingForm(false);
+    }
+  };
+
   const getProvinceIdByName = async (
     provinceName: string
   ): Promise<number | null> => {
@@ -422,13 +455,13 @@ const AddNewProject = () => {
   // Generate initial form values
   const generateInitialValues = () => {
     const initialValues: FormValues = {
-      projectTitle: "",
-      province: selectedProvince,
-      city: selectedCity,
+      projectTitle: project?.ProjectName || "",
+      province: project?.ProvinceName || selectedProvince,
+      city: project?.CityName || selectedCity,
       address: "",
-      customerFirstName: "",
-      customerLastName: "",
-      customerPhone: "",
+      customerFirstName: project?.PersonFirstName || "",
+      customerLastName: project?.PersonLastName || "",
+      customerPhone: project?.PersonMobile || "",
       textNote: "",
     };
 
@@ -448,10 +481,16 @@ const AddNewProject = () => {
       province: Yup.string().required("استان الزامی است"),
       city: Yup.string().required("شهرستان الزامی است"),
       address: Yup.string(),
-      customerFirstName: Yup.string().required("نام کارفرما الزامی است"),
-      customerLastName: Yup.string().required(
-        "نام خانوادگی کارفرما الزامی است"
-      ),
+      customerFirstName: Yup.string().when([], {
+        is: () => !hasCustomerInfo,
+        then: (schema) => schema.required("نام کارفرما الزامی است"),
+        otherwise: (schema) => schema,
+      }),
+      customerLastName: Yup.string().when([], {
+        is: () => !hasCustomerInfo,
+        then: (schema) => schema.required("نام خانوادگی کارفرما الزامی است"),
+        otherwise: (schema) => schema,
+      }),
       customerPhone: Yup.string().required("شماره تماس الزامی است"),
       textNote: Yup.string(),
     };
@@ -623,6 +662,8 @@ const AddNewProject = () => {
       const projectData = {
         PersonProjectId: 0,
         PersonId: customerId,
+        PersonFirstName: values.customerFirstName,
+        PersonLastName: values.customerLastName,
         PersonFullName: personFullName,
         CityId: cityId,
         CityName: values.city,
@@ -672,6 +713,80 @@ const AddNewProject = () => {
       const er = error as AxiosError;
       console.error("Error submitting project:", er);
       showToast(er.message || "خطا در ثبت پروژه", "error");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const editFormData = async (values: FormValues) => {
+    setIsSubmitting(true);
+    try {
+      const provinceId =
+        (await getProvinceIdByName(values.province)) || defaultProvinceId;
+      const cityId =
+        (await getCityIdByName(values.city, values.province)) || defaultCityId;
+
+      if (!provinceId || !cityId) {
+        showToast("خطا در دریافت اطلاعات استان و شهر", "error");
+        return;
+      }
+
+      const personFullName =
+        `${values.customerFirstName} ${values.customerLastName}`.trim();
+      const currentDate = new Date().toISOString();
+
+      const projectData = {
+        PersonProjectId: project?.PersonProjectId || 0,
+        PersonId: customerId,
+        PersonFullName: personFullName,
+        CityId: cityId,
+        CityName: values.city,
+        ProvinceId: provinceId,
+        ProvinceName: values.province,
+        ProjectName: values.projectTitle,
+        ApplicationUserId: userId || 0,
+        ApplicationUserName: null,
+        Description: values.textNote || values.address || "",
+        InsertDate: currentDate,
+        LastUpdateDate: null,
+        PersonProjectCustomFieldList: projectCustomFields
+          .filter((cf) => values[`custom_${cf.ProjectCustomFieldId}`])
+          .map((customField) => ({
+            PersonProjectId: 0,
+            ProjectCustomFieldId: customField.ProjectCustomFieldId,
+            ProjectCustomFieldSelectiveValueId: 0,
+            Value:
+              values[`custom_${customField.ProjectCustomFieldId}`].toString(),
+          })),
+      };
+
+      const token = (await getLoginResponse())?.Token;
+      if (!token) {
+        showToast("خطا در دریافت توکن احراز هویت", "error");
+        return;
+      }
+
+      const response = await axios.put(
+        `${appConfig.mobileApi}PersonProject/Edit`,
+        projectData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.status === 200 || response.status === 201) {
+        showToast("پروژه با موفقیت ویرایش شد", "success");
+        setTimeout(() => navigation.goBack(), 1500);
+      } else {
+        showToast("خطا در ویرایش پروژه", "error");
+      }
+    } catch (error) {
+      const er = error as AxiosError;
+      console.error("Error submitting project:", er);
+      showToast(er.message || "خطا در ویرایش پروژه", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -832,12 +947,17 @@ const AddNewProject = () => {
     <Formik<FormValues>
       initialValues={generateInitialValues()}
       validationSchema={generateValidationSchema()}
-      onSubmit={postFormData}
+      onSubmit={(values) => {
+        if (project) editFormData(values);
+        else {
+          postFormData(values);
+        }
+      }}
       enableReinitialize
     >
       {(formikProps) => (
         <>
-          <ScreenHeader title="ثبت پروژه جدید" />
+          <ScreenHeader title={project ? "ویرایش پروژه" : "ثبت پروژه جدید"} />
           <Toast
             visible={toastVisible}
             message={toastMessage}
@@ -845,7 +965,10 @@ const AddNewProject = () => {
             onDismiss={hideToast}
           />
           <View style={styles.container}>
-            <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+            <ScrollView
+              contentContainerStyle={{ flexGrow: 1 }}
+              showsVerticalScrollIndicator={false}
+            >
               {isLoadingForm ? (
                 <View style={styles.centerContainer}>
                   <ActivityIndicator size="large" color={colors.primary} />
@@ -975,6 +1098,7 @@ const AddNewProject = () => {
                           ? formikProps.errors.customerFirstName
                           : undefined
                       }
+                      readOnly={project ? true : false}
                     />
                     <AppTextInput
                       autoCapitalize="none"
@@ -994,6 +1118,7 @@ const AddNewProject = () => {
                           ? formikProps.errors.customerLastName
                           : undefined
                       }
+                      readOnly={project ? true : false}
                     />
                     <AppTextInput
                       autoCapitalize="none"
@@ -1011,6 +1136,7 @@ const AddNewProject = () => {
                           ? formikProps.errors.customerPhone
                           : undefined
                       }
+                      readOnly={project ? true : false}
                     />
                     {customFieldType2.map((customField) =>
                       renderInput(customField, formikProps)

@@ -198,7 +198,6 @@ const AddNewShop = () => {
   const route =
     useRoute<RouteProp<Record<string, AddNewShopRouteParams>, string>>();
   const shopFromRoute = route.params?.shop;
-  console.log("shop:", shopFromRoute);
 
   const [shop, setShop] = useState<IShopItem>();
   const [recordings, setRecordings] = useState<
@@ -251,8 +250,27 @@ const AddNewShop = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    setShop(shopFromRoute);
+    if (shopFromRoute) {
+      getShopById(shopFromRoute.ShopId);
+    }
   }, [shopFromRoute]);
+
+  const getShopById = async (id: number) => {
+    setIsLoadingForm(true);
+    try {
+      const response = await axios.get<IShopItem>(
+        `${appConfig.mobileApi}Shop/Get?id=${id}`
+      );
+      console.log("shop", response.data);
+
+      setShop(response.data);
+    } catch (error) {
+      console.log(error);
+      showToast("خطا در دریافت فروشگاه", "error");
+    } finally {
+      setIsLoadingForm(false);
+    }
+  };
 
   useEffect(() => {
     const fetchProvinces = async () => {
@@ -404,6 +422,11 @@ const AddNewShop = () => {
         initialValues[`custom_${field.ShopCustomFieldId}`] = "";
       }
     );
+
+    shop?.ShopCustomFieldList.forEach((customField) => {
+      initialValues[`custom_${customField.ShopCustomFieldId}`] =
+        customField.Value;
+    });
 
     return initialValues;
   };
@@ -718,6 +741,89 @@ const AddNewShop = () => {
     }
   };
 
+  const editFormData = async (values: FormValues) => {
+    setIsSubmitting(true);
+    try {
+      const provinceId = await LocationService.getProvinceIdByName(
+        values.province
+      );
+      const cityId = await PersonManagementService.getCityIdByName(
+        values.city,
+        values.province
+      );
+
+      const dataToEdit = {
+        ShopId: shop?.ShopId || 0,
+        ShopName: values.shopName,
+        CityId: cityId,
+        CityName: values.city,
+        ProvinceId: provinceId,
+        ProvinceName: values.province,
+        ShopAddress: values.shopAddress,
+        ShopAreaInMeters: values.shopArea,
+        ShopHistoryInYears: Number(values.shopHistoryInYears),
+        ShopOwnershipType: values.shopOwnershipType === "تملیکی" ? 1 : 2,
+        ShopOwnershipTypeStr: values.shopOwnershipType,
+        OwnerFirstName: values.firstName,
+        OwnerLastName: values.lastName,
+        OwnerMobile: values.mobileNumber,
+        HasWarehouse: values.hasWarehouse === "بله" ? true : false,
+        HasWarehouseStr: values.hasWarehouse,
+        WarehouseOwnershipType: 0,
+        WarehouseOwnershipTypeStr: values.warehouseOwnershipType,
+        WarehouseAreaInMeters: Number(values.warehouseArea),
+        WarehouseAddress: "string",
+        Description: values.notes,
+        ApplicationUserId: user?.UserId,
+        ApplicationUserName: user?.UserName,
+        InsertDate: new Date().toISOString(),
+        ShamsiInsertDate: null,
+        LastUpdateDate: null,
+        ShopCustomFieldList: shopCustomeField
+          .filter((cf) => values[`custom_${cf.ShopCustomFieldId}`])
+          .map((customField) => {
+            if (values[`custom_${customField.ShopCustomFieldId}`]) {
+              // if (customField.FieldType === 4) {
+              //   return {
+              //     ShopId: 0,
+              //     ShopCustomFieldId: customField.ShopCustomFieldId,
+              //     ShopCustomFieldSelectiveValueId:
+              //       values[
+              //         `custom_${customField.ShopCustomFieldId}`
+              //       ].toString(),
+              //     Value: 0,
+              //   };
+              // }
+              return {
+                ShopId: shop?.ShopId || 0,
+                ShopCustomFieldId: customField.ShopCustomFieldId,
+                ShopCustomFieldSelectiveValueId: 0,
+                Value:
+                  values[`custom_${customField.ShopCustomFieldId}`].toString(),
+              };
+            }
+          }),
+      };
+
+      console.log("dataToEdit", dataToEdit);
+
+      const response = await axios.put(
+        `${appConfig.mobileApi}Shop/Edit`,
+        dataToEdit
+      );
+      if (response.status === 200) {
+        showToast("فروشگاه با موفقیت ویرایش شد", "success");
+        setTimeout(() => {
+          navigation.goBack();
+        }, 1000);
+      }
+    } catch (error) {
+      showToast("خطا در ویرایش فروشگاه", "error");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <Formik<FormValues>
       initialValues={generateInitialValues(shop)}
@@ -727,7 +833,7 @@ const AddNewShop = () => {
         // Alert.alert("موفق", "اطلاعات با موفقیت ثبت شد");
         // Implement API call or other submission logic here
         if (shop) {
-          // editFormData(values)
+          editFormData(values);
         } else {
           postFormData(values);
         }

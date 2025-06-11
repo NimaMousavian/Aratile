@@ -563,8 +563,9 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                           label: "مقدار:",
                           value: `${invoicItem.ProductQuantity.toFixed(
                             2
-                          ).toString()} ${invoicItem.ProductMeasurementUnitName
-                            }`,
+                          ).toString()} ${
+                            invoicItem.ProductMeasurementUnitName
+                          }`,
                         },
                         {
                           icon: "shopping-bag",
@@ -612,7 +613,11 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                 {invoic && (
                   <InvoiceDetailsSummary
                     invoic={invoic}
-                    containerStyle={Platform.OS === "android" ? styles.androidCardAdjustment : {}}
+                    containerStyle={
+                      Platform.OS === "android"
+                        ? styles.androidCardAdjustment
+                        : {}
+                    }
                   />
                 )}
 
@@ -676,7 +681,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: 16,
+    paddingHorizontal: 15,
   },
   androidContentAdjustment: {
     marginTop: 0,
@@ -691,7 +696,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: 12,
     padding: 16,
-    marginBottom: 16,
+    marginBottom: 10,
     shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,

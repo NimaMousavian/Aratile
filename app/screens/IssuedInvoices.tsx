@@ -206,7 +206,9 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
               color={colors.white || "#fff"}
             />
             <Text style={styles.purchaseHeaderText}>
-              {isCurrentUserSeller ? `فاکتور ${convertToPersianNumbers(invoiceNumber)}` : headerTitle}
+              {isCurrentUserSeller
+                ? `فاکتور ${convertToPersianNumbers(invoiceNumber)}`
+                : headerTitle}
             </Text>
           </View>
 
@@ -225,11 +227,7 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
         <View style={styles.purchaseContent}>
           <View style={styles.purchaseRow}>
             <View style={styles.purchaseItem}>
-              <MaterialIcons
-                name="person"
-                size={18}
-                color={colors.secondary || "#6c5ce7"}
-              />
+              <MaterialIcons name="person" size={18} color={colors.blueIcon} />
               <View style={styles.purchaseTextContainer}>
                 <Text style={styles.secondaryLabel}>
                   {isCurrentUserSeller ? "خریدار:" : "خریدار:"}
@@ -261,7 +259,7 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
                   <MaterialIcons
                     name="event"
                     size={18}
-                    color={colors.secondary || "#6c5ce7"}
+                    color={colors.greenIcon}
                   />
                   <View style={styles.purchaseTextContainer}>
                     <Text style={styles.secondaryLabel}>تاریخ:</Text>
@@ -313,7 +311,7 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
                   <MaterialIcons
                     name="attach-money"
                     size={18}
-                    color={colors.secondary || "#6c5ce7"}
+                    color={colors.orangeIcon}
                   />
                   <View style={styles.purchaseTextContainer}>
                     <Text style={styles.secondaryLabel}>مبلغ کل:</Text>
@@ -940,7 +938,7 @@ const IssuedInvoices: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: colors.background,
   },
   headerContainer: {
     height: 120,
@@ -966,7 +964,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     marginHorizontal: 20,
     marginTop: 5,
-    marginBottom: 5,
+    marginBottom: 0,
     padding: 6,
     shadowColor: "#000",
     shadowOffset: {
@@ -1182,7 +1180,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.gray,
     borderRadius: 8,
-    padding: 10,
+    padding: 100,
     flexDirection: "row-reverse",
     marginBottom: 10,
   },

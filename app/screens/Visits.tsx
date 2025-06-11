@@ -127,7 +127,6 @@ const Visits = () => {
 
   return (
     <>
-
       <ScreenHeader title="بازدید های شوروم" />
       <View style={styles.container}>
         <Toast
@@ -136,7 +135,10 @@ const Visits = () => {
           type={toastType}
           onDismiss={() => setToastVisible(false)}
         />
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          showsVerticalScrollIndicator={false}
+        >
           {loading ? (
             <View style={styles.centerContainer}>
               <ActivityIndicator size="large" color={colors.primary} />
@@ -158,36 +160,41 @@ const Visits = () => {
                 fields={[
                   {
                     icon: "person-4",
-                    iconColor: "#228De1",
+                    iconColor: colors.blueIcon,
                     label: "مسئول بازدید:",
                     value: toPersianDigits(visit.ApplicationUserName),
                   },
                   {
                     icon: "calendar-month",
-                    iconColor: "#0F9058",
+                    iconColor: colors.greenIcon,
                     label: "تاریخ:",
                     value: toPersianDigits(visit.ShamsiVisitDate),
                   },
                   {
                     icon: "access-time",
-                    iconColor:"#F48400",
+                    iconColor: colors.orangeIcon,
                     label: "ساعت:",
-                    value: visit.StartTime && visit.FinishTime
-                      ? ` از ${toPersianDigits(
-                        (visit.StartTime || "").slice(0, 5)
-                      )} تا ${toPersianDigits(
-                        (visit.FinishTime || "").slice(0, 5)
-                      )}`
-                    : "-",
+                    value:
+                      visit.StartTime && visit.FinishTime
+                        ? ` از ${toPersianDigits(
+                            (visit.StartTime || "").slice(0, 5)
+                          )} تا ${toPersianDigits(
+                            (visit.FinishTime || "").slice(0, 5)
+                          )}`
+                        : "-",
                   },
                   {
                     icon: "question-mark",
-                    iconColor: "#DB4437",
+                    iconColor: colors.redIcon,
                     label: "نتیجه:",
-                    value: toPersianDigits(visit.ShowroomVisitResultTitle || "-"),
+                    value: toPersianDigits(
+                      visit.ShowroomVisitResultTitle || "-"
+                    ),
                   },
                 ]}
-                note={visit.Description ? toPersianDigits(visit.Description) : ""}
+                note={
+                  visit.Description ? toPersianDigits(visit.Description) : ""
+                }
                 noteConfig={{
                   show: visit.Description !== null,
                   icon: "notes",

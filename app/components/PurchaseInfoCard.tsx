@@ -119,7 +119,7 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
                 <MaterialIcons
                   name="person"
                   size={18}
-                  color={colors.secondary}
+                  color={colors.blueIcon}
                 />
                 <View style={styles.purchaseTextContainer}>
                   <Text style={styles.secondaryLabel}>خریدار:</Text>
@@ -187,7 +187,7 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
           <MaterialIcons
             name="error-outline"
             size={18}
-            color={colors.secondary}
+            color={colors.greenIcon}
           />
           <View style={styles.noteTextContainer}>
             <Text style={styles.noteLabel}>توضیحات:</Text>

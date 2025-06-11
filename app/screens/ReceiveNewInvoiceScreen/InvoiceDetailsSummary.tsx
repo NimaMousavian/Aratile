@@ -38,7 +38,7 @@ const InvoiceDetailsSummary: React.FC<InvoiceDetailsSummaryProps> = ({
     const itemsCount = invoic.InvoiceItemList.length;
 
     const baseTotal = invoic.InvoiceItemList.reduce((sum, item) => {
-      return sum + (item.PackagingQuantity * item.PerPackagePrice);
+      return sum + item.PackagingQuantity * item.PerPackagePrice;
     }, 0);
 
     const totalDiscount = invoic.InvoiceItemList.reduce((sum, item) => {
@@ -56,7 +56,7 @@ const InvoiceDetailsSummary: React.FC<InvoiceDetailsSummaryProps> = ({
       baseTotal,
       totalDiscount,
       totalExtra,
-      finalAmount
+      finalAmount,
     };
   }, [invoic.InvoiceItemList]);
 
@@ -92,21 +92,16 @@ const InvoiceDetailsSummary: React.FC<InvoiceDetailsSummaryProps> = ({
             </Text>
           </View>
 
-        
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>
-              تخفیفات:
-            </Text>
+            <Text style={styles.summaryLabel}>تخفیفات:</Text>
             <Text style={styles.summaryValue}>
-              {toPersianDigits(calculations.totalDiscount.toLocaleString())} ریال
+              {toPersianDigits(calculations.totalDiscount.toLocaleString())}{" "}
+              ریال
             </Text>
           </View>
 
-        
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>
-              اضافات:
-            </Text>
+            <Text style={styles.summaryLabel}>اضافات:</Text>
             <Text style={styles.summaryValue}>
               {toPersianDigits(calculations.totalExtra.toLocaleString())} ریال
             </Text>
@@ -114,7 +109,6 @@ const InvoiceDetailsSummary: React.FC<InvoiceDetailsSummaryProps> = ({
 
           <View style={styles.divider} />
 
-        
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>مبلغ نهایی:</Text>
             <Text style={styles.totalValue}>
@@ -152,15 +146,16 @@ const styles = StyleSheet.create({
     flexDirection: "row-reverse",
     alignItems: "center",
     flex: 1,
-    justifyContent: "center",
+    justifyContent: "flex-start",
+    paddingHorizontal: 15,
   },
   headerTitle: {
     fontSize: 18,
     color: colors.white,
     marginRight: 8,
     fontFamily: getFontFamily("Yekan_Bakh_Bold", "bold"),
-    textAlign: "center",
     flexShrink: 1,
+    textAlign: "right",
   },
   contentContainer: {
     padding: 16,

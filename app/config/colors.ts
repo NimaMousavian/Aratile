@@ -33,4 +33,8 @@ export default {
   error: "#e53935",
   info: "#2696d9",
   background: "#f5f5f5",
+  blueIcon: "#228De1",
+  greenIcon: "#0F9058",
+  orangeIcon: "#F48400",
+  redIcon: "#DB4437",
 };

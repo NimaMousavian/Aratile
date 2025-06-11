@@ -24,6 +24,12 @@ import { toPersianDigits } from "../../../utils/converters";
 import { getFontFamily } from "../../IssuedInvoices";
 import { Feather } from "@expo/vector-icons";
 
+export const handlePhoneCall = (phoneNumber: string): void => {
+  if (phoneNumber) {
+    Linking.openURL(`tel:${phoneNumber}`);
+  }
+};
+
 const B2BFieldMarketer = () => {
   const navigation = useNavigation<AppNavigationProp>();
   const [shopItems, setShopItems] = useState<IShopItem[]>([]);
@@ -78,12 +84,6 @@ const B2BFieldMarketer = () => {
     getShopItems();
   }, []);
 
-  const handlePhoneCall = (phoneNumber: string): void => {
-    if (phoneNumber) {
-      Linking.openURL(`tel:${phoneNumber}`);
-    }
-  };
-
   const onScreenFocus = useCallback(() => {
     getShopItems();
   }, []);
@@ -102,7 +102,7 @@ const B2BFieldMarketer = () => {
   return (
     <>
       <ScreenHeader
-        title="بازاریابی میدانی B2B"
+        title="فروشگاه ها"
         rightComponent={
           <View>
             <TouchableOpacity
@@ -124,15 +124,13 @@ const B2BFieldMarketer = () => {
       />
       <View style={styles.container}>
         <View style={styles.searchInput}>
-      
-        <SearchInput
-          value={filterShopName}
-          onChangeText={setFilterShopName}
-          onSearch={() => getShopItemsWithFilter()}
-          onClear={() => getShopItems()}
-         
+          <SearchInput
+            value={filterShopName}
+            onChangeText={setFilterShopName}
+            onSearch={() => getShopItemsWithFilter()}
+            onClear={() => getShopItems()}
           />
-          </View>
+        </View>
         <ScrollView
           contentContainerStyle={{ flexGrow: 1 }}
           showsVerticalScrollIndicator={false}
@@ -199,7 +197,7 @@ const B2BFieldMarketer = () => {
                     borderWidth: 2,
                     borderColor: colors.success, // یا هر رنگی که می‌خواید
                     backgroundColor: "white",
-                  }
+                  },
                 }}
                 editIcon={{
                   name: "edit",
@@ -269,7 +267,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#e0e0e0",
     marginVertical: 4,
-    
   },
   searchInput: {
     marginBottom: 10,
@@ -300,7 +297,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginLeft: 2,
-    marginRight: -20, 
+    marginRight: -20,
     borderWidth: 2,
     borderColor: colors.warning,
     backgroundColor: "white",
