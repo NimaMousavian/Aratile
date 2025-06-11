@@ -21,6 +21,22 @@ import {
 } from "../FieldMarketer/B2BFieldMarketer/AddNewShop";
 import AppText from "../../components/Text";
 
+// Google Material Design Colors
+const googleColors = [
+  "#4285F4", // Google Blue
+  "#ea4335", // Google Red
+  "#F4B400", // Google Yellow
+  "#0F9D58", // Google Green
+  "#AB47BC", // Purple
+  "#FF7043", // Deep Orange
+  "#26A69A", // Teal
+  "#42A5F5", // Light Blue
+  "#66BB6A", // Light Green
+  "#FFA726", // Orange
+  "#EC407A", // Pink
+  "#5C6BC0", // Indigo
+];
+
 const Forms = () => {
   const navigation = useNavigation<AppNavigationProp>();
   const [forms, setForms] = useState<IForm[]>([]);
@@ -43,6 +59,7 @@ const Forms = () => {
       setIsloading(false);
     }
   };
+
   useEffect(() => {
     getForms();
   }, []);
@@ -62,21 +79,51 @@ const Forms = () => {
     return sortedObject;
   };
 
-  const renderItem = (formItem: IForm): React.ReactElement => {
+  // Function to get color based on form index
+  const getFormColor = (formId: string): string => {
+    // Use form ID to generate consistent color index
+    const hash = formId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return googleColors[hash % googleColors.length];
+  };
+
+  const renderItem = (formItem: IForm, index: number, isLast: boolean): React.ReactElement => {
+    const formColor = getFormColor(formItem.FormId.toString());
+
     return (
-      <TouchableOpacity
-        onPress={() => navigation.navigate("FormItem", { formItem: formItem })}
-        key={formItem.FormId}
-      >
-        <View key={formItem.FormId} style={styles.formItemContainer}>
-          <MaterialIcons
-            name={formItem.IconName || "article"}
-            color={colors.info}
-            size={40}
-          />
-          <AppText style={styles.formTitle}>{formItem.FormName}</AppText>
-        </View>
-      </TouchableOpacity>
+      <View key={formItem.FormId}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("FormItem", { formItem: formItem })}
+          style={[styles.touchableItem, index === 0 && styles.firstItem]}
+          activeOpacity={0.7}
+        >
+          <View style={styles.formItemContainer}>
+            <View style={[
+              styles.iconContainer,
+              {
+                backgroundColor: `${formColor}20`,
+                borderColor: `${formColor}60`,
+              }
+            ]}>
+              <MaterialIcons
+                name={formItem.IconName || "article"}
+                color={formColor}
+                size={32}
+              />
+            </View>
+            <View style={styles.textContainer}>
+              <AppText style={styles.formTitle}>{formItem.FormName}</AppText>
+            </View>
+            <View style={styles.arrowContainer}>
+              <MaterialIcons
+                name="chevron-left"
+                color={colors.secondary}
+                size={24}
+              />
+            </View>
+          </View>
+        </TouchableOpacity>
+        {!isLast && <View style={styles.separator} />}
+      </View>
     );
   };
 
@@ -104,7 +151,9 @@ const Forms = () => {
                 showFilterIcon={true}
                 filterIconName={fields[0].FormGroupIconName || "edit-note"}
               >
-                {fields.map((field) => renderItem(field))}
+                {fields.map((field, index) =>
+                  renderItem(field, index, index === fields.length - 1)
+                )}
               </InputContainer>
             ))}
           </ScrollView>
@@ -119,6 +168,8 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     paddingTop: 0,
+    paddingBottom:10,
+    marginBottom:50,
     backgroundColor: colors.background,
   },
   addIconContainer: {
@@ -131,30 +182,68 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 12,
   },
+  touchableItem: {
+    marginHorizontal: -16,
+    paddingHorizontal: 16,
+  },
+  firstItem: {
+    marginTop: -12,
+  },
   formItemContainer: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    paddingVertical: 18,
+    paddingHorizontal: 8,
+    backgroundColor: 'transparent',
+  },
+  iconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: -8,
+    marginLeft: 8,
     borderWidth: 1,
-    borderColor: colors.info,
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 20,
-    alignItems: "center",
-    backgroundColor: "#deeaf1",
+  },
+  textContainer: {
+    flex: 1,
+    justifyContent: 'center',
   },
   formTitle: {
     fontFamily: "Yekan_Bakh_Bold",
-    fontSize: 20,
-    marginTop: 6,
-    textAlign: "center",
+    fontSize: 17,
+    textAlign: 'right',
+    lineHeight: 24,
+    letterSpacing: 0.3,
+  },
+  arrowContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 36,
+    height: 36,
+    marginLeft: -5,
+    borderRadius: 50,
+    backgroundColor: `${colors.primaryLight}20`,
+  },
+  separator: {
+    height: 1,
+    backgroundColor: colors.gray,
+    marginHorizontal: 0,
+    marginVertical: 2,
+    opacity: 0.5,
   },
   loadingContainer: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: colors.background,
   },
   loadingText: {
     fontSize: 16,
-    color: "#6B7280",
+    color: colors.medium,
     marginTop: 12,
+    fontFamily: "Yekan_Bakh_Bold",
   },
 });
 

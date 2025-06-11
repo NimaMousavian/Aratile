@@ -9,6 +9,7 @@ import {
   View,
   Modal,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { IForm, IFormField, IFormItem, IFormStep } from "../../config/types";
 import { Formik, FormikProps } from "formik";
 import * as Yup from "yup";
@@ -119,33 +120,40 @@ const fetchStepsFromAPI = async (): Promise<Step[]> => {
 // Fix 1: Update the createValidationSchema function
 const createValidationSchema = (fields: IFormField[]) => {
   const shape: { [key: string]: Yup.StringSchema } = {};
+
   fields.forEach((field) => {
     let schema = Yup.string();
 
-    // Fix: Make sure required validation is applied first
-    if (field.IsRequired) {
-      schema = schema.required(`${field.FieldName} الزامی است`);
-    }
-
+    // ابتدا سایر validationها را اعمال کنید
     if (field.MinValue) {
       schema = schema.min(
         Number(field.MinValue),
         `${field.FieldName} باید حداقل ${field.MinValue} کاراکتر باشد`
       );
     }
+
     if (field.MaxValue) {
       schema = schema.max(
         Number(field.MaxValue),
         `${field.FieldName} باید حداکثر ${field.MaxValue} کاراکتر باشد`
       );
     }
+
     if (field.FieldType === 5) {
       schema = schema.email(`ایمیل نامعتبر است`);
     }
 
-    // Use consistent field name format
+    // در آخر required را بررسی کنید
+    if (field.IsRequired) {
+      schema = schema.required(`فیلد ${field.FieldName} الزامی است`);
+    } else {
+      // اگر فیلد اجباری نیست، خالی بودن آن مجاز است
+      schema = schema.nullable().notRequired();
+    }
+
     shape[`custom-${field.FormFieldId}`] = schema;
   });
+
   return Yup.object().shape(shape);
 };
 
@@ -170,8 +178,6 @@ const StepperHeader: React.FC<StepperHeaderProps> = ({
   const nextStepIcon = !isLastStep
     ? steps[currentStep + 1].IconName || "person"
     : null;
-  //   const prevStepIcon = "person";
-  //   const nextStepIcon = "person";
 
   return (
     <View style={styles.stepperHeader}>
@@ -181,7 +187,6 @@ const StepperHeader: React.FC<StepperHeaderProps> = ({
             name={prevStepIcon}
             size={30}
             color={onPrevious ? "#999" : "#E0E0E0"}
-            // onPress={onPrevious || undefined}
             style={styles.navIcon}
           />
         </View>
@@ -194,7 +199,7 @@ const StepperHeader: React.FC<StepperHeaderProps> = ({
             {
               position: "absolute",
               height: 2,
-              width: "20%", // Adjust to fit between icons
+              width: "20%",
               top: "45%",
               left: "15%",
               transform: [{ translateY: -1 }],
@@ -230,7 +235,6 @@ const StepperHeader: React.FC<StepperHeaderProps> = ({
             name={nextStepIcon || "person"}
             size={30}
             color={isLastStep ? "#E0E0E0" : "#999"}
-            // onPress={isLastStep ? undefined : onNext}
             style={styles.navIcon}
           />
         </View>
@@ -259,35 +263,25 @@ const ProductInputField: React.FC<{
           { marginBottom: formikProps.errors[fieldName] ? 0 : 15 },
         ]}
       >
-        <View style={styles.customerGradient}>
+        <LinearGradient
+          colors={[colors.secondary, colors.primary]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.customerGradient}
+        >
           <View style={styles.customerRow}>
             <View style={styles.customerField}>
+              <MaterialIcons
+                name="shopping-bag"
+                size={24}
+                color="white"
+                style={styles.customerIcon}
+              />
               <AppText style={styles.customerLabel}>
                 {customField.FieldName}
               </AppText>
             </View>
             <View style={styles.customerButtonsContainer}>
-              {/* {selectedColleague && (
-                <TouchableOpacity
-                  style={[
-                    styles.iconCircleSmall,
-                    { backgroundColor: "#fef2e0" },
-                  ]}
-                  onPress={() =>
-                    navigation.navigate("CustomerInfo", {
-                      customer: selectedColleague,
-                    })
-                  }
-                >
-                  <MaterialIcons name="edit" size={22} color={colors.warning} />
-                </TouchableOpacity>
-              )} */}
-              {/* <TouchableOpacity
-                style={[styles.iconCircleSmall, { backgroundColor: "#e5f9ec" }]}
-                onPress={() => navigation.navigate("CustomerInfo")}
-              >
-                <MaterialIcons name="add" size={22} color={colors.success} />
-              </TouchableOpacity> */}
               <TouchableOpacity
                 style={[styles.iconCircleSmall]}
                 onPress={() => {
@@ -304,18 +298,18 @@ const ProductInputField: React.FC<{
                 <MaterialIcons
                   name="camera-alt"
                   size={22}
-                  color={colors.white}
+                  color={colors.secondary}
                 />
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.iconCircleSmall]}
                 onPress={() => setShowProductSearchDrawer(true)}
               >
-                <MaterialIcons name="search" size={22} color={colors.white} />
+                <MaterialIcons name="search" size={22} color={colors.primary} />
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </LinearGradient>
 
         <View style={styles.selectedCustomerContainer}>
           {selectedProduct ? (
@@ -365,9 +359,20 @@ const PersonInputField: React.FC<{
           { marginBottom: formikProps.errors[fieldName] ? 0 : 15 },
         ]}
       >
-        <View style={styles.customerGradient}>
+        <LinearGradient
+          colors={[colors.secondary, colors.primary]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.customerGradient}
+        >
           <View style={styles.customerRow}>
             <View style={styles.customerField}>
+              <MaterialIcons
+                name="person"
+                size={24}
+                color="white"
+                style={styles.customerIcon}
+              />
               <AppText style={styles.customerLabel}>
                 {customField.FieldName}
               </AppText>
@@ -377,11 +382,11 @@ const PersonInputField: React.FC<{
                 style={[styles.iconCircleSmall]}
                 onPress={() => setShowColleagueSheet(true)}
               >
-                <MaterialIcons name="search" size={22} color={colors.white} />
+                <MaterialIcons name="search" size={22} color={colors.primary} />
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </LinearGradient>
 
         <View style={styles.selectedCustomerContainer}>
           {selectedColleague ? (
@@ -659,34 +664,32 @@ const StepScreen: React.FC<StepScreenProps> = ({
     section.FormFieldList.forEach((formField) => fields.push(formField))
   );
 
-  // Initialize values with the correct field key format
   const initialValues = fields.reduce((acc, field) => {
-    acc[`custom-${field.FormFieldId}`] = "";
+    // برای فیلدهای غیراجباری، مقدار خالی قابل قبول است
+    acc[`custom-${field.FormFieldId}`] = field.IsRequired ? "" : "";
     return acc;
   }, {} as { [key: string]: string });
 
   const validationSchema = createValidationSchema(fields);
 
-  const log = (msg: any) => {
-    console.log(msg);
-    return <View></View>;
-  };
-
   return (
-    <View style={[styles.stepContainer]}>
-      <ScrollView>
-        <Formik
-          initialValues={initialValues}
-          validationSchema={validationSchema}
-          validateOnMount={true} // Enable validation on mount
-          validateOnChange={true} // Ensure validation runs on every change
-          validateOnBlur={true} // Ensure validation runs on blur
-          onSubmit={(values) => onNext(values)}
-        >
-          {(FormikProps) => (
-            <View>
-              {log(FormikProps.errors)}
-
+    <View style={styles.stepContainer}>
+      <Formik
+        initialValues={initialValues}
+        validationSchema={validationSchema}
+        validateOnMount={false}
+        validateOnChange={true}
+        validateOnBlur={true}
+        onSubmit={(values) => onNext(values)}
+      >
+        {(FormikProps) => (
+          <View style={styles.formContainer}>
+            {/* Scrollable Content */}
+            <ScrollView
+              style={styles.scrollContent}
+              contentContainerStyle={styles.scrollContentContainer}
+              showsVerticalScrollIndicator={false}
+            >
               {step.StepSectionList.map((section) => (
                 <InputContainer key={section.Title} title={section.Title}>
                   {section.FormFieldList.map((formField) =>
@@ -694,6 +697,10 @@ const StepScreen: React.FC<StepScreenProps> = ({
                   )}
                 </InputContainer>
               ))}
+            </ScrollView>
+
+            {/* Fixed Bottom Button Container */}
+            <View style={styles.fixedButtonContainer}>
               <View style={styles.buttonContainer}>
                 {onPrevious ? (
                   <AppButton
@@ -733,9 +740,9 @@ const StepScreen: React.FC<StepScreenProps> = ({
                 />
               </View>
             </View>
-          )}
-        </Formik>
-      </ScrollView>
+          </View>
+        )}
+      </Formik>
     </View>
   );
 };
@@ -817,7 +824,7 @@ const FormItem: React.FC = () => {
     callback: () => void
   ) => {
     directionRef.current = direction;
-    const startValue = direction === "next" ? 300 : -300; // RTL: Slide from right for next, left for prev
+    const startValue = direction === "next" ? 300 : -300;
     const endValue = 0;
 
     slideAnim.setValue(startValue);
@@ -868,15 +875,6 @@ const FormItem: React.FC = () => {
       });
     }
   };
-
-  // if (steps?.length === 0) {
-  //   return (
-  //     <View style={styles.emptyContainer}>
-  //       <Feather name="clipboard" size={64} color="#9CA3AF" />
-  //       <AppText style={styles.emptyText}>موردی یافت نشد</AppText>
-  //     </View>
-  //   );
-  // }
 
   const SuccessfulSubmitScreen = () => {
     return (
@@ -945,7 +943,6 @@ const FormItem: React.FC = () => {
                   currentStep={currentStep}
                   onPrevious={currentStep > 0 ? handlePrevious : null}
                   onNext={() => {
-                    // Trigger next step only if form is valid (handled in StepScreen)
                     const formikSubmitButton = document.querySelector(
                       'button[type="submit"]'
                     ) as HTMLButtonElement;
@@ -1029,6 +1026,23 @@ const styles = StyleSheet.create({
   stepContainer: {
     flex: 1,
   },
+  formContainer: {
+    flex: 1,
+    justifyContent: "space-between",
+  },
+  scrollContent: {
+    flex: 1,
+  },
+  scrollContentContainer: {
+    paddingBottom: 20,
+  },
+  fixedButtonContainer: {
+    backgroundColor: "#f5f5f5",
+    paddingTop: 15,
+    paddingBottom: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#e0e0e0",
+  },
   stepTitle: {
     fontSize: 24,
     fontWeight: "bold",
@@ -1061,7 +1075,6 @@ const styles = StyleSheet.create({
     flexDirection: "row-reverse", // RTL support
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 20,
   },
   emptyContainer: {
     flex: 1,
@@ -1085,19 +1098,23 @@ const styles = StyleSheet.create({
     color: "#6B7280",
     marginTop: 12,
   },
+  // Improved Customer Container Styles with LinearGradient
   customerContainer: {
     flexDirection: "column",
-    marginBottom: 0,
+    marginBottom: 15,
     backgroundColor: colors.white,
     borderRadius: 12,
     overflow: "hidden",
-
-    borderWidth: 1,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 1,
+    borderWidth: 2,
     borderColor: colors.gray,
   },
   customerGradient: {
     padding: 12,
-    backgroundColor: colors.gray,
   },
   customerRow: {
     flexDirection: "row-reverse",
@@ -1112,7 +1129,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginRight: 4,
     fontFamily: "Yekan_Bakh_Bold",
-    color: colors.dark,
+    color: "white",
   },
   customerIcon: {},
   customerButtonsContainer: {
@@ -1120,21 +1137,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   iconCircleSmall: {
-    width: 40,
-    height: 40,
-    borderRadius: 30,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: "center",
     alignItems: "center",
     marginHorizontal: 5,
     borderWidth: 1,
     borderColor: "#e0e0e0",
-    backgroundColor: colors.warning,
+    backgroundColor: "white",
   },
   selectedCustomerContainer: {
     padding: 12,
     borderTopWidth: 1,
     borderTopColor: colors.gray,
-    backgroundColor: colors.white,
+    backgroundColor: colors.light,
   },
   selectedCustomerName: {
     fontSize: 16,
@@ -1149,12 +1166,13 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   errorText: {
-    /* Added error text style */ color: colors.danger,
+    color: colors.danger,
     fontSize: 12,
     marginTop: 5,
     marginBottom: 15,
     textAlign: "right",
     fontFamily: "Yekan_Bakh_Regular",
+    marginHorizontal: 4,
   },
 });
 

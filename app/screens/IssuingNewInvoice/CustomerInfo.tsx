@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
   ScrollView,
@@ -19,10 +20,7 @@ import PersonGroupService, { PersonGroup } from "./api/PersonGroupService";
 import PersonManagementService, {
   CreatePersonDTO,
 } from "./api/PersonManagementService";
-import {
-  groupBy,
-  InputContainer,
-} from "../FieldMarketer/B2BFieldMarketer/AddNewShop";
+import { InputContainer } from "../FieldMarketer/B2BFieldMarketer/AddNewShop";
 import axios from "axios";
 import appConfig from "../../../config";
 import { RouteProp, useRoute } from "@react-navigation/native";
@@ -59,7 +57,7 @@ interface FormValues {
     name: string;
     phone: string;
   };
-  [key: string]: string;
+  [key: string]: string; // Support dynamic custom fields and colleague object
 }
 
 interface Province {
@@ -70,6 +68,7 @@ interface Province {
   ActiveStr: string;
 }
 
+// تابع دریافت اطلاعات ورود کاربر از AsyncStorage
 const getLoginResponse = async (): Promise<ILoginResponse | null> => {
   try {
     const jsonValue = await AsyncStorage.getItem("loginResponse");
@@ -87,12 +86,13 @@ type CustomerInfoRouteParams = {
   };
 };
 
+// Generate initial values for Formik
 const generateInitialValues = (
   person: IPerson | undefined,
-  customFields: IPersonCustomField[]
+  customFieldType1: IPersonCustomField[],
+  customFieldType2: IPersonCustomField[],
+  customFieldType3: IPersonCustomField[]
 ) => {
-  console.log("person in generate:", person);
-
   const initialValues: FormValues = {
     firstName: person?.FirstName || "",
     lastName: person?.LastName || "",
@@ -111,18 +111,26 @@ const generateInitialValues = (
     },
   };
 
-  customFields.forEach((field) => {
-    initialValues[`custom_${field.PersonCustomFieldId}`] = "";
-  });
+  // Add dynamic fields for customFieldType1, customFieldType2, customFieldType3
+  [...customFieldType1, ...customFieldType2, ...customFieldType3].forEach(
+    (field) => {
+      initialValues[`custom_${field.PersonCustomFieldId}`] = "";
+    }
+  );
 
   return initialValues;
 };
 
-const generateValidationSchema = (customFields: IPersonCustomField[]) => {
+// Generate Yup validation schema
+const generateValidationSchema = (
+  customFieldType1: IPersonCustomField[],
+  customFieldType2: IPersonCustomField[],
+  customFieldType3: IPersonCustomField[]
+) => {
   const shape: { [key: string]: any } = {
     firstName: Yup.string().required("لطفاً نام را وارد کنید"),
     lastName: Yup.string().required("لطفاً نام خانوادگی را وارد کنید"),
-    alias: Yup.string(),
+    alias: Yup.string().required("لطفاً نام مستعار را وارد کنید"),
     mobile: Yup.string()
       .matches(/^09\d{9}$/, "شماره موبایل باید ۱۱ رقم و با ۰۹ شروع شود")
       .required("لطفاً شماره موبایل را وارد کنید"),
@@ -139,34 +147,41 @@ const generateValidationSchema = (customFields: IPersonCustomField[]) => {
     }),
   };
 
-  customFields.forEach((field) => {
-    if (field.IsRequired) {
-      if (field.FieldType === 2 || field.FieldType === 5) {
-        shape[`custom_${field.PersonCustomFieldId}`] = Yup.string()
-          .matches(/^\d+$/, `${field.FieldName} باید عدد باشد`)
-          .required(`${field.FieldName} الزامی است`);
-      } else if (field.FieldType === 3) {
-        shape[`custom_${field.PersonCustomFieldId}`] = Yup.string().required(
-          `${field.FieldName} الزامی است`
-        );
-      } else {
-        shape[`custom_${field.PersonCustomFieldId}`] = Yup.string().required(
-          `${field.FieldName} الزامی است`
-        );
+  // Add validation for dynamic fields
+  [...customFieldType1, ...customFieldType2, ...customFieldType3].forEach(
+    (field) => {
+      if (field.IsRequired) {
+        if (field.FieldType === 2 || field.FieldType === 5) {
+          // Numeric field
+          shape[`custom_${field.PersonCustomFieldId}`] = Yup.string()
+            .matches(/^\d+$/, `${field.FieldName} باید عدد باشد`)
+            .required(`${field.FieldName} الزامی است`);
+        } else if (field.FieldType === 3) {
+          // Date field
+          shape[`custom_${field.PersonCustomFieldId}`] = Yup.string().required(
+            `${field.FieldName} الزامی است`
+          );
+        } else {
+          // Text or multi-select field
+          shape[`custom_${field.PersonCustomFieldId}`] = Yup.string().required(
+            `${field.FieldName} الزامی است`
+          );
+        }
       }
     }
-  });
+  );
 
   return Yup.object().shape(shape);
 };
 
+// Render input based on FieldType
 const renderInput = (
   customField: IPersonCustomField,
   formikProps: FormikProps<FormValues>
 ) => {
   const fieldName = `custom_${customField.PersonCustomFieldId}`;
   switch (customField.FieldType) {
-    case 1:
+    case 1: // Text
       return (
         <AppTextInput
           autoCapitalize="none"
@@ -187,8 +202,8 @@ const renderInput = (
           }
         />
       );
-    case 2:
-    case 5:
+    case 2: // Number
+    case 5: // Number
       return (
         <AppTextInput
           autoCapitalize="none"
@@ -209,7 +224,7 @@ const renderInput = (
           }
         />
       );
-    case 3:
+    case 3: // Date
       return (
         <DatePickerField
           date={formikProps.values[fieldName] || ""}
@@ -222,7 +237,7 @@ const renderInput = (
           }
         />
       );
-    case 4:
+    case 4: // Multi-select
       return (
         <DynamicSelectionBottomSheet
           customFieldId={customField.PersonCustomFieldId}
@@ -232,7 +247,7 @@ const renderInput = (
           formikProps={formikProps}
         />
       );
-    case 6:
+    case 6: // Location
       return (
         <IconButton
           text="موقعیت جغرافیایی"
@@ -242,7 +257,7 @@ const renderInput = (
           flex={1}
         />
       );
-    case 7:
+    case 7: // Multiline Text
       return (
         <AppTextInput
           autoCapitalize="none"
@@ -298,6 +313,12 @@ const CustomerInfo: React.FC = () => {
   const mode = route.params?.mode;
 
   const [person, setPerson] = useState<IPerson>();
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [mobile, setMobile] = useState("");
+  const [alias, setAlias] = useState("");
+  const [address, setAddress] = useState("");
+  const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [selectedCustomerTypes, setSelectedCustomerTypes] = useState<string[]>(
@@ -338,50 +359,20 @@ const CustomerInfo: React.FC = () => {
   const [loadingCustomerTypes, setLoadingCustomerTypes] = useState(true);
   const [loadingCustomerJob, setLoadingCustomerJob] = useState(true);
   const [isLoadingForm, setIsLoadingForm] = useState<boolean>(false);
-  const [personCustomField, setPersonCustomField] = useState<
-    IPersonCustomField[]
-  >([]);
   const [customFieldType1, setCustomFieldType1] = useState<
     IPersonCustomField[]
   >([]);
   const [customFieldType2, setCustomFieldType2] = useState<
     IPersonCustomField[]
   >([]);
+  const [customFieldType3, setCustomFieldType3] = useState<
+    IPersonCustomField[]
+  >([]);
   const [customFieldOtherTypes, setCustomFieldOtherTypes] = useState<
     Record<string, IPersonCustomField[]>
   >({});
 
-  const fetchPersonCustomField = async () => {
-    setIsLoadingForm(true);
-    try {
-      const response = await axios.get<{ Items: IPersonCustomField[] }>(
-        `${appConfig.mobileApi}PersonCustomField/GetAllActive`
-      );
-      const type1 = response.data.Items.filter(
-        (customField) => customField.PersonCustomFieldGroupId === 1
-      ).sort((a, b) => a.Form_ShowOrder - b.Form_ShowOrder);
-      const type2 = response.data.Items.filter(
-        (customField) => customField.PersonCustomFieldGroupId === 2
-      ).sort((a, b) => a.Form_ShowOrder - b.Form_ShowOrder);
-
-      const otherTypes = response.data.Items.filter(
-        (customField) =>
-          customField.PersonCustomFieldGroupId !== 1 &&
-          customField.PersonCustomFieldGroupId !== 2
-      );
-      const groupedFields = groupBy(otherTypes, "PersonCustomFieldGroupId");
-      setCustomFieldType1(type1);
-      setCustomFieldType2(type2);
-      setCustomFieldOtherTypes(groupedFields);
-      setPersonCustomField(response.data.Items);
-      console.log(groupedFields);
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setIsLoadingForm(false);
-    }
-  };
-
+  // دریافت مقادیر پیش‌فرض استان و شهر از اطلاعات ورود کاربر
   useEffect(() => {
     const loadDefaultLocation = async () => {
       try {
@@ -402,6 +393,7 @@ const CustomerInfo: React.FC = () => {
             setSelectedCity(cityName);
           }
 
+          // اگر استان انتخاب شده است، شهرهای مربوط به آن را بارگذاری کنید
           if (provinceName) {
             fetchCitiesByProvince(provinceName);
           }
@@ -412,12 +404,12 @@ const CustomerInfo: React.FC = () => {
     };
 
     if (!customerID) {
+      // فقط در حالت اضافه کردن جدید، مقادیر پیش‌فرض را اعمال کنید
       loadDefaultLocation();
     }
   }, [provinces.length]);
 
   useEffect(() => {
-    fetchPersonCustomField();
     if (customerID) {
       getCustomer(Number(customerID));
     }
@@ -436,6 +428,18 @@ const CustomerInfo: React.FC = () => {
       );
 
       setPerson(person);
+      setFirstName(person.FirstName);
+      setLastName(person.LastName);
+      setMobile(person.Mobile);
+      setAlias(person.NickName);
+      setAddress(person.Address);
+      setDescription(person.Description);
+      setAddress(person.Address);
+      // setSelectedColleague({
+      //   id: person.Person_PersonGroup_List[0].PersonGroupId.toString(),
+      //   name: person.Person_PersonGroup_List[0].PersonGroupName,
+      //   phone: "",
+      // });
       setSelectedProvince(person.ProvinceName);
       setSelectedCity(person.CityName);
       setSelectedCustomerTypesString(
@@ -448,6 +452,7 @@ const CustomerInfo: React.FC = () => {
         phone: person.IntroducerPersonMobile,
       });
 
+      // بارگذاری شهرهای استان انتخاب شده
       if (person.ProvinceName) {
         fetchCitiesByProvince(person.ProvinceName);
       }
@@ -561,6 +566,7 @@ const CustomerInfo: React.FC = () => {
   };
 
   const handleCustomerJobSelection = (selectedTypes: string[]): void => {
+    // setSelectedCustomerTypes(selectedTypes);
     const customerTypesString = selectedTypes.join(", ");
     setSelectedCustomerJobString(customerTypesString);
   };
@@ -573,8 +579,56 @@ const CustomerInfo: React.FC = () => {
     setSelectedColleague(colleague);
   };
 
+  const validateForm = (): boolean => {
+    if (!firstName.trim()) {
+      showToast("لطفاً نام را وارد کنید", "error");
+      return false;
+    }
+
+    if (!lastName.trim()) {
+      showToast("لطفاً نام خانوادگی را وارد کنید", "error");
+      return false;
+    }
+    if (!alias.trim()) {
+      showToast("لطفاً نام مستعار را وارد کنید", "error");
+      return false;
+    }
+
+    if (!mobile.trim()) {
+      showToast("لطفاً شماره موبایل را وارد کنید", "error");
+      return false;
+    }
+    if (!selectedCustomerTypesString.trim()) {
+      showToast("لطفاً گروه مشتری را انتخاب کنید", "error");
+      return false;
+    }
+    if (!selectedCustomerJobString.trim()) {
+      showToast("لطفاً شغل مشتری را انتخاب کنید", "error");
+      return false;
+    }
+
+    const mobileRegex = /^09\d{9}$/;
+    if (!mobileRegex.test(mobile)) {
+      showToast("شماره موبایل باید ۱۱ رقم و با ۰۹ شروع شود", "error");
+      return false;
+    }
+
+    if (!selectedProvince) {
+      showToast("لطفاً استان را انتخاب کنید", "error");
+      return false;
+    }
+
+    if (!selectedCity) {
+      showToast("لطفاً شهر را انتخاب کنید", "error");
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (data: FormValues): Promise<void> => {
     if (customerID) {
+      // handle edit mode
       console.log("in edit mode");
       setIsSubmitting(true);
       try {
@@ -603,13 +657,22 @@ const CustomerInfo: React.FC = () => {
               customertype.PersonGroupName === selectedCustomerTypesString
           )?.PersonGroupId || 0,
         ];
+        // if (selectedCustomerTypes.length > 0) {
+        //   personGroupIds =
+        //     await PersonManagementService.getPersonGroupIdsByNames(
+        //       selectedCustomerTypes
+        //     );
+        //   if (personGroupIds.length === 0 && selectedCustomerTypes.length > 0) {
+        //     showToast("خطا در دریافت شناسه‌های گروه مشتری", "warning");
+        //   }
+        // }
 
         const personToEdit: IPersonToEdit = {
           PersonId: Number(customerID),
-          FirstName: data.firstName,
-          LastName: data.lastName,
-          NickName: data.alias,
-          Mobile: data.mobile,
+          FirstName: firstName,
+          LastName: lastName,
+          NickName: alias,
+          Mobile: mobile,
           ProvinceId: provinceId,
           CityId: cityId,
           PersonJobId:
@@ -618,8 +681,8 @@ const CustomerInfo: React.FC = () => {
             )?.value || 0,
           MarketingChannelId: null,
           IntroducerPersonId: Number(selectedColleague.id),
-          Address: data.address,
-          Description: data.description,
+          Address: address,
+          Description: description,
           PersonGroupIdList: personGroupIds,
         };
 
@@ -640,6 +703,12 @@ const CustomerInfo: React.FC = () => {
         setIsSubmitting(false);
       }
     } else {
+      // in add mode
+      // if (!validateForm()) {
+      //   console.log("form is not valid");
+
+      //   return;
+      // }
       setIsSubmitting(true);
 
       try {
@@ -673,19 +742,6 @@ const CustomerInfo: React.FC = () => {
           }
         }
 
-        const customFields: CreatePersonDTO["PersonCustomFieldList"] =
-          personCustomField
-            .filter((cf) => data[`custom_${cf.PersonCustomFieldId}`])
-            .map((customField) => {
-              return {
-                PersonId: 0,
-                PersonCustomFieldId: customField.PersonCustomFieldId,
-                Value:
-                  data[`custom_${customField.PersonCustomFieldId}`].toString(),
-                InsertDate: new Date().toISOString(),
-              };
-            });
-
         const personData: CreatePersonDTO = {
           PersonId: 0,
           FirstName: data.firstName,
@@ -696,10 +752,7 @@ const CustomerInfo: React.FC = () => {
           MarketingChannelId: null,
           Address: data.address,
           PersonGroupIdList: personGroupIds,
-          PersonCustomFieldList: customFields,
         };
-
-        console.log(personData);
 
         const newPersonId = await PersonManagementService.createPerson(
           personData
@@ -707,6 +760,14 @@ const CustomerInfo: React.FC = () => {
 
         showToast(`مشتری با موفقیت ثبت شد.`, "success");
 
+        setFirstName("");
+        setLastName("");
+        setMobile("");
+        setAlias("");
+        setAddress("");
+        setDescription("");
+
+        // بعد از ثبت موفق، مقادیر پیش‌فرض استان و شهر دوباره تنظیم شوند
         const loginResponse = await getLoginResponse();
         if (loginResponse && loginResponse.ProvinceName) {
           setSelectedProvince(loginResponse.ProvinceName);
@@ -731,17 +792,10 @@ const CustomerInfo: React.FC = () => {
       }
     }
   };
-
   return (
     <>
       <ScreenHeader
-        title={
-          customerID
-            ? "ویرایش خریدار"
-            : mode === "visitor"
-              ? "اطلاعات بازدید کننده"
-              : "ثبت خریدار جدید"
-        }
+        title={mode === "visitor" ? "اطلاعات بازدید کننده" : "ثبت خریدار جدید"}
       />
       <Toast
         visible={toastVisible}
@@ -750,8 +804,17 @@ const CustomerInfo: React.FC = () => {
         onDismiss={hideToast}
       />
       <Formik
-        initialValues={generateInitialValues(person, personCustomField)}
-        validationSchema={generateValidationSchema(personCustomField)}
+        initialValues={generateInitialValues(
+          person,
+          customFieldType1,
+          customFieldType2,
+          customFieldType3
+        )}
+        validationSchema={generateValidationSchema(
+          customFieldType1,
+          customFieldType2,
+          customFieldType3
+        )}
         onSubmit={handleSubmit}
         enableReinitialize
       >
@@ -841,9 +904,10 @@ const CustomerInfo: React.FC = () => {
                           : undefined
                       }
                     />
-
                     <SelectionBottomSheet
-                      placeholderText="گروه مشتری"
+                      placeholderText={
+                        formikProps.values.customerType || "گروه مشتری"
+                      }
                       title="گروه مشتری"
                       iconName="group"
                       options={customerTypes.map(
@@ -857,11 +921,7 @@ const CustomerInfo: React.FC = () => {
                       }
                       multiSelect={false}
                       loading={loadingCustomerTypes}
-                      initialValues={
-                        formikProps.values.customerType && formikProps.values.customerType.trim() !== ""
-                          ? [formikProps.values.customerType]
-                          : []
-                      }
+                      initialValues={[formikProps.values.customerType]}
                       error={
                         formikProps.touched.customerType &&
                           formikProps.errors.customerType
@@ -869,9 +929,8 @@ const CustomerInfo: React.FC = () => {
                           : undefined
                       }
                     />
-
                     <SelectionBottomSheet
-                      placeholderText="شغل"
+                      placeholderText={formikProps.values.customerJob || "شغل"}
                       title="شغل"
                       iconName="work"
                       options={customerJobs.map((job) => job.label)}
@@ -883,11 +942,7 @@ const CustomerInfo: React.FC = () => {
                       }
                       multiSelect={false}
                       loading={loadingCustomerJob}
-                      initialValues={
-                        formikProps.values.customerJob && formikProps.values.customerJob.trim() !== ""
-                          ? [formikProps.values.customerJob]
-                          : []
-                      }
+                      initialValues={[formikProps.values.customerJob]}
                       error={
                         formikProps.touched.customerJob &&
                           formikProps.errors.customerJob
@@ -895,7 +950,6 @@ const CustomerInfo: React.FC = () => {
                           : undefined
                       }
                     />
-
                     <TouchableOpacity
                       activeOpacity={0.7}
                       onPress={() => setIsColleagueBottomSheetVisible(true)}
@@ -932,7 +986,7 @@ const CustomerInfo: React.FC = () => {
                       <View style={styles.halfWidth}>
                         <SelectionBottomSheet
                           key={`city-${formikProps.values.province}`}
-                          placeholderText="شهرستان"
+                          placeholderText={formikProps.values.city || "شهرستان"}
                           title="شهرستان"
                           iconName="apartment"
                           options={formikProps.values.province ? cities : []}
@@ -949,11 +1003,6 @@ const CustomerInfo: React.FC = () => {
                                   "error"
                                 )
                           }
-                          initialValues={
-                            formikProps.values.city && formikProps.values.city.trim() !== ""
-                              ? [formikProps.values.city]
-                              : []
-                          }
                           error={
                             formikProps.touched.city && formikProps.errors.city
                               ? formikProps.errors.city
@@ -963,7 +1012,9 @@ const CustomerInfo: React.FC = () => {
                       </View>
                       <View style={styles.halfWidth}>
                         <SelectionBottomSheet
-                          placeholderText="استان"
+                          placeholderText={
+                            formikProps.values.province || "استان"
+                          }
                           title="استان"
                           iconName="map"
                           options={provinces}
@@ -976,11 +1027,6 @@ const CustomerInfo: React.FC = () => {
                             fetchCitiesByProvince(selected[0] || "");
                           }}
                           loading={loadingProvinces}
-                          initialValues={
-                            formikProps.values.province && formikProps.values.province.trim() !== ""
-                              ? [formikProps.values.province]
-                              : []
-                          }
                           error={
                             formikProps.touched.province &&
                               formikProps.errors.province
@@ -1011,25 +1057,9 @@ const CustomerInfo: React.FC = () => {
                       }
                     />
                     {customFieldType1.map((customField) =>
-                      <View key={customField.PersonCustomFieldId}>
-                        {renderInput(customField, formikProps)}
-                      </View>
+                      renderInput(customField, formikProps)
                     )}
                   </InputContainer>
-                  {Object.entries(customFieldOtherTypes).map(
-                    ([groupId, fields]) => (
-                      <InputContainer
-                        key={groupId}
-                        title={fields[0].PersonCustomFieldGroupName}
-                      >
-                        {fields.map((customField) => (
-                          <View key={customField.PersonCustomFieldId}>
-                            {renderInput(customField, formikProps)}
-                          </View>
-                        ))}
-                      </InputContainer>
-                    )
-                  )}
                   <InputContainer title="سایر اطلاعات">
                     <AppTextInput
                       placeholder="توضیحات"
@@ -1055,9 +1085,27 @@ const CustomerInfo: React.FC = () => {
                       renderInput(customField, formikProps)
                     )}
                   </InputContainer>
-
+                  {customFieldType3.length > 0 && (
+                    <InputContainer title="فیلدهای اضافی مشتری">
+                      {customFieldType3.map((customField) =>
+                        renderInput(customField, formikProps)
+                      )}
+                    </InputContainer>
+                  )}
+                  {Object.entries(customFieldOtherTypes).map(
+                    ([groupId, fields]) => (
+                      <InputContainer
+                        key={groupId}
+                        title={fields[0].PersonCustomFieldGroupName}
+                      >
+                        {fields.map((customField) =>
+                          renderInput(customField, formikProps)
+                        )}
+                      </InputContainer>
+                    )
+                  )}
                   <IconButton
-                    text={isSubmitting ? "در حال ثبت..." : customerID ? "ویرایش" : "ثبت"}
+                    text={isSubmitting ? "در حال ثبت..." : "ثبت"}
                     onPress={formikProps.handleSubmit}
                     iconName="done"
                     style={{ width: "100%", marginBottom: 30 }}
@@ -1084,6 +1132,208 @@ const CustomerInfo: React.FC = () => {
       </Formik>
     </>
   );
+
+  // return (
+  //   <>
+  //     <ScreenHeader
+  //       title={mode === "visitor" ? "اطلاعات بازدید کننده" : "ثبت خریدار جدید"}
+  //     />
+
+  //     <Toast
+  //       visible={toastVisible}
+  //       message={toastMessage}
+  //       type={toastType}
+  //       onDismiss={hideToast}
+  //     />
+
+  //     <View style={styles.container}>
+  //       <ScrollView>
+  //         <InputContainer title="اطلاعات مشتری">
+  //           <AppTextInput
+  //             autoCapitalize="none"
+  //             autoCorrect={false}
+  //             keyboardType="default"
+  //             icon="person"
+  //             placeholder="نام"
+  //             value={firstName}
+  //             onChangeText={setFirstName}
+  //           />
+  //           <AppTextInput
+  //             autoCapitalize="none"
+  //             autoCorrect={false}
+  //             keyboardType="default"
+  //             icon="person"
+  //             placeholder="نام خانوادگی"
+  //             value={lastName}
+  //             onChangeText={setLastName}
+  //           />
+  //           <AppTextInput
+  //             autoCapitalize="none"
+  //             autoCorrect={false}
+  //             keyboardType="default"
+  //             icon="person-4"
+  //             placeholder="نام مستعار/ جایگزین"
+  //             value={alias}
+  //             onChangeText={setAlias}
+  //           />
+  //           <AppTextInput
+  //             autoCapitalize="none"
+  //             autoCorrect={false}
+  //             keyboardType="number-pad"
+  //             icon="phone-android"
+  //             placeholder="شماره موبایل "
+  //             value={mobile}
+  //             onChangeText={setMobile}
+  //           />
+
+  //           <SelectionBottomSheet
+  //             placeholderText={
+  //               selectedCustomerTypesString
+  //                 ? selectedCustomerTypesString
+  //                 : "گروه مشتری"
+  //             }
+  //             title="گروه مشتری "
+  //             iconName="group"
+  //             options={customerTypes.map(
+  //               (group: PersonGroup) => group.PersonGroupName
+  //             )}
+  //             onSelect={handleCustomerTypeSelection}
+  //             multiSelect={false}
+  //             loading={loadingCustomerTypes}
+  //             initialValues={customerTypes
+  //               .map((group: PersonGroup) => group.PersonGroupName)
+  //               .filter((customer) => customer === selectedCustomerTypesString)}
+  //           />
+  //           <SelectionBottomSheet
+  //             placeholderText={
+  //               selectedCustomerJobString ? selectedCustomerJobString : "شغل"
+  //             }
+  //             title="شغل"
+  //             iconName="work"
+  //             options={customerJobs.map((job: any) => job.label)}
+  //             onSelect={handleCustomerJobSelection}
+  //             multiSelect={false}
+  //             loading={loadingCustomerJob}
+  //             initialValues={customerJobs
+  //               .map((job: any) => job.label)
+  //               .filter((customer) => customer === selectedCustomerJobString)}
+  //           />
+
+  //           <TouchableOpacity
+  //             activeOpacity={0.7}
+  //             onPress={() => setIsColleagueBottomSheetVisible(true)}
+  //             style={{ width: "100%" }}
+  //           >
+  //             <AppTextInput
+  //               autoCapitalize="none"
+  //               autoCorrect={false}
+  //               keyboardType="default"
+  //               icon="person-search"
+  //               placeholder="معرف"
+  //               value={
+  //                 selectedColleague.name
+  //                   ? `${selectedColleague.name} (${selectedColleague.phone})`
+  //                   : ""
+  //               }
+  //               onChangeText={() => {}}
+  //               editable={false}
+  //             />
+  //           </TouchableOpacity>
+
+  //           {mode === "visitor" && (
+  //             <SelectionBottomSheet
+  //               placeholderText={"نحوه ی آشنایی با شرکت"}
+  //               title="نحوه ی آشنایی با شرکت"
+  //               iconName="business"
+  //               options={customerJobs.map((job: any) => job.label)}
+  //               onSelect={handleCustomerJobSelection}
+  //               multiSelect={false}
+  //               loading={loadingCustomerJob}
+  //             />
+  //           )}
+
+  //           <View style={styles.rowContainer}>
+  //             <View style={styles.halfWidth}>
+  //               <SelectionBottomSheet
+  //                 key={`city-${selectedProvince}`}
+  //                 placeholderText={selectedCity || "شهرستان"}
+  //                 title="شهرستان"
+  //                 iconName="apartment"
+  //                 options={selectedProvince ? cities : []}
+  //                 onSelect={handleCitySelection}
+  //                 loading={loadingCities}
+  //                 onPress={selectedProvince ? undefined : handleCityClick}
+  //               />
+  //             </View>
+  //             <View style={styles.halfWidth}>
+  //               <SelectionBottomSheet
+  //                 placeholderText={selectedProvince || "استان"}
+  //                 title="استان"
+  //                 iconName="map"
+  //                 options={provinces}
+  //                 onSelect={handleProvinceSelection}
+  //                 loading={loadingProvinces}
+  //               />
+  //             </View>
+  //           </View>
+  //           <AppTextInput
+  //             autoCapitalize="none"
+  //             autoCorrect={false}
+  //             keyboardType="default"
+  //             icon="location-pin"
+  //             placeholder="آدرس مشتری"
+  //             value={address}
+  //             onChangeText={setAddress}
+  //             multiline
+  //             numberOfLines={5}
+  //             height={150}
+  //             textAlign="right"
+  //             isLargeInput={true}
+  //           />
+  //         </InputContainer>
+
+  //         <InputContainer title="سایر اطلاعات">
+  //           <AppTextInput
+  //             autoCapitalize="none"
+  //             autoCorrect={false}
+  //             keyboardType="default"
+  //             icon="text-snippet"
+  //             placeholder="توضیحات"
+  //             value={description}
+  //             onChangeText={setDescription}
+  //             multiline
+  //             numberOfLines={5}
+  //             height={150}
+  //             textAlign="right"
+  //             isLargeInput={true}
+  //           />
+  //           <View style={{ height: 0 }} />
+  //         </InputContainer>
+
+  //         <IconButton
+  //           text={isSubmitting ? "در حال ثبت..." : "ثبت"}
+  //           onPress={handleSubmit}
+  //           iconName="done"
+  //           style={{ width: "100%" }}
+  //           backgroundColor={colors.success}
+  //           disabled={isSubmitting}
+  //         />
+  //         {isSubmitting && (
+  //           <View style={styles.loadingContainer}>
+  //             <ActivityIndicator size="large" color={colors.primary} />
+  //           </View>
+  //         )}
+  //       </ScrollView>
+  //     </View>
+
+  //     <ColleagueBottomSheet
+  //       visible={isColleagueBottomSheetVisible}
+  //       onClose={() => setIsColleagueBottomSheetVisible(false)}
+  //       onSelectColleague={handleSelectColleague}
+  //       // isCustomer={false}
+  //     />
+  //   </>
+  // );
 };
 
 const styles = StyleSheet.create({

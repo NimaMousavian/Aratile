@@ -47,6 +47,23 @@ const { height } = Dimensions.get("window");
 
 const DEFAULT_PAGE_SIZE = 20;
 
+const getFontFamily = (baseFont: string, weight: string): string => {
+  if (Platform.OS === "android") {
+    switch (weight) {
+      case "700":
+      case "bold":
+        return "Yekan_Bakh_Bold";
+      case "500":
+      case "600":
+      case "semi-bold":
+        return "Yekan_Bakh_Bold";
+      default:
+        return "Yekan_Bakh_Regular";
+    }
+  }
+  return baseFont;
+};
+
 const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
   visible,
   onClose,
@@ -276,7 +293,6 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
       return (
         <View style={styles.loaderContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
-
         </View>
       );
     }
@@ -355,38 +371,76 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
                 renderItem={({ item, index }) => (
                   <TouchableOpacity
                     key={`colleague-${item.id}-${index}`}
-                    style={styles.resultItem}
+                    style={styles.productCard}
                     onPress={() => handleSelectColleague(item)}
+                    activeOpacity={0.7}
                   >
-                    <View style={styles.resultItemContent}>
-                      <View style={styles.nameSection}>
-                        <Text style={styles.resultName}>
-                          {toPersianDigits(item.name)}
-                        </Text>
-                        <View style={styles.groupContainer}>
-                          <MaterialIcons
+                    {/* Header with name */}
+                    <View style={styles.productTitleContainer}>
+                      <View style={styles.productTitleRow}>
+                        <View style={styles.titleWithIconContainer}>
+                          {/* <MaterialIcons
                             name="person"
-                            size={18}
-                            color="#bfbfbf"
-                            style={styles.personIcon}
-                          />
-                          {item.groups && item.groups.length > 0 && (
-                            <Text style={styles.resultGroups}>
-                              {toPersianDigits(item.groups[0])}
-                            </Text>
-                          )}
+                            size={20}
+                            color={colors.primary}
+                            style={{ marginLeft: 8 }}
+                          /> */}
+                          <Text style={styles.productTitle}>
+                            {toPersianDigits(item.name)}
+                          </Text>
                         </View>
                       </View>
-                      <View style={styles.phoneSection}>
-                        <MaterialIcons
-                          name="smartphone"
-                          size={18}
-                          color="#bfbfbf"
-                          style={styles.phoneIcon}
-                        />
-                        <Text style={styles.resultPhone}>
-                          {toPersianDigits(item.phone)}
-                        </Text>
+                    </View>
+
+                    {/* Body with details */}
+                    <View style={styles.productDetailsContainer}>
+                      <View style={styles.infoWithImageContainer}>
+                   
+
+                        <View style={styles.infoSection}>
+                          {/* Phone field */}
+                          <View style={[styles.fieldContainer, styles.fieldMarginBottom]}>
+                            <MaterialIcons
+                              name="phone"
+                              size={18}
+                              color={colors.success}
+                            />
+                            <Text style={styles.secondaryLabel}>تلفن:</Text>
+                            <Text style={styles.fieldValue}>
+                              {toPersianDigits(item.phone)}
+                            </Text>
+                          </View>
+
+                          {/* Group field */}
+                          {item.groups && item.groups.length > 0 && (
+                            <View style={[styles.fieldContainer, styles.fieldMarginBottom]}>
+                              <MaterialIcons
+                                name="group"
+                                size={18}
+                                color={colors.secondary}
+                              />
+                              <Text style={styles.secondaryLabel}>گروه:</Text>
+                              <Text style={styles.fieldValue}>
+                                {toPersianDigits(item.groups[0])}
+                              </Text>
+                            </View>
+                          )}
+
+                          {/* Introducing code field */}
+                          {item.introducingCode && (
+                            <View style={styles.fieldContainer}>
+                              <MaterialIcons
+                                name="qr-code"
+                                size={18}
+                                color={colors.warning}
+                              />
+                              <Text style={styles.secondaryLabel}>کد معرف:</Text>
+                              <Text style={styles.fieldValue}>
+                                {toPersianDigits(item.introducingCode)}
+                              </Text>
+                            </View>
+                          )}
+                        </View>
                       </View>
                     </View>
                   </TouchableOpacity>
@@ -397,6 +451,7 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
                 initialNumToRender={pageSize}
                 maxToRenderPerBatch={pageSize / 2}
                 windowSize={10}
+                ItemSeparatorComponent={() => <View style={styles.separator} />}
               />
             ) : searchPerformed ? (
               <View style={styles.noResultsContainer}>
@@ -487,55 +542,84 @@ const styles = StyleSheet.create({
   resultList: {
     flex: 1,
   },
-  resultItem: {
-    flexDirection: "row-reverse",
-    alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 0,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+  separator: {
+    height: 12,
   },
-  resultItemContent: {
+  // ProductCard styles
+  productCard: {
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    marginBottom: 12,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#e1e1e1",
+  },
+  productTitleContainer: {
+    padding: 12,
+    backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e1e1e1",
+  },
+  productTitleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  titleWithIconContainer: {
+    flexDirection: "row",
+    alignItems: "center",
     flex: 1,
   },
-  nameSection: {
-    marginBottom: 4,
+  productTitle: {
+    fontSize: 18,
+    color: colors.primary,
+    fontFamily: getFontFamily("Yekan_Bakh_Bold", "600"),
+    textAlign: "right",
+    flex: 1,
   },
-  resultName: {
-    fontSize: 19,
+  productDetailsContainer: {
+    padding: 12,
+  },
+  infoWithImageContainer: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+  },
+  infoSection: {
+    flex: 1,
+  },
+  productImagePlaceholder: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    backgroundColor: "#f8f8f8",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  fieldContainer: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    height: 25,
+  },
+  fieldMarginBottom: {
+    marginBottom: 12,
+  },
+  secondaryLabel: {
+    fontSize: 15,
+    color: colors.medium,
+    fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
+    marginLeft: 8,
+    marginRight: 10,
+  },
+  fieldValue: {
+    fontSize: 15,
+    fontFamily: getFontFamily("Yekan_Bakh_Bold", "500"),
     color: colors.dark,
-    fontFamily: "Yekan_Bakh_Bold",
-    textAlign: "right",
-  },
-  groupContainer: {
-    flexDirection: "row-reverse",
-    alignItems: "center",
-    marginTop: 3,
-  },
-  resultGroups: {
-    fontSize: 15,
-    color: colors.medium,
-    fontFamily: "Yekan_Bakh_Regular",
-    textAlign: "right",
-    marginRight: 4,
-  },
-  personIcon: {
-    marginTop: 0,
-  },
-  phoneSection: {
-    flexDirection: "row-reverse",
-    alignItems: "center",
-  },
-  resultPhone: {
-    fontSize: 15,
-    color: colors.medium,
-    fontFamily: "Yekan_Bakh_Regular",
-    textAlign: "right",
-    marginRight: 4,
-    marginTop: 4,
-  },
-  phoneIcon: {
-    marginTop: 0,
   },
   noResultsContainer: {
     alignItems: "center",
@@ -566,13 +650,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "center",
-  },
-  loadingMoreText: {
-    fontSize: 14,
-    color: colors.medium,
-    marginRight: 8,
-    fontFamily: "Yekan_Bakh_Regular",
-    textAlign: "center",
   },
   loadingContainer: {
     alignItems: "center",

@@ -42,25 +42,26 @@ const API_STATUS_MAPPING = {
   4: TASK_STATUS.CANCELED,
 };
 
-// نگاشت برعکس: از متن فارسی به عدد
+// نگاشت برعکس: از متن فارسی به عدد (حالت‌های قابل تغییر توسط کاربر)
 const STATUS_TO_API_MAPPING = {
   [TASK_STATUS.NOT_STARTED]: 1,
   [TASK_STATUS.IN_PROGRESS]: 2,
   [TASK_STATUS.COMPLETED]: 3,
-  [TASK_STATUS.CANCELED]: 4,
 };
 
+// رنگ‌های جدید بر اساس Google Colors
 const TASK_STATUS_COLORS = {
-  [TASK_STATUS.NOT_STARTED]: "#FFC107",
-  [TASK_STATUS.IN_PROGRESS]: "#17A2B8",
-  [TASK_STATUS.COMPLETED]: "#28A745",
-  [TASK_STATUS.CANCELED]: "#9E9E9E",
+  [TASK_STATUS.NOT_STARTED]: "#fbbc05",  // Yellow
+  [TASK_STATUS.IN_PROGRESS]: "#4285f4",  // Blue
+  [TASK_STATUS.COMPLETED]: "#34a853",    // Green
+  [TASK_STATUS.CANCELED]: "#9E9E9E",     // Gray
 };
+
 const TASK_STATUS_BACKGROUND = {
-  [TASK_STATUS.NOT_STARTED]: "#FFFFE1",
-  [TASK_STATUS.IN_PROGRESS]: "#dfe8ff",
-  [TASK_STATUS.COMPLETED]: "#f1feed",
-  [TASK_STATUS.CANCELED]: "#e2e2e2",
+  [TASK_STATUS.NOT_STARTED]: "#fef7e0",  // Light yellow background
+  [TASK_STATUS.IN_PROGRESS]: "#e8f0fe",  // Light blue background
+  [TASK_STATUS.COMPLETED]: "#e6f4ea",    // Light green background
+  [TASK_STATUS.CANCELED]: "#f5f5f5",     // Light gray background
 };
 
 // تابع برای تبدیل وضعیت عددی به متن
@@ -72,6 +73,98 @@ const getTaskStatusText = (taskState, taskStateStr) => {
 
   // در غیر این صورت از TaskState عددی استفاده کن
   return API_STATUS_MAPPING[taskState] || TASK_STATUS.NOT_STARTED;
+};
+
+// تابع بهبود یافته برای محاسبه تفاوت زمان با ساعت، دقیقه و ثانیه
+const getTimeDifference = (date1, date2) => {
+  const diffMs = Math.abs(date2.getTime() - date1.getTime());
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+  const diffSeconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+
+  let result = "";
+
+  if (diffDays > 0) {
+    result = `${toPersianDigits(diffDays.toString())} روز`;
+    if (diffHours > 0) {
+      result += ` و ${toPersianDigits(diffHours.toString())} ساعت`;
+    }
+  } else if (diffHours > 0) {
+    result = `${toPersianDigits(diffHours.toString())} ساعت`;
+    if (diffMinutes > 0) {
+      result += ` و ${toPersianDigits(diffMinutes.toString())} دقیقه`;
+    }
+  } else if (diffMinutes > 0) {
+    result = `${toPersianDigits(diffMinutes.toString())} دقیقه`;
+    if (diffSeconds > 0) {
+      result += ` و ${toPersianDigits(diffSeconds.toString())} ثانیه`;
+    }
+  } else {
+    result = `${toPersianDigits(diffSeconds.toString())} ثانیه`;
+  }
+
+  return result;
+};
+
+// تابع برای تشخیص زمان تاخیر - فقط برای تسک‌های شروع نشده
+const isTaskOverdue = (deadlineDate, taskState) => {
+  if (!deadlineDate || taskState !== 1) return false; // فقط برای شروع نشده (taskState === 1)
+
+  const deadline = new Date(deadlineDate);
+  const now = new Date();
+  return now > deadline;
+};
+
+// کامپوننت برای نمایش زمان داینامیک
+const DynamicTimeInfo = ({ task }) => {
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000); // به‌روزرسانی هر ثانیه
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const getTimeInfo = () => {
+    if (task.TaskState === 2 && task.InsertDate) {
+      // در حال انجام - نمایش زمان شروع
+      const startDate = new Date(task.InsertDate);
+      const timePassed = getTimeDifference(startDate, currentTime);
+      return {
+        label: "زمان شروع:",
+        value: `${timePassed} پیش`,
+        icon: "play-arrow",
+        color: colors.secondary
+      };
+    } else if (task.TaskState === 1 && task.TaskDeadlineDate) {
+      // شروع نشده - فقط در صورت زمان تاخیر نمایش داده شود
+      const deadline = new Date(task.TaskDeadlineDate);
+      if (currentTime > deadline) {
+        const overdue = getTimeDifference(deadline, currentTime);
+        return {
+          label: "زمان تاخیر:",
+          value: overdue,
+          icon: "warning",
+          color: '#d32f2f'
+        };
+      }
+    }
+
+    return null;
+  };
+
+  const timeInfo = getTimeInfo();
+  if (!timeInfo) return null;
+
+  return {
+    icon: timeInfo.icon,
+    iconColor: timeInfo.color,
+    label: timeInfo.label,
+    value: timeInfo.value,
+  };
 };
 
 type FontWeight = "700" | "600" | "500" | "bold" | "semi-bold" | string;
@@ -469,11 +562,85 @@ const ScrollableDayCarousel = ({
 
 const StatusIndicator = ({ status }: { status: string }) => {
   const statusColor = TASK_STATUS_COLORS[status] || "#9E9E9E";
-  const statusColorBackground = TASK_STATUS_BACKGROUND[status] || "#ebebeb";
+  const statusColorBackground = TASK_STATUS_BACKGROUND[status] || "#f5f5f5";
 
   return (
-    <View style={[styles.statusIndicator, {  borderRadius: 6, backgroundColor: statusColorBackground }]}>
+    <View style={[styles.statusIndicator, { borderRadius: 6, backgroundColor: statusColorBackground }]}>
       <AppText style={[styles.statusText, { color: statusColor }]}>{status}</AppText>
+    </View>
+  );
+};
+
+// کامپوننت کارت تسک با زمان داینامیک
+const TaskCard = ({ task, onStatusChange, isStatusChangeable, statusUpdateLoading, onPress }) => {
+  const timeInfo = DynamicTimeInfo({ task });
+  const isOverdue = isTaskOverdue(task.TaskDeadlineDate, task.TaskState);
+
+  const fields = [
+    {
+      icon: "person-4",
+      iconColor: colors.secondary,
+      label: "نوع:",
+      value: toPersianDigits(task.TaskTypeName),
+    },
+  ];
+
+  if (timeInfo) {
+    fields.push(timeInfo);
+  }
+
+  return (
+    <View>
+      <ProductCard
+        title={
+          <View style={styles.titleContainer}>
+            <Text style={styles.titleText}>{toPersianDigits(task.TaskTitle)}</Text>
+            <View style={styles.statusContainer}>
+              <StatusIndicator status={task.TaskStateStr} />
+              {statusUpdateLoading && (
+                <ActivityIndicator
+                  size="small"
+                  color={colors.primary}
+                  style={styles.statusLoader}
+                />
+              )}
+            </View>
+          </View>
+        }
+        fields={fields}
+        note=""
+        noteConfig={{
+          show: false,
+          icon: "notes",
+          iconColor: colors.secondary,
+          label: "",
+        }}
+        qrConfig={{
+          show: false,
+          icon: "camera",
+          iconSize: 36,
+          iconColor: colors.secondary,
+        }}
+        titleStyle={{ fontSize: 20 }}
+        containerStyle={[
+          Platform.OS === "android"
+            ? {
+              ...styles.androidCardAdjustment,
+              borderColor: TASK_STATUS_COLORS[task.TaskStateStr] || "#9E9E9E",
+            }
+            : {
+              ...styles.cardContainer,
+              borderWidth: 2,
+              borderColor: TASK_STATUS_COLORS[task.TaskStateStr] || "#9E9E9E",
+            },
+          styles.taskContentContainer,
+          isOverdue && { borderColor: '#d32f2f' }
+        ]}
+        onPress={onPress}
+        status={task.TaskStateStr}
+        onStatusChange={isStatusChangeable ? onStatusChange : undefined}
+        disabled={statusUpdateLoading}
+      />
     </View>
   );
 };
@@ -594,14 +761,13 @@ const TaskManagement: React.FC = () => {
         nextStatus = TASK_STATUS.COMPLETED;
         break;
       case TASK_STATUS.COMPLETED:
-        nextStatus = TASK_STATUS.CANCELED;
-        break;
-      case TASK_STATUS.CANCELED:
-        nextStatus = TASK_STATUS.NOT_STARTED;
-        break;
-      default:
         nextStatus = TASK_STATUS.IN_PROGRESS;
         break;
+      case TASK_STATUS.CANCELED:
+        // حالت "لغو شده" قابل تغییر نیست
+        return;
+      default:
+        return;
     }
 
     // فراخوانی API برای تغییر وضعیت
@@ -611,6 +777,11 @@ const TaskManagement: React.FC = () => {
       // در صورت ناموفق بودن، وضعیت تغییر نمی‌کند
       console.log("Status update failed for task:", taskId);
     }
+  };
+
+  // تابع برای تشخیص اینکه آیا وضعیت قابل تغییر است
+  const isStatusChangeable = (status: string) => {
+    return status !== TASK_STATUS.CANCELED;
   };
 
   return (
@@ -639,58 +810,16 @@ const TaskManagement: React.FC = () => {
             </View>
           ) : (
             tasks.map((task) => (
-              <ProductCard
+              <TaskCard
                 key={task.TaskId}
-                title={
-                  <View style={styles.titleContainer}>
-                    <Text style={styles.titleText}>{toPersianDigits(task.TaskTitle)}</Text>
-                    <View style={styles.statusContainer}>
-                      <StatusIndicator status={task.TaskStateStr} />
-                      {statusUpdateLoading[task.TaskId] && (
-                        <ActivityIndicator
-                          size="small"
-                          color={colors.primary}
-                          style={styles.statusLoader}
-                        />
-                      )}
-                    </View>
-                  </View>
-                }
-                fields={[
-                  {
-                    icon: "person-4",
-                    iconColor: colors.secondary,
-                    label: "نوع:",
-                    value: toPersianDigits(task.TaskTypeName),
-                  },
-                ]}
-                note=""
-                noteConfig={{
-                  show: false,
-                  icon: "notes",
-                  iconColor: colors.secondary,
-                  label: "",
-                }}
-                qrConfig={{
-                  show: false,
-                  icon: "camera",
-                  iconSize: 36,
-                  iconColor: colors.secondary,
-                }}
-                titleStyle={{ fontSize: 20 }}
-                containerStyle={[
-                  Platform.OS === "android"
-                    ? styles.androidCardAdjustment
-                    : styles.cardContainer,
-                  styles.taskContentContainer
-                ]}
+                task={task}
+                onStatusChange={(currentStatus) => handleStatusChange(task.TaskId, currentStatus)}
+                isStatusChangeable={isStatusChangeable(task.TaskStateStr)}
+                statusUpdateLoading={statusUpdateLoading[task.TaskId]}
                 onPress={() => {
                   setCurrentTaskId(task.TaskId);
                   setTaskDrawerVisible(true);
                 }}
-                status={task.TaskStateStr}
-                onStatusChange={(currentStatus) => handleStatusChange(task.TaskId, currentStatus)}
-                disabled={statusUpdateLoading[task.TaskId]}
               />
             ))
           )}
@@ -714,8 +843,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   androidCardAdjustment: {
-    borderWidth: 3,
-    borderColor: "#e0e0e0",
+    borderWidth: 2,
     marginVertical: 8,
     minHeight: 120,
     paddingVertical: 16,
@@ -832,6 +960,16 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 12,
     fontFamily: getFontFamily("Yekan_Bakh_Regular", "500"),
+  },
+  timeIndicator: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginTop: 4,
+  },
+  timeText: {
+    fontSize: 11,
+    fontFamily: getFontFamily("Yekan_Bakh_Regular", "400"),
   }
 });
 
