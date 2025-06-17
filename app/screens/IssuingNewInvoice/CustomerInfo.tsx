@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   ScrollView,
@@ -252,7 +251,7 @@ const renderInput = (
         <IconButton
           text="موقعیت جغرافیایی"
           iconName="location-pin"
-          onPress={() => { }}
+          onPress={() => {}}
           backgroundColor={colors.primary}
           flex={1}
         />
@@ -456,7 +455,7 @@ const CustomerInfo: React.FC = () => {
       if (person.ProvinceName) {
         fetchCitiesByProvince(person.ProvinceName);
       }
-    } catch (error) { }
+    } catch (error) {}
   };
 
   useEffect(() => {
@@ -849,7 +848,7 @@ const CustomerInfo: React.FC = () => {
                       value={formikProps.values.firstName}
                       error={
                         formikProps.touched.firstName &&
-                          formikProps.errors.firstName
+                        formikProps.errors.firstName
                           ? formikProps.errors.firstName
                           : undefined
                       }
@@ -866,7 +865,7 @@ const CustomerInfo: React.FC = () => {
                       value={formikProps.values.lastName}
                       error={
                         formikProps.touched.lastName &&
-                          formikProps.errors.lastName
+                        formikProps.errors.lastName
                           ? formikProps.errors.lastName
                           : undefined
                       }
@@ -924,7 +923,7 @@ const CustomerInfo: React.FC = () => {
                       initialValues={[formikProps.values.customerType]}
                       error={
                         formikProps.touched.customerType &&
-                          formikProps.errors.customerType
+                        formikProps.errors.customerType
                           ? formikProps.errors.customerType
                           : undefined
                       }
@@ -945,27 +944,36 @@ const CustomerInfo: React.FC = () => {
                       initialValues={[formikProps.values.customerJob]}
                       error={
                         formikProps.touched.customerJob &&
-                          formikProps.errors.customerJob
+                        formikProps.errors.customerJob
                           ? formikProps.errors.customerJob
                           : undefined
                       }
                     />
                     <TouchableOpacity
                       activeOpacity={0.7}
-                      onPress={() => setIsColleagueBottomSheetVisible(true)}
-                      style={{ width: "100%" }}
+                      onPress={() => {
+                        setIsColleagueBottomSheetVisible(true);
+                      }}
+                      style={styles.colleagueBox}
                     >
-                      <AppTextInput
-                        placeholder="معرف"
-                        icon="person-search"
-                        value={
-                          formikProps.values.colleague.name
-                            ? `${formikProps.values.colleague.name} (${formikProps.values.colleague.phone})`
-                            : ""
-                        }
-                        editable={false}
-                      />
+                      <MaterialIcons
+                        name="person-search"
+                        size={20}
+                        color={colors.medium}
+                      ></MaterialIcons>
+                      <AppText
+                        style={{
+                          color: colors.medium,
+                          marginRight: 12,
+                          fontSize: 15,
+                        }}
+                      >
+                        {formikProps.values.colleague.name
+                          ? `${formikProps.values.colleague.name} (${formikProps.values.colleague.phone})`
+                          : "معرف"}
+                      </AppText>
                     </TouchableOpacity>
+
                     {mode === "visitor" && (
                       <SelectionBottomSheet
                         placeholderText="نحوه ی آشنایی با شرکت"
@@ -998,10 +1006,10 @@ const CustomerInfo: React.FC = () => {
                             formikProps.values.province
                               ? undefined
                               : () =>
-                                showToast(
-                                  "لطفاً ابتدا استان را انتخاب کنید",
-                                  "error"
-                                )
+                                  showToast(
+                                    "لطفاً ابتدا استان را انتخاب کنید",
+                                    "error"
+                                  )
                           }
                           error={
                             formikProps.touched.city && formikProps.errors.city
@@ -1029,7 +1037,7 @@ const CustomerInfo: React.FC = () => {
                           loading={loadingProvinces}
                           error={
                             formikProps.touched.province &&
-                              formikProps.errors.province
+                            formikProps.errors.province
                               ? formikProps.errors.province
                               : undefined
                           }
@@ -1051,7 +1059,7 @@ const CustomerInfo: React.FC = () => {
                       value={formikProps.values.address}
                       error={
                         formikProps.touched.address &&
-                          formikProps.errors.address
+                        formikProps.errors.address
                           ? formikProps.errors.address
                           : undefined
                       }
@@ -1076,7 +1084,7 @@ const CustomerInfo: React.FC = () => {
                       value={formikProps.values.description}
                       error={
                         formikProps.touched.description &&
-                          formikProps.errors.description
+                        formikProps.errors.description
                           ? formikProps.errors.description
                           : undefined
                       }
@@ -1365,6 +1373,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingVertical: 40,
+  },
+  colleagueBox: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: colors.gray,
+    borderRadius: 8,
+    backgroundColor: colors.white,
+    padding: 10,
+    marginBottom: 16,
   },
 });
 
