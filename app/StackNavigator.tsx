@@ -11,7 +11,7 @@ import { useNavigation } from "@react-navigation/native";
 import AppSelectionScreen from "./screens/AppSelectionScreen";
 import styles from "./config/styles";
 import colors from "./config/colors";
-import { IForm, IProduct, IShopItem, IShowRoomVisitItem } from "./config/types";
+import { IForm, IProduct, IProjectItem, IShopItem, IShowRoomVisitItem } from "./config/types";
 import AppText from "./components/Text";
 import LogingScreen from "./screens/LogingScreen";
 import ProfileScreen from "./screens/ProfileScreen";
@@ -99,7 +99,7 @@ export type RootStackParamList = {
   B2CFieldMarketer: undefined;
   AddNewShop: { shop?: IShopItem };
   VoiceRecording: undefined;
-  AddNewProject: undefined;
+  AddNewProject: {project?: IProjectItem};
 
   ShowRoom: undefined;
   Visits: undefined;
