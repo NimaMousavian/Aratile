@@ -44,6 +44,36 @@ const useProductScanner = () => {
     }
   }, [route.params?.scannedCode]);
 
+  // تابع برای تعیین رنگ بر اساس نوع آیکون
+  const getIconColors = (icon: string) => {
+    switch (icon) {
+      case "check":
+      case "check-circle":
+        return {
+          headerColors: [colors.success, "#4caf50"],
+          iconColor: colors.success
+        };
+      case "error":
+      case "close":
+        return {
+          headerColors: ["#ff5252", "#ff7b7b"],
+          iconColor: "#ff5252"
+        };
+      case "delete":
+        return {
+          headerColors: [colors.danger, "#f44336"],
+          iconColor: colors.danger
+        };
+      case "search-off":
+      case "info":
+      default:
+        return {
+          headerColors: [colors.primary, colors.secondary],
+          iconColor: colors.primary
+        };
+    }
+  };
+
   const showModal = (title: string, message: string, icon: React.ComponentProps<typeof ReusableModal>["headerConfig"]["icon"] = "info") => {
     setModalConfig({
       title,
@@ -117,7 +147,7 @@ const useProductScanner = () => {
           showModal(
             "به‌روزرسانی موفق",
             "محصول با موفقیت به‌روزرسانی شد.",
-            "check"
+            "check-circle"
           );
         } else {
           const productExists = selectedProducts.some(
@@ -289,6 +319,8 @@ const useProductScanner = () => {
   };
 
   const renderModal = () => {
+    const iconColors = getIconColors(modalConfig.icon as string);
+
     return (
       <ReusableModal
         visible={modalVisible}
@@ -296,13 +328,13 @@ const useProductScanner = () => {
         headerConfig={{
           title: modalConfig.title,
           icon: modalConfig.icon,
-          colors: ["#ff5252", "#ff7b7b"]
+          colors: iconColors.headerColors
         }}
         messages={[
           {
             text: modalConfig.message,
             icon: modalConfig.icon,
-            iconColor: "#ff5252"
+            iconColor: iconColors.iconColor
           }
         ]}
         buttons={modalButtons}

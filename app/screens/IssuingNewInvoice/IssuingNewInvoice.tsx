@@ -385,22 +385,28 @@ const IssuingNewInvoice: React.FC = () => {
         })),
       };
 
-      // ارسال فاکتور به سرور
       const result = await InvoiceService.submitInvoice(invoiceData);
 
       setIsSubmitting(false);
 
       if (result.success) {
+<<<<<<< Updated upstream
         // نمایش پیام موفقیت با مدال سبز
         showSuccessModal("موفقیت", "فاکتور با موفقیت ثبت شد.");
+=======
+        showModal("موفقیت", "فاکتور با موفقیت ثبت شد.", "check-circle", colors.success);
+>>>>>>> Stashed changes
 
-        // بازگشت به صفحه قبل پس از چند ثانیه
         setTimeout(() => {
           navigation.navigate("IssuedInvoices", { refresh: true });
         }, 2000);
       } else {
+<<<<<<< Updated upstream
         // نمایش پیام خطا با مدال قرمز
         showErrorModal("خطا در ثبت فاکتور", result.error || "خطای نامشخص");
+=======
+        showToast(`خطا در ثبت فاکتور: ${result.error}`, "error");
+>>>>>>> Stashed changes
       }
     } catch (error) {
       setIsSubmitting(false);

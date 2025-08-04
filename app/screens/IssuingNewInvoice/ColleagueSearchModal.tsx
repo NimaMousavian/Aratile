@@ -43,7 +43,7 @@ interface ColleagueBottomSheetProps {
   isCustomer?: boolean;
 }
 
-const { height } = Dimensions.get("window");
+const { height, width } = Dimensions.get("window");
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -106,7 +106,6 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
       ]).start();
 
       setSearchQuery("");
-
       setColleagues([]);
       setFilteredColleagues([]);
       setCurrentPage(1);
@@ -305,10 +304,17 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
   return (
     <Modal
       visible={visible}
+<<<<<<< Updated upstream
       transparent
       animationType="none"
       onRequestClose={onClose}
       statusBarTranslucent
+=======
+      transparent={true}
+      animationType="none"
+      onRequestClose={onClose}
+      statusBarTranslucent={true}
+>>>>>>> Stashed changes
     >
       <View style={styles.container}>
         <Animated.View style={[styles.backdrop, { opacity: backdropOpacity }]}>
@@ -324,7 +330,11 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
             styles.bottomSheet,
             {
               transform: [{ translateY }],
+<<<<<<< Updated upstream
               paddingBottom: keyboardHeight > 0 ? keyboardHeight : 20,
+=======
+              paddingBottom: Math.max(keyboardHeight, 20),
+>>>>>>> Stashed changes
             },
           ]}
         >
@@ -352,6 +362,7 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
               containerStyle={styles.searchContainer}
             />
 
+<<<<<<< Updated upstream
             {loading ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator
@@ -477,6 +488,97 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
                 </Text>
               </View>
             )}
+=======
+            <View style={styles.contentContainer}>
+              {loading ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator
+                    size="large"
+                    color={colors.secondary}
+                    style={styles.spinner}
+                  />
+                  <Text style={styles.loadingText}>در حال بارگذاری...</Text>
+                </View>
+              ) : filteredColleagues.length > 0 ? (
+                <FlatList
+                  ref={flatListRef}
+                  showsVerticalScrollIndicator={false}
+                  data={filteredColleagues}
+                  keyExtractor={(item, index) => `${item.id}-${index}`}
+                  style={styles.resultList}
+                  contentContainerStyle={styles.resultListContent}
+                  renderItem={({ item, index }) => (
+                    <TouchableOpacity
+                      key={`colleague-${item.id}-${index}`}
+                      style={styles.resultItem}
+                      onPress={() => handleSelectColleague(item)}
+                    >
+                      <View style={styles.resultItemContent}>
+                        <View style={styles.nameSection}>
+                          <Text style={styles.resultName}>
+                            {toPersianDigits(item.name)}
+                          </Text>
+                          <View style={styles.groupContainer}>
+                            <MaterialIcons
+                              name="person"
+                              size={18}
+                              color="#bfbfbf"
+                              style={styles.personIcon}
+                            />
+                            {item.groups && item.groups.length > 0 && (
+                              <Text style={styles.resultGroups}>
+                                {toPersianDigits(item.groups[0])}
+                              </Text>
+                            )}
+                          </View>
+                        </View>
+                        <View style={styles.phoneSection}>
+                          <MaterialIcons
+                            name="smartphone"
+                            size={18}
+                            color="#bfbfbf"
+                            style={styles.phoneIcon}
+                          />
+                          <Text style={styles.resultPhone}>
+                            {toPersianDigits(item.phone)}
+                          </Text>
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                  )}
+                  onEndReached={handleLoadMore}
+                  onEndReachedThreshold={0.5}
+                  ListFooterComponent={renderFooter}
+                  initialNumToRender={pageSize}
+                  maxToRenderPerBatch={pageSize / 2}
+                  windowSize={10}
+                />
+              ) : searchPerformed ? (
+                <View style={styles.noResultsContainer}>
+                  <MaterialIcons
+                    name="search-off"
+                    size={48}
+                    color={colors.medium}
+                  />
+                  <Text style={styles.noResultsText}>نتیجه‌ای یافت نشد</Text>
+                  {isCustomer && (
+                    <AppButton
+                      title="ثبت خریدار جدید"
+                      onPress={() => navigation.navigate("CustomerInfo", {})}
+                      color="success"
+                      style={{ width: "100%", marginTop: 15 }}
+                    />
+                  )}
+                </View>
+              ) : (
+                <View style={styles.initialStateContainer}>
+                  <Text style={styles.initialStateText}>
+                    برای جستجو، عبارت مورد نظر را وارد کنید و دکمه جستجو را بزنید
+                  </Text>
+                </View>
+              )}
+            </View>
+>>>>>>> Stashed changes
           </View>
         </Animated.View>
       </View>
@@ -487,10 +589,18 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+<<<<<<< Updated upstream
     justifyContent: "flex-end",
+=======
+    justifyContent: 'flex-end',
+>>>>>>> Stashed changes
   },
   backdrop: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   backdropTouchable: {
@@ -500,7 +610,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
+<<<<<<< Updated upstream
     height: "80%",
+=======
+    height: height * 0.85,
+    width: '100%',
+>>>>>>> Stashed changes
     overflow: "hidden",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -3 },
@@ -532,15 +647,29 @@ const styles = StyleSheet.create({
     left: 5,
   },
   body: {
-    padding: 16,
     flex: 1,
+<<<<<<< Updated upstream
+=======
+    paddingHorizontal: 16,
+    paddingTop: 16,
+>>>>>>> Stashed changes
   },
   searchContainer: {
     marginBottom: 16,
     width: "100%",
   },
+  contentContainer: {
+    flex: 1,
+    minHeight: 200,
+  },
   resultList: {
     flex: 1,
+<<<<<<< Updated upstream
+=======
+  },
+  resultListContent: {
+    paddingBottom: 20,
+>>>>>>> Stashed changes
   },
   separator: {
     height: 12,
@@ -625,6 +754,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 40,
+    flex: 1,
   },
   noResultsText: {
     fontSize: 16,
@@ -654,9 +784,13 @@ const styles = StyleSheet.create({
   loadingContainer: {
     alignItems: "center",
     justifyContent: "center",
+<<<<<<< Updated upstream
     padding: 30,
     borderRadius: 8,
     margin: 20,
+=======
+    paddingVertical: 40,
+>>>>>>> Stashed changes
     flex: 1,
   },
   spinner: {

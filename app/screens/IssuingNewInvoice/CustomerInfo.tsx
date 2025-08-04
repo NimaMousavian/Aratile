@@ -56,7 +56,7 @@ interface FormValues {
     name: string;
     phone: string;
   };
-  [key: string]: string; // Support dynamic custom fields and colleague object
+  [key: string]: string;
 }
 
 interface Province {
@@ -67,7 +67,6 @@ interface Province {
   ActiveStr: string;
 }
 
-// تابع دریافت اطلاعات ورود کاربر از AsyncStorage
 const getLoginResponse = async (): Promise<ILoginResponse | null> => {
   try {
     const jsonValue = await AsyncStorage.getItem("loginResponse");
@@ -85,7 +84,6 @@ type CustomerInfoRouteParams = {
   };
 };
 
-// Generate initial values for Formik
 const generateInitialValues = (
   person: IPerson | undefined,
   customFieldType1: IPersonCustomField[],
@@ -110,7 +108,6 @@ const generateInitialValues = (
     },
   };
 
-  // Add dynamic fields for customFieldType1, customFieldType2, customFieldType3
   [...customFieldType1, ...customFieldType2, ...customFieldType3].forEach(
     (field) => {
       initialValues[`custom_${field.PersonCustomFieldId}`] = "";
@@ -120,7 +117,6 @@ const generateInitialValues = (
   return initialValues;
 };
 
-// Generate Yup validation schema
 const generateValidationSchema = (
   customFieldType1: IPersonCustomField[],
   customFieldType2: IPersonCustomField[],
@@ -129,14 +125,14 @@ const generateValidationSchema = (
   const shape: { [key: string]: any } = {
     firstName: Yup.string().required("لطفاً نام را وارد کنید"),
     lastName: Yup.string().required("لطفاً نام خانوادگی را وارد کنید"),
-    alias: Yup.string().required("لطفاً نام مستعار را وارد کنید"),
     mobile: Yup.string()
       .matches(/^09\d{9}$/, "شماره موبایل باید ۱۱ رقم و با ۰۹ شروع شود")
       .required("لطفاً شماره موبایل را وارد کنید"),
-    customerType: Yup.string().required("لطفاً گروه مشتری را انتخاب کنید"),
-    customerJob: Yup.string().required("لطفاً شغل مشتری را انتخاب کنید"),
-    province: Yup.string().required("لطفاً استان را انتخاب کنید"),
-    city: Yup.string().required("لطفاً شهر را انتخاب کنید"),
+    alias: Yup.string(),
+    customerType: Yup.string(),
+    customerJob: Yup.string(),
+    province: Yup.string(),
+    city: Yup.string(),
     address: Yup.string(),
     description: Yup.string(),
     colleague: Yup.object().shape({
@@ -146,22 +142,18 @@ const generateValidationSchema = (
     }),
   };
 
-  // Add validation for dynamic fields
   [...customFieldType1, ...customFieldType2, ...customFieldType3].forEach(
     (field) => {
       if (field.IsRequired) {
         if (field.FieldType === 2 || field.FieldType === 5) {
-          // Numeric field
           shape[`custom_${field.PersonCustomFieldId}`] = Yup.string()
             .matches(/^\d+$/, `${field.FieldName} باید عدد باشد`)
             .required(`${field.FieldName} الزامی است`);
         } else if (field.FieldType === 3) {
-          // Date field
           shape[`custom_${field.PersonCustomFieldId}`] = Yup.string().required(
             `${field.FieldName} الزامی است`
           );
         } else {
-          // Text or multi-select field
           shape[`custom_${field.PersonCustomFieldId}`] = Yup.string().required(
             `${field.FieldName} الزامی است`
           );
@@ -173,14 +165,13 @@ const generateValidationSchema = (
   return Yup.object().shape(shape);
 };
 
-// Render input based on FieldType
 const renderInput = (
   customField: IPersonCustomField,
   formikProps: FormikProps<FormValues>
 ) => {
   const fieldName = `custom_${customField.PersonCustomFieldId}`;
   switch (customField.FieldType) {
-    case 1: // Text
+    case 1:
       return (
         <AppTextInput
           autoCapitalize="none"
@@ -194,15 +185,10 @@ const renderInput = (
           placeholder={customField.FieldName}
           onChangeText={formikProps.handleChange(fieldName)}
           value={formikProps.values[fieldName]}
-          error={
-            formikProps.touched[fieldName] && formikProps.errors[fieldName]
-              ? formikProps.errors[fieldName]
-              : undefined
-          }
         />
       );
-    case 2: // Number
-    case 5: // Number
+    case 2:
+    case 5:
       return (
         <AppTextInput
           autoCapitalize="none"
@@ -216,27 +202,17 @@ const renderInput = (
           placeholder={customField.FieldName}
           onChangeText={formikProps.handleChange(fieldName)}
           value={formikProps.values[fieldName]}
-          error={
-            formikProps.touched[fieldName] && formikProps.errors[fieldName]
-              ? formikProps.errors[fieldName]
-              : undefined
-          }
         />
       );
-    case 3: // Date
+    case 3:
       return (
         <DatePickerField
           date={formikProps.values[fieldName] || ""}
           label={customField.FieldName}
           onDateChange={(value) => formikProps.setFieldValue(fieldName, value)}
-          error={
-            formikProps.touched[fieldName] && formikProps.errors[fieldName]
-              ? formikProps.errors[fieldName]
-              : undefined
-          }
         />
       );
-    case 4: // Multi-select
+    case 4:
       return (
         <DynamicSelectionBottomSheet
           customFieldId={customField.PersonCustomFieldId}
@@ -246,17 +222,17 @@ const renderInput = (
           formikProps={formikProps}
         />
       );
-    case 6: // Location
+    case 6:
       return (
         <IconButton
           text="موقعیت جغرافیایی"
           iconName="location-pin"
-          onPress={() => {}}
+          onPress={() => { }}
           backgroundColor={colors.primary}
           flex={1}
         />
       );
-    case 7: // Multiline Text
+    case 7:
       return (
         <AppTextInput
           autoCapitalize="none"
@@ -275,11 +251,6 @@ const renderInput = (
           placeholder={customField.FieldName}
           onChangeText={formikProps.handleChange(fieldName)}
           value={formikProps.values[fieldName]}
-          error={
-            formikProps.touched[fieldName] && formikProps.errors[fieldName]
-              ? formikProps.errors[fieldName]
-              : undefined
-          }
         />
       );
     default:
@@ -296,11 +267,6 @@ const renderInput = (
           placeholder={customField.FieldName}
           onChangeText={formikProps.handleChange(fieldName)}
           value={formikProps.values[fieldName]}
-          error={
-            formikProps.touched[fieldName] && formikProps.errors[fieldName]
-              ? formikProps.errors[fieldName]
-              : undefined
-          }
         />
       );
   }
@@ -312,35 +278,8 @@ const CustomerInfo: React.FC = () => {
   const mode = route.params?.mode;
 
   const [person, setPerson] = useState<IPerson>();
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [mobile, setMobile] = useState("");
-  const [alias, setAlias] = useState("");
-  const [address, setAddress] = useState("");
-  const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const [selectedCustomerTypes, setSelectedCustomerTypes] = useState<string[]>(
-    []
-  );
-  const [selectedCustomerTypesString, setSelectedCustomerTypesString] =
-    useState("");
-  const [selectedCustomerJobString, setSelectedCustomerJobString] =
-    useState("");
-  const [selectedColleague, setSelectedColleague] = useState<Colleague>({
-    id: "",
-    name: "",
-    phone: "",
-  });
-  const [isColleagueBottomSheetVisible, setIsColleagueBottomSheetVisible] =
-    useState(false);
-
-  const [selectedProvince, setSelectedProvince] = useState("");
-  const [selectedCity, setSelectedCity] = useState("");
-  const [defaultProvinceId, setDefaultProvinceId] = useState<number | null>(
-    null
-  );
-  const [defaultCityId, setDefaultCityId] = useState<number | null>(null);
+  const [isColleagueBottomSheetVisible, setIsColleagueBottomSheetVisible] = useState(false);
 
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
@@ -371,28 +310,14 @@ const CustomerInfo: React.FC = () => {
     Record<string, IPersonCustomField[]>
   >({});
 
-  // دریافت مقادیر پیش‌فرض استان و شهر از اطلاعات ورود کاربر
   useEffect(() => {
     const loadDefaultLocation = async () => {
       try {
         const loginResponse = await getLoginResponse();
         if (loginResponse) {
-          const provinceId = loginResponse.ProvinceId;
-          const cityId = loginResponse.CityId;
           const provinceName = loginResponse.ProvinceName;
           const cityName = loginResponse.CityName;
 
-          if (provinceId && provinceName) {
-            setDefaultProvinceId(provinceId);
-            setSelectedProvince(provinceName);
-          }
-
-          if (cityId && cityName) {
-            setDefaultCityId(cityId);
-            setSelectedCity(cityName);
-          }
-
-          // اگر استان انتخاب شده است، شهرهای مربوط به آن را بارگذاری کنید
           if (provinceName) {
             fetchCitiesByProvince(provinceName);
           }
@@ -403,7 +328,6 @@ const CustomerInfo: React.FC = () => {
     };
 
     if (!customerID) {
-      // فقط در حالت اضافه کردن جدید، مقادیر پیش‌فرض را اعمال کنید
       loadDefaultLocation();
     }
   }, [provinces.length]);
@@ -420,38 +344,9 @@ const CustomerInfo: React.FC = () => {
         `${appConfig.mobileApi}Person/Get?id=${cID}`
       );
       const person = response.data;
-      console.log("customer:", person);
-
-      const provinceName = await LocationService.getProvinceNameByID(
-        Number(person.ProvinceId)
-      );
 
       setPerson(person);
-      setFirstName(person.FirstName);
-      setLastName(person.LastName);
-      setMobile(person.Mobile);
-      setAlias(person.NickName);
-      setAddress(person.Address);
-      setDescription(person.Description);
-      setAddress(person.Address);
-      // setSelectedColleague({
-      //   id: person.Person_PersonGroup_List[0].PersonGroupId.toString(),
-      //   name: person.Person_PersonGroup_List[0].PersonGroupName,
-      //   phone: "",
-      // });
-      setSelectedProvince(person.ProvinceName);
-      setSelectedCity(person.CityName);
-      setSelectedCustomerTypesString(
-        person.Person_PersonGroup_List[0].PersonGroupName
-      );
-      setSelectedCustomerJobString(person.PersonJobName);
-      setSelectedColleague({
-        id: "1",
-        name: person.IntroducerPersonFullName,
-        phone: person.IntroducerPersonMobile,
-      });
 
-      // بارگذاری شهرهای استان انتخاب شده
       if (person.ProvinceName) {
         fetchCitiesByProvince(person.ProvinceName);
       }
@@ -484,6 +379,7 @@ const CustomerInfo: React.FC = () => {
         setLoadingCustomerTypes(false);
       }
     };
+
     const fetchCustomerJobs = async () => {
       setLoadingCustomerJob(true);
       try {
@@ -543,75 +439,62 @@ const CustomerInfo: React.FC = () => {
     setToastVisible(false);
   };
 
-  const handleCustomerTypeSelection = (selectedTypes: string[]): void => {
-    setSelectedCustomerTypes(selectedTypes);
-    const customerTypesString = selectedTypes.join(", ");
-    setSelectedCustomerTypesString(customerTypesString);
-  };
+  const showFirstValidationError = (errors: any, touched: any) => {
+    const fieldOrder = [
+      'firstName',
+      'lastName',
+      'mobile',
+      'customerType',
+      'customerJob',
+      'province',
+      'city',
+      'address',
+      'description'
+    ];
 
-  const handleProvinceSelection = (value: string[]): void => {
-    if (value && value.length > 0) {
-      const provinceName = value[0];
-      setSelectedProvince(provinceName);
-      setSelectedCity("");
-      fetchCitiesByProvince(provinceName);
+    for (const field of fieldOrder) {
+      if (touched[field] && errors[field]) {
+        showToast(errors[field], "error");
+        return;
+      }
+    }
+
+    for (const [key, error] of Object.entries(errors)) {
+      if (key.startsWith('custom_') && touched[key] && error) {
+        showToast(error as string, "error");
+        return;
+      }
     }
   };
 
-  const handleCitySelection = (value: string[]): void => {
-    if (value && value.length > 0) {
-      setSelectedCity(value[0]);
-    }
-  };
+  const handleSubmit = async (values: FormValues, formikBag: any): Promise<void> => {
+    console.log("handleSubmit called with values:", values);
 
-  const handleCustomerJobSelection = (selectedTypes: string[]): void => {
-    // setSelectedCustomerTypes(selectedTypes);
-    const customerTypesString = selectedTypes.join(", ");
-    setSelectedCustomerJobString(customerTypesString);
-  };
+    // Check for validation errors
+    const errors: any = {};
 
-  const handleCityClick = (): void => {
-    showToast("لطفاً ابتدا استان را انتخاب کنید", "error");
-  };
-
-  const handleSelectColleague = (colleague: Colleague): void => {
-    setSelectedColleague(colleague);
-  };
-
-  const validateForm = (): boolean => {
-    if (!firstName.trim()) {
-      showToast("لطفاً نام را وارد کنید", "error");
-      return false;
+    if (!values.firstName.trim()) {
+      errors.firstName = "لطفاً نام را وارد کنید";
     }
 
-    if (!lastName.trim()) {
-      showToast("لطفاً نام خانوادگی را وارد کنید", "error");
-      return false;
-    }
-    if (!alias.trim()) {
-      showToast("لطفاً نام مستعار را وارد کنید", "error");
-      return false;
+    if (!values.lastName.trim()) {
+      errors.lastName = "لطفاً نام خانوادگی را وارد کنید";
     }
 
-    if (!mobile.trim()) {
-      showToast("لطفاً شماره موبایل را وارد کنید", "error");
-      return false;
-    }
-    if (!selectedCustomerTypesString.trim()) {
-      showToast("لطفاً گروه مشتری را انتخاب کنید", "error");
-      return false;
-    }
-    if (!selectedCustomerJobString.trim()) {
-      showToast("لطفاً شغل مشتری را انتخاب کنید", "error");
-      return false;
+    if (!values.mobile.trim()) {
+      errors.mobile = "لطفاً شماره موبایل را وارد کنید";
+    } else if (!/^09\d{9}$/.test(values.mobile)) {
+      errors.mobile = "شماره موبایل باید ۱۱ رقم و با ۰۹ شروع شود";
     }
 
-    const mobileRegex = /^09\d{9}$/;
-    if (!mobileRegex.test(mobile)) {
-      showToast("شماره موبایل باید ۱۱ رقم و با ۰۹ شروع شود", "error");
-      return false;
+    // Show first error as toast
+    if (Object.keys(errors).length > 0) {
+      const firstError = Object.values(errors)[0] as string;
+      showToast(firstError, "error");
+      return;
     }
 
+<<<<<<< Updated upstream
     if (!selectedProvince) {
       showToast("لطفاً استان را انتخاب کنید", "error");
       return false;
@@ -626,91 +509,82 @@ const CustomerInfo: React.FC = () => {
   };
 
   const handleSubmit = async (data: FormValues): Promise<void> => {
+=======
+>>>>>>> Stashed changes
     if (customerID) {
-      // handle edit mode
-      console.log("in edit mode");
       setIsSubmitting(true);
       try {
-        const provinceId = await LocationService.getProvinceIdByName(
-          selectedProvince
-        );
-        if (!provinceId) {
-          showToast("خطا در دریافت شناسه استان", "error");
-          setIsSubmitting(false);
-          return;
+        let provinceId = null;
+        let cityId = null;
+
+        if (values.province) {
+          provinceId = await LocationService.getProvinceIdByName(values.province);
+          if (!provinceId) {
+            showToast("خطا در دریافت شناسه استان", "error");
+            setIsSubmitting(false);
+            return;
+          }
         }
 
-        const cityId = await PersonManagementService.getCityIdByName(
-          selectedCity,
-          selectedProvince
-        );
-        if (!cityId) {
-          showToast("خطا در دریافت شناسه شهر", "error");
-          setIsSubmitting(false);
-          return;
+        if (values.city && values.province) {
+          cityId = await PersonManagementService.getCityIdByName(values.city, values.province);
+          if (!cityId) {
+            showToast("خطا در دریافت شناسه شهر", "error");
+            setIsSubmitting(false);
+            return;
+          }
         }
 
-        let personGroupIds: number[] = [
-          customerTypes.find(
-            (customertype: PersonGroup) =>
-              customertype.PersonGroupName === selectedCustomerTypesString
-          )?.PersonGroupId || 0,
-        ];
-        // if (selectedCustomerTypes.length > 0) {
-        //   personGroupIds =
-        //     await PersonManagementService.getPersonGroupIdsByNames(
-        //       selectedCustomerTypes
-        //     );
-        //   if (personGroupIds.length === 0 && selectedCustomerTypes.length > 0) {
-        //     showToast("خطا در دریافت شناسه‌های گروه مشتری", "warning");
-        //   }
-        // }
+        let personGroupIds: number[] = [];
+        if (values.customerType) {
+          const foundType = customerTypes.find(type => type.PersonGroupName === values.customerType);
+          if (foundType) personGroupIds = [foundType.PersonGroupId];
+        }
+
+        let personJobId = null;
+        if (values.customerJob) {
+          const foundJob = customerJobs.find(job => job.label === values.customerJob);
+          personJobId = foundJob?.value || null;
+        }
 
         const personToEdit: IPersonToEdit = {
           PersonId: Number(customerID),
-          FirstName: firstName,
-          LastName: lastName,
-          NickName: alias,
-          Mobile: mobile,
+          FirstName: values.firstName,
+          LastName: values.lastName,
+          NickName: values.alias,
+          Mobile: values.mobile,
           ProvinceId: provinceId,
           CityId: cityId,
-          PersonJobId:
-            customerJobs.find(
-              (customer: any) => customer.label === selectedCustomerJobString
-            )?.value || 0,
+          PersonJobId: personJobId,
           MarketingChannelId: null,
-          IntroducerPersonId: Number(selectedColleague.id),
-          Address: address,
-          Description: description,
+          IntroducerPersonId: values.colleague.id ? Number(values.colleague.id) : null,
+          Address: values.address,
+          Description: values.description,
           PersonGroupIdList: personGroupIds,
         };
 
-        console.log("personToEdit", personToEdit);
-
-        const response = await axios.put(
-          `${appConfig.mobileApi}Person/Edit`,
-          personToEdit
-        );
-
+        const response = await axios.put(`${appConfig.mobileApi}Person/Edit`, personToEdit);
         if (response.status === 200) {
           showToast(`مشتری با موفقیت ویرایش شد.`, "success");
         }
       } catch (error) {
-        console.error("خطا در ثبت مشتری:", error);
         showToast("خطا در ثبت مشتری. لطفاً دوباره تلاش کنید", "error");
       } finally {
         setIsSubmitting(false);
       }
     } else {
+<<<<<<< Updated upstream
       // in add mode
       // if (!validateForm()) {
       //   console.log("form is not valid");
 
       //   return;
       // }
+=======
+>>>>>>> Stashed changes
       setIsSubmitting(true);
-
       try {
+<<<<<<< Updated upstream
         const provinceId = await LocationService.getProvinceIdByName(
           data.province
         );
@@ -739,10 +613,38 @@ const CustomerInfo: React.FC = () => {
           if (personGroupIds.length === 0 && data.customerType) {
             showToast("خطا در دریافت شناسه‌های گروه مشتری", "warning");
           }
+=======
+        let provinceId = null;
+        let cityId = null;
+
+        if (values.province) {
+          provinceId = await LocationService.getProvinceIdByName(values.province);
+          if (!provinceId) {
+            showToast("خطا در دریافت شناسه استان", "error");
+            setIsSubmitting(false);
+            return;
+          }
+        }
+
+        if (values.city && values.province) {
+          cityId = await PersonManagementService.getCityIdByName(values.city, values.province);
+          if (!cityId) {
+            showToast("خطا در دریافت شناسه شهر", "error");
+            setIsSubmitting(false);
+            return;
+          }
+        }
+
+        let personGroupIds: number[] = [];
+        if (values.customerType) {
+          const foundType = customerTypes.find(type => type.PersonGroupName === values.customerType);
+          if (foundType) personGroupIds = [foundType.PersonGroupId];
+>>>>>>> Stashed changes
         }
 
         const personData: CreatePersonDTO = {
           PersonId: 0,
+<<<<<<< Updated upstream
           FirstName: data.firstName,
           LastName: data.lastName,
           Mobile: data.mobile,
@@ -750,47 +652,29 @@ const CustomerInfo: React.FC = () => {
           CityId: cityId,
           MarketingChannelId: null,
           Address: data.address,
+=======
+          FirstName: values.firstName,
+          LastName: values.lastName,
+          Mobile: values.mobile,
+          ProvinceId: provinceId,
+          CityId: cityId,
+          MarketingChannelId: null,
+          Address: values.address,
+>>>>>>> Stashed changes
           PersonGroupIdList: personGroupIds,
         };
 
-        const newPersonId = await PersonManagementService.createPerson(
-          personData
-        );
-
+        await PersonManagementService.createPerson(personData);
         showToast(`مشتری با موفقیت ثبت شد.`, "success");
 
-        setFirstName("");
-        setLastName("");
-        setMobile("");
-        setAlias("");
-        setAddress("");
-        setDescription("");
-
-        // بعد از ثبت موفق، مقادیر پیش‌فرض استان و شهر دوباره تنظیم شوند
-        const loginResponse = await getLoginResponse();
-        if (loginResponse && loginResponse.ProvinceName) {
-          setSelectedProvince(loginResponse.ProvinceName);
-          if (loginResponse.CityName) {
-            setSelectedCity(loginResponse.CityName);
-          } else {
-            setSelectedCity("");
-          }
-        } else {
-          setSelectedProvince("");
-          setSelectedCity("");
-        }
-
-        setSelectedCustomerTypes([]);
-        setSelectedCustomerTypesString("");
-        setSelectedColleague({ id: "", name: "", phone: "" });
       } catch (error) {
-        console.error("خطا در ثبت مشتری:", error);
         showToast("خطا در ثبت مشتری. لطفاً دوباره تلاش کنید", "error");
       } finally {
         setIsSubmitting(false);
       }
     }
   };
+
   return (
     <>
       <ScreenHeader
@@ -809,12 +693,7 @@ const CustomerInfo: React.FC = () => {
           customFieldType2,
           customFieldType3
         )}
-        validationSchema={generateValidationSchema(
-          customFieldType1,
-          customFieldType2,
-          customFieldType3
-        )}
-        onSubmit={handleSubmit}
+        onSubmit={() => { }} // Empty since we handle submit manually
         enableReinitialize
       >
         {(formikProps) => (
@@ -846,12 +725,6 @@ const CustomerInfo: React.FC = () => {
                         "firstName"
                       )}
                       value={formikProps.values.firstName}
-                      error={
-                        formikProps.touched.firstName &&
-                        formikProps.errors.firstName
-                          ? formikProps.errors.firstName
-                          : undefined
-                      }
                     />
                     <AppTextInput
                       placeholder="نام خانوادگی"
@@ -863,12 +736,6 @@ const CustomerInfo: React.FC = () => {
                         "lastName"
                       )}
                       value={formikProps.values.lastName}
-                      error={
-                        formikProps.touched.lastName &&
-                        formikProps.errors.lastName
-                          ? formikProps.errors.lastName
-                          : undefined
-                      }
                     />
                     <AppTextInput
                       placeholder="نام مستعار/ جایگزین"
@@ -880,11 +747,6 @@ const CustomerInfo: React.FC = () => {
                         "alias"
                       )}
                       value={formikProps.values.alias}
-                      error={
-                        formikProps.touched.alias && formikProps.errors.alias
-                          ? formikProps.errors.alias
-                          : undefined
-                      }
                     />
                     <AppTextInput
                       placeholder="شماره موبایل"
@@ -897,11 +759,6 @@ const CustomerInfo: React.FC = () => {
                         "mobile"
                       )}
                       value={formikProps.values.mobile}
-                      error={
-                        formikProps.touched.mobile && formikProps.errors.mobile
-                          ? formikProps.errors.mobile
-                          : undefined
-                      }
                     />
                     <SelectionBottomSheet
                       placeholderText={
@@ -920,13 +777,7 @@ const CustomerInfo: React.FC = () => {
                       }
                       multiSelect={false}
                       loading={loadingCustomerTypes}
-                      initialValues={[formikProps.values.customerType]}
-                      error={
-                        formikProps.touched.customerType &&
-                        formikProps.errors.customerType
-                          ? formikProps.errors.customerType
-                          : undefined
-                      }
+                      initialValues={[formikProps.values.customerType].filter(Boolean)}
                     />
                     <SelectionBottomSheet
                       placeholderText={formikProps.values.customerJob || "شغل"}
@@ -941,13 +792,7 @@ const CustomerInfo: React.FC = () => {
                       }
                       multiSelect={false}
                       loading={loadingCustomerJob}
-                      initialValues={[formikProps.values.customerJob]}
-                      error={
-                        formikProps.touched.customerJob &&
-                        formikProps.errors.customerJob
-                          ? formikProps.errors.customerJob
-                          : undefined
-                      }
+                      initialValues={[formikProps.values.customerJob].filter(Boolean)}
                     />
                     <TouchableOpacity
                       activeOpacity={0.7}
@@ -1006,15 +851,10 @@ const CustomerInfo: React.FC = () => {
                             formikProps.values.province
                               ? undefined
                               : () =>
-                                  showToast(
-                                    "لطفاً ابتدا استان را انتخاب کنید",
-                                    "error"
-                                  )
-                          }
-                          error={
-                            formikProps.touched.city && formikProps.errors.city
-                              ? formikProps.errors.city
-                              : undefined
+                                showToast(
+                                  "لطفاً ابتدا استان را انتخاب کنید",
+                                  "error"
+                                )
                           }
                         />
                       </View>
@@ -1035,12 +875,6 @@ const CustomerInfo: React.FC = () => {
                             fetchCitiesByProvince(selected[0] || "");
                           }}
                           loading={loadingProvinces}
-                          error={
-                            formikProps.touched.province &&
-                            formikProps.errors.province
-                              ? formikProps.errors.province
-                              : undefined
-                          }
                         />
                       </View>
                     </View>
@@ -1057,12 +891,6 @@ const CustomerInfo: React.FC = () => {
                         "address"
                       )}
                       value={formikProps.values.address}
-                      error={
-                        formikProps.touched.address &&
-                        formikProps.errors.address
-                          ? formikProps.errors.address
-                          : undefined
-                      }
                     />
                     {customFieldType1.map((customField) =>
                       renderInput(customField, formikProps)
@@ -1082,12 +910,6 @@ const CustomerInfo: React.FC = () => {
                         "description"
                       )}
                       value={formikProps.values.description}
-                      error={
-                        formikProps.touched.description &&
-                        formikProps.errors.description
-                          ? formikProps.errors.description
-                          : undefined
-                      }
                     />
                     {customFieldType2.map((customField) =>
                       renderInput(customField, formikProps)
@@ -1114,7 +936,40 @@ const CustomerInfo: React.FC = () => {
                   )}
                   <IconButton
                     text={isSubmitting ? "در حال ثبت..." : "ثبت"}
+<<<<<<< Updated upstream
                     onPress={formikProps.handleSubmit}
+=======
+                    onPress={() => {
+                      console.log("Submit button clicked!");
+                      console.log("Form values:", formikProps.values);
+
+                      // Manual validation and submission
+                      const values = formikProps.values;
+
+                      if (!values.firstName.trim()) {
+                        showToast("لطفاً نام را وارد کنید", "error");
+                        return;
+                      }
+
+                      if (!values.lastName.trim()) {
+                        showToast("لطفاً نام خانوادگی را وارد کنید", "error");
+                        return;
+                      }
+
+                      if (!values.mobile.trim()) {
+                        showToast("لطفاً شماره موبایل را وارد کنید", "error");
+                        return;
+                      }
+
+                      if (!/^09\d{9}$/.test(values.mobile)) {
+                        showToast("شماره موبایل باید ۱۱ رقم و با ۰۹ شروع شود", "error");
+                        return;
+                      }
+
+                      // If validation passes, call the actual submit function
+                      handleSubmit(values, {});
+                    }}
+>>>>>>> Stashed changes
                     iconName="done"
                     style={{ width: "100%", marginBottom: 30 }}
                     backgroundColor={colors.success}
@@ -1140,208 +995,6 @@ const CustomerInfo: React.FC = () => {
       </Formik>
     </>
   );
-
-  // return (
-  //   <>
-  //     <ScreenHeader
-  //       title={mode === "visitor" ? "اطلاعات بازدید کننده" : "ثبت خریدار جدید"}
-  //     />
-
-  //     <Toast
-  //       visible={toastVisible}
-  //       message={toastMessage}
-  //       type={toastType}
-  //       onDismiss={hideToast}
-  //     />
-
-  //     <View style={styles.container}>
-  //       <ScrollView>
-  //         <InputContainer title="اطلاعات مشتری">
-  //           <AppTextInput
-  //             autoCapitalize="none"
-  //             autoCorrect={false}
-  //             keyboardType="default"
-  //             icon="person"
-  //             placeholder="نام"
-  //             value={firstName}
-  //             onChangeText={setFirstName}
-  //           />
-  //           <AppTextInput
-  //             autoCapitalize="none"
-  //             autoCorrect={false}
-  //             keyboardType="default"
-  //             icon="person"
-  //             placeholder="نام خانوادگی"
-  //             value={lastName}
-  //             onChangeText={setLastName}
-  //           />
-  //           <AppTextInput
-  //             autoCapitalize="none"
-  //             autoCorrect={false}
-  //             keyboardType="default"
-  //             icon="person-4"
-  //             placeholder="نام مستعار/ جایگزین"
-  //             value={alias}
-  //             onChangeText={setAlias}
-  //           />
-  //           <AppTextInput
-  //             autoCapitalize="none"
-  //             autoCorrect={false}
-  //             keyboardType="number-pad"
-  //             icon="phone-android"
-  //             placeholder="شماره موبایل "
-  //             value={mobile}
-  //             onChangeText={setMobile}
-  //           />
-
-  //           <SelectionBottomSheet
-  //             placeholderText={
-  //               selectedCustomerTypesString
-  //                 ? selectedCustomerTypesString
-  //                 : "گروه مشتری"
-  //             }
-  //             title="گروه مشتری "
-  //             iconName="group"
-  //             options={customerTypes.map(
-  //               (group: PersonGroup) => group.PersonGroupName
-  //             )}
-  //             onSelect={handleCustomerTypeSelection}
-  //             multiSelect={false}
-  //             loading={loadingCustomerTypes}
-  //             initialValues={customerTypes
-  //               .map((group: PersonGroup) => group.PersonGroupName)
-  //               .filter((customer) => customer === selectedCustomerTypesString)}
-  //           />
-  //           <SelectionBottomSheet
-  //             placeholderText={
-  //               selectedCustomerJobString ? selectedCustomerJobString : "شغل"
-  //             }
-  //             title="شغل"
-  //             iconName="work"
-  //             options={customerJobs.map((job: any) => job.label)}
-  //             onSelect={handleCustomerJobSelection}
-  //             multiSelect={false}
-  //             loading={loadingCustomerJob}
-  //             initialValues={customerJobs
-  //               .map((job: any) => job.label)
-  //               .filter((customer) => customer === selectedCustomerJobString)}
-  //           />
-
-  //           <TouchableOpacity
-  //             activeOpacity={0.7}
-  //             onPress={() => setIsColleagueBottomSheetVisible(true)}
-  //             style={{ width: "100%" }}
-  //           >
-  //             <AppTextInput
-  //               autoCapitalize="none"
-  //               autoCorrect={false}
-  //               keyboardType="default"
-  //               icon="person-search"
-  //               placeholder="معرف"
-  //               value={
-  //                 selectedColleague.name
-  //                   ? `${selectedColleague.name} (${selectedColleague.phone})`
-  //                   : ""
-  //               }
-  //               onChangeText={() => {}}
-  //               editable={false}
-  //             />
-  //           </TouchableOpacity>
-
-  //           {mode === "visitor" && (
-  //             <SelectionBottomSheet
-  //               placeholderText={"نحوه ی آشنایی با شرکت"}
-  //               title="نحوه ی آشنایی با شرکت"
-  //               iconName="business"
-  //               options={customerJobs.map((job: any) => job.label)}
-  //               onSelect={handleCustomerJobSelection}
-  //               multiSelect={false}
-  //               loading={loadingCustomerJob}
-  //             />
-  //           )}
-
-  //           <View style={styles.rowContainer}>
-  //             <View style={styles.halfWidth}>
-  //               <SelectionBottomSheet
-  //                 key={`city-${selectedProvince}`}
-  //                 placeholderText={selectedCity || "شهرستان"}
-  //                 title="شهرستان"
-  //                 iconName="apartment"
-  //                 options={selectedProvince ? cities : []}
-  //                 onSelect={handleCitySelection}
-  //                 loading={loadingCities}
-  //                 onPress={selectedProvince ? undefined : handleCityClick}
-  //               />
-  //             </View>
-  //             <View style={styles.halfWidth}>
-  //               <SelectionBottomSheet
-  //                 placeholderText={selectedProvince || "استان"}
-  //                 title="استان"
-  //                 iconName="map"
-  //                 options={provinces}
-  //                 onSelect={handleProvinceSelection}
-  //                 loading={loadingProvinces}
-  //               />
-  //             </View>
-  //           </View>
-  //           <AppTextInput
-  //             autoCapitalize="none"
-  //             autoCorrect={false}
-  //             keyboardType="default"
-  //             icon="location-pin"
-  //             placeholder="آدرس مشتری"
-  //             value={address}
-  //             onChangeText={setAddress}
-  //             multiline
-  //             numberOfLines={5}
-  //             height={150}
-  //             textAlign="right"
-  //             isLargeInput={true}
-  //           />
-  //         </InputContainer>
-
-  //         <InputContainer title="سایر اطلاعات">
-  //           <AppTextInput
-  //             autoCapitalize="none"
-  //             autoCorrect={false}
-  //             keyboardType="default"
-  //             icon="text-snippet"
-  //             placeholder="توضیحات"
-  //             value={description}
-  //             onChangeText={setDescription}
-  //             multiline
-  //             numberOfLines={5}
-  //             height={150}
-  //             textAlign="right"
-  //             isLargeInput={true}
-  //           />
-  //           <View style={{ height: 0 }} />
-  //         </InputContainer>
-
-  //         <IconButton
-  //           text={isSubmitting ? "در حال ثبت..." : "ثبت"}
-  //           onPress={handleSubmit}
-  //           iconName="done"
-  //           style={{ width: "100%" }}
-  //           backgroundColor={colors.success}
-  //           disabled={isSubmitting}
-  //         />
-  //         {isSubmitting && (
-  //           <View style={styles.loadingContainer}>
-  //             <ActivityIndicator size="large" color={colors.primary} />
-  //           </View>
-  //         )}
-  //       </ScrollView>
-  //     </View>
-
-  //     <ColleagueBottomSheet
-  //       visible={isColleagueBottomSheetVisible}
-  //       onClose={() => setIsColleagueBottomSheetVisible(false)}
-  //       onSelectColleague={handleSelectColleague}
-  //       // isCustomer={false}
-  //     />
-  //   </>
-  // );
 };
 
 const styles = StyleSheet.create({

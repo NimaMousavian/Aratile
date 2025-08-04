@@ -203,10 +203,7 @@ const AddNewColleague = () => {
       showToast("لطفاً نام خانوادگی را وارد کنید", "error");
       return false;
     }
-    if (!alias.trim()) {
-      showToast("لطفاً نام مستعار را وارد کنید", "error");
-      return false;
-    }
+  
 
     if (!mobile.trim()) {
       showToast("لطفاً شماره موبایل را وارد کنید", "error");
