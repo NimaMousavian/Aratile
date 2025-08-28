@@ -84,7 +84,7 @@ const openMianCheckDirectly = async () => {
   for (const pkg of likelyPackages) {
     try {
       // Many apps register their package name as a URL scheme
-      const url = `${pkg.split('.').pop().toLowerCase()}://`;
+      const url = `${pkg.split(".").pop().toLowerCase()}://`;
       const canOpen = await Linking.canOpenURL(url);
       if (canOpen) {
         await Linking.openURL(url);
@@ -102,12 +102,14 @@ const openMianCheckDirectly = async () => {
       "MainActivity",
       "SplashActivity",
       "StartActivity",
-      "LauncherActivity"
+      "LauncherActivity",
     ]) {
       try {
         const intentUrl = `intent:#Intent;component=${pkg}/.${activity};end`;
         await Linking.openURL(intentUrl);
-        console.log(`Activity-specific method succeeded with ${pkg}/.${activity}`);
+        console.log(
+          `Activity-specific method succeeded with ${pkg}/.${activity}`
+        );
         return true;
       } catch (e) {
         // Continue silently
@@ -133,7 +135,9 @@ const openAppByPackageName = async () => {
       // "ir.pirooze.miancheck"
     ];
 
-    console.log("Attempting to open MianCheck app with different package names...");
+    console.log(
+      "Attempting to open MianCheck app with different package names..."
+    );
 
     // Method 1: Using Linking.openURL with deep link patterns
     for (const packageName of possiblePackages) {
@@ -161,7 +165,9 @@ const openAppByPackageName = async () => {
 
         if (canOpen) {
           await Linking.openURL(androidAppUrl);
-          console.log(`✅ MianCheck opened successfully with android-app scheme`);
+          console.log(
+            `✅ MianCheck opened successfully with android-app scheme`
+          );
           return;
         }
       } catch (error) {
@@ -189,11 +195,13 @@ const openAppByPackageName = async () => {
     // Method 4: Direct attempt with IntentLauncher
     for (const packageName of possiblePackages) {
       try {
-        await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
+        await IntentLauncher.startActivityAsync("android.intent.action.VIEW", {
           data: `${packageName}://`,
           flags: 268435456, // FLAG_ACTIVITY_NEW_TASK
         });
-        console.log(`✅ MianCheck opened successfully with IntentLauncher VIEW`);
+        console.log(
+          `✅ MianCheck opened successfully with IntentLauncher VIEW`
+        );
         return;
       } catch (error) {
         console.log(`IntentLauncher VIEW failed for ${packageName}`);
@@ -203,11 +211,13 @@ const openAppByPackageName = async () => {
     // Method 5: Try a more basic approach with Intent.ACTION_MAIN but without category
     for (const packageName of possiblePackages) {
       try {
-        await IntentLauncher.startActivityAsync('android.intent.action.MAIN', {
+        await IntentLauncher.startActivityAsync("android.intent.action.MAIN", {
           packageName: packageName,
           flags: 268435456, // FLAG_ACTIVITY_NEW_TASK
         });
-        console.log(`✅ MianCheck opened successfully with basic IntentLauncher`);
+        console.log(
+          `✅ MianCheck opened successfully with basic IntentLauncher`
+        );
         return;
       } catch (error) {
         // Continue to next package
@@ -241,7 +251,6 @@ const openAppByPackageName = async () => {
       // Last resort: web URL
       console.log("Opening web URL as last resort");
       await Linking.openURL("https://cafebazaar.ir/search?q=میانچک");
-
     } catch (error) {
       console.log("Failed to open app stores:", error);
 
@@ -257,10 +266,13 @@ const openAppByPackageName = async () => {
               try {
                 await Linking.openURL("https://cafebazaar.ir/search?q=میانچک");
               } catch (e) {
-                Alert.alert("خطا", "نمی‌توان مرورگر را باز کرد. لطفاً برنامه میانچک را دستی نصب کنید.");
+                Alert.alert(
+                  "خطا",
+                  "نمی‌توان مرورگر را باز کرد. لطفاً برنامه میانچک را دستی نصب کنید."
+                );
               }
-            }
-          }
+            },
+          },
         ]
       );
     }
@@ -303,19 +315,19 @@ const openCalculator = async () => {
 
       // روش دوم: تلاش با package name های مختلف ماشین حساب
       const calculatorPackages = [
-        "com.google.android.calculator",      // Google Calculator
-        "com.android.calculator2",            // Android Calculator
+        "com.google.android.calculator", // Google Calculator
+        "com.android.calculator2", // Android Calculator
         "com.sec.android.app.popupcalculator", // Samsung Calculator
-        "com.miui.calculator",                 // MIUI Calculator (Xiaomi)
-        "com.oneplus.calculator",              // OnePlus Calculator
-        "com.huawei.calculator",               // Huawei Calculator
-        "com.oppo.calculator",                 // OPPO Calculator
-        "com.vivo.calculator",                 // Vivo Calculator
-        "com.coloros.calculator",              // ColorOS Calculator
-        "com.asus.calculator",                 // ASUS Calculator
-        "com.motorola.calculator",             // Motorola Calculator
-        "com.htc.android.calculator",          // HTC Calculator
-        "com.lge.calculator",                  // LG Calculator
+        "com.miui.calculator", // MIUI Calculator (Xiaomi)
+        "com.oneplus.calculator", // OnePlus Calculator
+        "com.huawei.calculator", // Huawei Calculator
+        "com.oppo.calculator", // OPPO Calculator
+        "com.vivo.calculator", // Vivo Calculator
+        "com.coloros.calculator", // ColorOS Calculator
+        "com.asus.calculator", // ASUS Calculator
+        "com.motorola.calculator", // Motorola Calculator
+        "com.htc.android.calculator", // HTC Calculator
+        "com.lge.calculator", // LG Calculator
       ];
 
       // تلاش با Intent برای هر package
@@ -368,10 +380,13 @@ const openCalculator = async () => {
       // روش پنجم: تلاش با IntentLauncher برای package های مختلف
       for (const packageName of calculatorPackages) {
         try {
-          await IntentLauncher.startActivityAsync("android.intent.action.VIEW", {
-            packageName: packageName,
-            flags: 268435456, // FLAG_ACTIVITY_NEW_TASK
-          });
+          await IntentLauncher.startActivityAsync(
+            "android.intent.action.VIEW",
+            {
+              packageName: packageName,
+              flags: 268435456, // FLAG_ACTIVITY_NEW_TASK
+            }
+          );
           console.log(`✅ ماشین حساب باز شد با IntentLauncher: ${packageName}`);
           return;
         } catch (error) {
@@ -386,14 +401,11 @@ const openCalculator = async () => {
         "ماشین حساب پیدا نشد. لطفاً از فهرست برنامه‌ها ماشین حساب را باز کنید.",
         [{ text: "باشه", style: "default" }]
       );
-
     } catch (error) {
       console.error("خطا در باز کردن ماشین حساب:", error);
-      Alert.alert(
-        "خطا",
-        "خطا در باز کردن ماشین حساب. لطفاً دستی باز کنید.",
-        [{ text: "باشه", style: "default" }]
-      );
+      Alert.alert("خطا", "خطا در باز کردن ماشین حساب. لطفاً دستی باز کنید.", [
+        { text: "باشه", style: "default" },
+      ]);
     }
   } else {
     console.log("این قابلیت فقط برای Android پشتیبانی می‌شود");
@@ -537,6 +549,24 @@ const HomeScreen: React.FC = () => {
   const draggedIndexRef = useRef<number | null>(null);
   const hoveredIndexRef = useRef<number | null>(null);
   const showSaveButtonRef = useRef(false);
+  const [toastVisible, setToastVisible] = useState<boolean>(false);
+  const [toastMessage, setToastMessage] = useState<string>("");
+  const [toastType, setToastType] = useState<
+    "success" | "error" | "warning" | "info"
+  >("error");
+
+  const showToast = (
+    message: string,
+    type: "success" | "error" | "warning" | "info" = "error"
+  ) => {
+    setToastMessage(message);
+    setToastType(type);
+    setToastVisible(true);
+  };
+
+  useEffect(() => {
+    console.log("avatarUri", avatarUri);
+  }, [avatarUri]);
 
   const SPRING_CONFIG = {
     tension: 50,
@@ -702,38 +732,45 @@ const HomeScreen: React.FC = () => {
         }
 
         if (!avatarLocalPath || !FileSystem.getInfoAsync) {
-          console.warn(
+          console.log(
             "FileSystem is not available, falling back to default icon"
           );
           setAvatarUri(undefined);
           return;
         }
 
-        const cachedUri = await AsyncStorage.getItem(avatarCacheKey);
-        if (cachedUri) {
-          const fileInfo = await FileSystem.getInfoAsync(avatarLocalPath).catch(
-            () => ({ exists: false })
-          );
-          if (fileInfo.exists) {
-            setAvatarUri(cachedUri);
-            return;
-          }
-        }
+        console.log("userData.AvatarImageURL", userData.AvatarImageURL);
+
+        // const cachedUri = await AsyncStorage.getItem(avatarCacheKey);
+        // console.log("cachedUri:", cachedUri);
+        // if (cachedUri) {
+        //   const fileInfo = await FileSystem.getInfoAsync(avatarLocalPath).catch(
+        //     () => ({ exists: false })
+        //   );
+        //   if (fileInfo.exists) {
+        //     setAvatarUri(cachedUri);
+        //     return;
+        //   }
+        // }
 
         const downloadResult = await FileSystem.downloadAsync(
           userData.AvatarImageURL,
           avatarLocalPath
         );
+        console.log("downloadResult.uri", downloadResult.uri);
 
         if (downloadResult.status === 200) {
           const uri = `${avatarLocalPath}`;
           await AsyncStorage.setItem(avatarCacheKey, uri);
-          setAvatarUri(uri);
+          console.log("uri", uri);
+
+          // setAvatarUri(uri);
+          setAvatarUri(userData.AvatarImageURL);
         } else {
           setAvatarUri(undefined);
         }
       } catch (error) {
-        console.error("Error loading avatar:", error);
+        console.log("Error loading avatar:", error);
         setAvatarUri(undefined);
       }
     };
@@ -795,7 +832,7 @@ const HomeScreen: React.FC = () => {
       }
     }
 
-    return () => { };
+    return () => {};
   }, [isDragging]);
 
   useEffect(() => {
@@ -1144,7 +1181,7 @@ const HomeScreen: React.FC = () => {
 
       const distance = Math.sqrt(
         Math.pow(position.x - currentPosition.x, 2) +
-        Math.pow(position.y - currentPosition.y, 2)
+          Math.pow(position.y - currentPosition.y, 2)
       );
 
       if (distance < minDistance) {

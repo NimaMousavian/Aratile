@@ -58,10 +58,15 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
   onError,
   isEditing = false, // مقدار پیش‌فرض false
 }) => {
-  console.log("ProductPropertiesDrawer - product:", product, "isEditing:", isEditing);
+  console.log(
+    "ProductPropertiesDrawer - product:",
+    product,
+    "isEditing:",
+    isEditing
+  );
 
   const [quantity, setQuantity] = useState<string>("1");
-  const [displayQuantity, setDisplayQuantity] = useState<string>("۱");
+  const [displayQuantity, setDisplayQuantity] = useState<string>("");
   const [note, setNote] = useState<string>("");
   const [manualCalculation, setManualCalculation] = useState<boolean>(false);
   const [keyboardHeight, setKeyboardHeight] = useState<number>(0);
@@ -85,7 +90,7 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
       if (isEditing) {
         // در حالت ویرایش، مقادیر موجود محصول را استفاده می‌کنیم
         setQuantity(product.quantity || "1");
-        setDisplayQuantity(toPersianDigits(product.quantity || "1"));
+        setDisplayQuantity(toPersianDigits(product.quantity || ""));
         setNote(product.note || "");
         setManualCalculation(product.manualCalculation || false);
 
@@ -97,8 +102,8 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
         }
       } else {
         // در حالت افزودن، مقادیر پیش‌فرض را تنظیم می‌کنیم
-        setQuantity("1");
-        setDisplayQuantity("۱");
+        // setQuantity("1");
+        // setDisplayQuantity("۱");
         setNote(product.note || "");
         setManualCalculation(product.manualCalculation || false);
         setBoxCount(null);
@@ -124,12 +129,17 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
         }
       }
 
-      console.log("Rectified Value:", product.rectifiedValue, "Parsed:", rectifiedValue);
+      console.log(
+        "Rectified Value:",
+        product.rectifiedValue,
+        "Parsed:",
+        rectifiedValue
+      );
     }
   }, [product, visible, isEditing]);
 
   useEffect(() => {
-    return () => { };
+    return () => {};
   }, []);
 
   useEffect(() => {
@@ -219,13 +229,21 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
     // چک کردن مقدار درخواستی با موجودی قابل تعهد
     // در حالت ویرایش، اگر مقدار بیشتر از قبل نشده باشد، این چک را نادیده می‌گیریم
     if (!isEditing && qtyNum > availableStock) {
-      showToast(`مقدار وارد شده بیشتر از موجودی قابل تعهد (${toPersianDigits(availableStock.toString())}) است`, "error");
+      showToast(
+        `مقدار وارد شده بیشتر از موجودی قابل تعهد (${toPersianDigits(
+          availableStock.toString()
+        )}) است`,
+        "error"
+      );
       return false;
     } else if (isEditing && product && qtyNum > availableStock) {
       // در حالت ویرایش، فقط اگر مقدار جدید از مقدار قبلی و موجودی بیشتر باشد خطا می‌دهیم
       const oldQty = parseFloat(product.quantity || "0");
       if (qtyNum > oldQty && qtyNum > availableStock + oldQty) {
-        showToast(`مقدار وارد شده بیشتر از موجودی قابل تعهد (با احتساب سفارش فعلی) است`, "error");
+        showToast(
+          `مقدار وارد شده بیشتر از موجودی قابل تعهد (با احتساب سفارش فعلی) است`,
+          "error"
+        );
         return false;
       }
     }
@@ -272,7 +290,7 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
       }
 
       setIsCalculating(false);
-      showToast("محاسبه با موفقیت انجام شد", "success");
+      // showToast("محاسبه با موفقیت انجام شد", "success");
     }, 800);
   };
 
@@ -308,13 +326,19 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
       note: note,
       manualCalculation: manualCalculation,
       boxCount: currentBoxCount,
-      totalArea: totalArea
+      totalArea: totalArea,
     };
 
     console.log("Saving product with isEditing:", isEditing);
     console.log("Updated product:", updatedProduct);
 
-    const saveSuccessful = onSave(updatedProduct, quantity, note, manualCalculation, currentBoxCount || undefined);
+    const saveSuccessful = onSave(
+      updatedProduct,
+      quantity,
+      note,
+      manualCalculation,
+      currentBoxCount || undefined
+    );
 
     if (saveSuccessful) {
       performClose();
@@ -354,8 +378,12 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
 
   if (!product || !visible) return null;
 
-  const displayStockQuantity = product.propertyValue ? toPersianDigits(product.propertyValue) : "نامشخص";
-  const displayRectifiedValue = product.rectifiedValue ? toPersianDigits(product.rectifiedValue) : "۱.۴۴";
+  const displayStockQuantity = product.propertyValue
+    ? toPersianDigits(product.propertyValue)
+    : "نامشخص";
+  const displayRectifiedValue = product.rectifiedValue
+    ? toPersianDigits(product.rectifiedValue)
+    : "۱.۴۴";
 
   const buttonAreaHeight = 100;
 
@@ -420,7 +448,9 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
                 <View style={styles.headerContent}>
                   <MaterialIcons name="shopping-cart" size={24} color="white" />
                   <Text style={styles.headerTitle}>
-                    {isEditing ? "ویرایش محصول در سفارش" : "افزودن محصول به سفارش"}
+                    {isEditing
+                      ? "ویرایش محصول در سفارش"
+                      : "افزودن محصول به سفارش"}
                   </Text>
                 </View>
                 <TouchableOpacity
@@ -484,7 +514,8 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
                         موجودی قابل تعهد:
                       </AppText>
                       <AppText style={styles.stockValue}>
-                        {toPersianDigits(availableStock.toString())} {product.measurementUnitName || ""}
+                        {toPersianDigits(availableStock.toString())}{" "}
+                        {product.measurementUnitName || ""}
                       </AppText>
                     </View>
 
@@ -504,7 +535,11 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
                       autoCorrect={false}
                       keyboardType="number-pad"
                       icon="straighten"
-                      placeholder={product.measurementUnitName ? `مقدار سفارش (${product.measurementUnitName})` : "مقدار سفارش"}
+                      placeholder={
+                        product.measurementUnitName
+                          ? `مقدار سفارش (${product.measurementUnitName})`
+                          : "مقدار سفارش"
+                      }
                       value={displayQuantity}
                       onChangeText={handleQuantityChange}
                     />
@@ -528,7 +563,11 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
                         <View style={styles.boxCountTextContainer}>
                           <View style={styles.calculationRow}>
                             <View style={styles.labelContainer}>
-                              <MaterialIcons name="shopping-bag" size={20} color={colors.secondary} />
+                              <MaterialIcons
+                                name="shopping-bag"
+                                size={20}
+                                color={colors.secondary}
+                              />
                               <Text style={styles.calculationLabel}>
                                 تعداد کارتن:
                               </Text>
@@ -541,13 +580,23 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
                           {product.rectifiedValue && (
                             <View style={styles.calculationRow}>
                               <View style={styles.labelContainer}>
-                                <MaterialIcons name="calculate" size={20} color={colors.secondary} />
+                                <MaterialIcons
+                                  name="calculate"
+                                  size={20}
+                                  color={colors.secondary}
+                                />
                                 <Text style={styles.calculationLabel}>
                                   متراژ کل:
                                 </Text>
                               </View>
                               <Text style={styles.calculationValue}>
-                                {toPersianDigits((boxCount * parseFloat(product.rectifiedValue || "1.44")).toFixed(2))} {product.measurementUnitName || ""}
+                                {toPersianDigits(
+                                  (
+                                    boxCount *
+                                    parseFloat(product.rectifiedValue || "1.44")
+                                  ).toFixed(2)
+                                )}{" "}
+                                {product.measurementUnitName || ""}
                               </Text>
                             </View>
                           )}
@@ -746,7 +795,7 @@ const styles = StyleSheet.create({
     marginTop: 15, // فاصله بیشتر از دکمه محاسبه کن
   },
   boxCountTextContainer: {
-    width: '100%',
+    width: "100%",
   },
   calculationRow: {
     flexDirection: "row-reverse",

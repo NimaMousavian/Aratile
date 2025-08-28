@@ -67,14 +67,14 @@ const ProfileScreen = () => {
         }
 
         // Check if image exists in AsyncStorage
-        const cachedUri = await AsyncStorage.getItem(avatarCacheKey);
-        if (cachedUri) {
-          const fileInfo = await FileSystem.getInfoAsync(avatarLocalPath);
-          if (fileInfo.exists) {
-            setAvatarUri(cachedUri);
-            return;
-          }
-        }
+        // const cachedUri = await AsyncStorage.getItem(avatarCacheKey);
+        // if (cachedUri) {
+        //   const fileInfo = await FileSystem.getInfoAsync(avatarLocalPath);
+        //   if (fileInfo.exists) {
+        //     setAvatarUri(cachedUri);
+        //     return;
+        //   }
+        // }
 
         // If online, download and cache the image
         const downloadResult = await FileSystem.downloadAsync(
@@ -85,7 +85,8 @@ const ProfileScreen = () => {
         if (downloadResult.status === 200) {
           const uri = `${avatarLocalPath}`;
           await AsyncStorage.setItem(avatarCacheKey, uri);
-          setAvatarUri(uri);
+          // setAvatarUri(uri);
+          setAvatarUri(user.AvatarImageURL);
         } else {
           setAvatarUri(null);
         }
@@ -118,18 +119,18 @@ const ProfileScreen = () => {
       // });
 
       // Delete cached avatar image if FileSystem is available
-      if (
-        avatarLocalPath &&
-        FileSystem.getInfoAsync &&
-        FileSystem.deleteAsync
-      ) {
-        const fileInfo = await FileSystem.getInfoAsync(avatarLocalPath).catch(
-          () => ({ exists: false })
-        );
-        if (fileInfo.exists) {
-          await FileSystem.deleteAsync(avatarLocalPath);
-        }
-      }
+      // if (
+      //   avatarLocalPath &&
+      //   FileSystem.getInfoAsync &&
+      //   FileSystem.deleteAsync
+      // ) {
+      //   const fileInfo = await FileSystem.getInfoAsync(avatarLocalPath).catch(
+      //     () => ({ exists: false })
+      //   );
+      //   if (fileInfo.exists) {
+      //     await FileSystem.deleteAsync(avatarLocalPath);
+      //   }
+      // }
 
       console.log("All database data has been cleared");
       return true;
@@ -150,14 +151,35 @@ const ProfileScreen = () => {
         // Continue with logout anyway
       }
 
+      // --- Clear avatar cache safely ---
+      try {
+        if (avatarCacheKey) {
+          await AsyncStorage.removeItem(avatarCacheKey);
+        }
+
+        if (avatarLocalPath) {
+          const fileInfo = await FileSystem.getInfoAsync(avatarLocalPath).catch(
+            () => ({ exists: false })
+          );
+          if (fileInfo.exists) {
+            await FileSystem.deleteAsync(avatarLocalPath, { idempotent: true });
+            console.log("Avatar cache cleared");
+          }
+        }
+
+        // Reset local avatar state too
+        setAvatarUri(null);
+      } catch (err) {
+        console.error("Failed to clear avatar cache:", err);
+      }
+
       // Perform the original logout operation
       const success = await logout();
 
       setLogoutModalVisible(false);
       setIsLoggingOut(false);
 
-      // If needed, you can add additional navigation here
-      // For example, navigate to the login screen
+      // Optional: navigate to login screen
       // navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
     } catch (error) {
       console.error("Error during logout process:", error);

@@ -26,6 +26,7 @@ import ReusableModal from "../../components/Modal";
 import colors from "../../config/colors";
 import { toPersianDigits } from "../../utils/numberConversions";
 import useProductScanner from "../../Hooks/useProductScanner";
+import { useAuth } from "../AuthContext";
 
 export interface Product {
   id: number;
@@ -134,7 +135,7 @@ const IssuingNewInvoice: React.FC = () => {
     messages: [],
     buttons: [],
   });
-
+  const { user } = useAuth();
   const [toastVisible, setToastVisible] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string>("");
   const [toastType, setToastType] = useState<
@@ -171,7 +172,8 @@ const IssuingNewInvoice: React.FC = () => {
           id: "ok",
           text: "تأیید",
           color: buttonColor,
-          onPress: () => setModalConfig(prev => ({ ...prev, visible: false })),
+          onPress: () =>
+            setModalConfig((prev) => ({ ...prev, visible: false })),
         },
       ],
     });
@@ -186,17 +188,20 @@ const IssuingNewInvoice: React.FC = () => {
         icon: "check-circle",
         colors: [colors.success, "#4ade80"], // Green gradient
       },
-      messages: [{
-        text: message,
-        icon: "check-circle",
-        iconColor: colors.success
-      }],
+      messages: [
+        {
+          text: message,
+          icon: "check-circle",
+          iconColor: colors.success,
+        },
+      ],
       buttons: [
         {
           id: "ok",
           text: "تأیید",
           color: colors.success,
-          onPress: () => setModalConfig(prev => ({ ...prev, visible: false })),
+          onPress: () =>
+            setModalConfig((prev) => ({ ...prev, visible: false })),
         },
       ],
     });
@@ -211,17 +216,20 @@ const IssuingNewInvoice: React.FC = () => {
         icon: "error",
         colors: [colors.danger, "#ef4444"], // Red gradient
       },
-      messages: [{
-        text: message,
-        icon: "error",
-        iconColor: colors.danger
-      }],
+      messages: [
+        {
+          text: message,
+          icon: "error",
+          iconColor: colors.danger,
+        },
+      ],
       buttons: [
         {
           id: "ok",
           text: "تأیید",
           color: colors.danger,
-          onPress: () => setModalConfig(prev => ({ ...prev, visible: false })),
+          onPress: () =>
+            setModalConfig((prev) => ({ ...prev, visible: false })),
         },
       ],
     });
@@ -241,18 +249,20 @@ const IssuingNewInvoice: React.FC = () => {
         icon: "help",
         colors: [colors.warning, "#f59e0b"], // Orange gradient
       },
-      messages: [{
-        text: message,
-        icon: "help",
-        iconColor: colors.warning
-      }],
+      messages: [
+        {
+          text: message,
+          icon: "help",
+          iconColor: colors.warning,
+        },
+      ],
       buttons: [
         {
           id: "cancel",
           text: "انصراف",
           color: colors.medium,
           onPress: () => {
-            setModalConfig(prev => ({ ...prev, visible: false }));
+            setModalConfig((prev) => ({ ...prev, visible: false }));
             if (onCancel) onCancel();
           },
         },
@@ -261,7 +271,7 @@ const IssuingNewInvoice: React.FC = () => {
           text: "تأیید",
           color: colors.warning,
           onPress: () => {
-            setModalConfig(prev => ({ ...prev, visible: false }));
+            setModalConfig((prev) => ({ ...prev, visible: false }));
             onConfirm();
           },
         },
@@ -369,6 +379,7 @@ const IssuingNewInvoice: React.FC = () => {
     try {
       // آماده‌سازی داده‌های فاکتور
       const invoiceData = {
+        ApplicationUserId: user?.UserId || 0,
         personId: parseInt(selectedColleague.id),
         discount: 0, // در صورت نیاز، تخفیف را از کامپوننت InvoiceTotalCalculator دریافت کنید
         extra: 0, // در صورت نیاز، هزینه اضافی را از کامپوننت InvoiceTotalCalculator دریافت کنید
@@ -451,8 +462,9 @@ const IssuingNewInvoice: React.FC = () => {
         if (!isNaN(rectifiedValue) && rectifiedValue > 0) {
           const totalArea =
             product.totalArea || product.boxCount * rectifiedValue;
-          totalAreaText = ` (${toPersianDigits(totalArea.toFixed(2))}${product.measurementUnitName ? ` ${product.measurementUnitName}` : ""
-            })`;
+          totalAreaText = ` (${toPersianDigits(totalArea.toFixed(2))}${
+            product.measurementUnitName ? ` ${product.measurementUnitName}` : ""
+          })`;
         }
       }
 
@@ -503,7 +515,7 @@ const IssuingNewInvoice: React.FC = () => {
       {/* Reusable Modal */}
       <ReusableModal
         visible={modalConfig.visible}
-        onClose={() => setModalConfig(prev => ({ ...prev, visible: false }))}
+        onClose={() => setModalConfig((prev) => ({ ...prev, visible: false }))}
         headerConfig={modalConfig.headerConfig}
         messages={modalConfig.messages}
         buttons={modalConfig.buttons}
@@ -717,8 +729,14 @@ const IssuingNewInvoice: React.FC = () => {
                     onReturn: (scannedProduct: Product) => {
                       if (scannedProduct) {
                         // بررسی قیمت محصول اسکن شده
-                        if (!scannedProduct.price || scannedProduct.price === 0) {
-                          showToast("قیمت محصول باید بیشتر از صفر باشد", "warning");
+                        if (
+                          !scannedProduct.price ||
+                          scannedProduct.price === 0
+                        ) {
+                          showToast(
+                            "قیمت محصول باید بیشتر از صفر باشد",
+                            "warning"
+                          );
                           return;
                         }
 

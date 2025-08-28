@@ -51,13 +51,18 @@ interface APIProduct {
   ActiveStr: string;
   Quantity?: string;
   ProductMeasurementUnitName?: string;
+  Inventory: number;
 }
 
 interface ProductSearchDrawerProps {
   visible: boolean;
   onClose: () => void;
   onProductSelect: (product: Product) => void;
-  searchProduct: (query: string, page?: number, pageSize?: number) => Promise<{
+  searchProduct: (
+    query: string,
+    page?: number,
+    pageSize?: number
+  ) => Promise<{
     items: APIProduct[];
     totalCount: number;
     hasMore: boolean;
@@ -235,9 +240,13 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
           setTotalCount(result.totalCount || 0);
         } else {
           // Remove duplicates when adding new items
-          setSearchResults(prevResults => {
-            const existingIds = new Set(prevResults.map(item => item.ProductId));
-            const newUniqueItems = result.items.filter(item => !existingIds.has(item.ProductId));
+          setSearchResults((prevResults) => {
+            const existingIds = new Set(
+              prevResults.map((item) => item.ProductId)
+            );
+            const newUniqueItems = result.items.filter(
+              (item) => !existingIds.has(item.ProductId)
+            );
             return [...prevResults, ...newUniqueItems];
           });
         }
@@ -274,14 +283,19 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
   const loadMoreThrottleRef = useRef<boolean>(false);
 
   const handleLoadMore = () => {
-    if (loadMoreThrottleRef.current || !hasMoreData || loadingMore || searching) {
+    if (
+      loadMoreThrottleRef.current ||
+      !hasMoreData ||
+      loadingMore ||
+      searching
+    ) {
       return;
     }
 
     if (searchQuery.trim() === currentQuery.current) {
       loadMoreThrottleRef.current = true;
 
-      setCurrentPage(prevPage => {
+      setCurrentPage((prevPage) => {
         const nextPage = prevPage + 1;
         // Call handleSearch with the next page
         setTimeout(() => {
@@ -394,47 +408,50 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
     fetchCompleteProductData();
   };
 
-  const renderProductItem = React.useMemo(() =>
-    ({ item, index }: ListRenderItemInfo<APIProduct>) => (
-      <View style={styles.productItemWrapper}>
-        <ProductCard
-          key={`product-${item.ProductId}-${index}`}
-          title={toPersianDigits(item.ProductName)}
-          onPress={() => handleProductSelect(item)}
-          fields={[
-            {
-              icon: "qr-code",
-              iconColor: colors.secondary,
-              label: "کد:",
-              value: toPersianDigits(item.SKU),
-            },
-            {
-              icon: "attach-money",
-              iconColor: colors.secondary,
-              label: "قیمت:",
-              value:
-                item.Price !== null
-                  ? toPersianDigits(item.Price.toLocaleString()) + " ریال"
-                  : "0 ریال",
-            },
-            {
-              icon: "check-circle",
-              iconColor: colors.secondary,
-              label: "وضعیت:",
-              value: item.ActiveStr,
-              valueColor: item.Active ? colors.success : colors.danger,
-            },
-          ]}
-          qrConfig={{
-            show: true,
-            icon: "qr-code-2",
-            iconSize: 36,
-            iconColor: colors.secondary,
-          }}
-          containerStyle={styles.productCard}
-        />
-      </View>
-    ), [colors]
+  const renderProductItem = React.useMemo(
+    () =>
+      ({ item, index }: ListRenderItemInfo<APIProduct>) =>
+        (
+          <View style={styles.productItemWrapper}>
+            <ProductCard
+              key={`product-${item.ProductId}-${index}`}
+              title={toPersianDigits(item.ProductName)}
+              onPress={() => handleProductSelect(item)}
+              fields={[
+                {
+                  icon: "qr-code",
+                  iconColor: colors.secondary,
+                  label: "کد:",
+                  value: toPersianDigits(item.SKU),
+                },
+                {
+                  icon: "attach-money",
+                  iconColor: colors.secondary,
+                  label: "قیمت:",
+                  value:
+                    item.Price !== null
+                      ? toPersianDigits(item.Price.toLocaleString()) + " ریال"
+                      : "0 ریال",
+                },
+                {
+                  icon: "inventory",
+                  iconColor: colors.secondary,
+                  label: "موجودی:",
+                  value: toPersianDigits(item.Inventory),
+                  valueColor: item.Inventory ? colors.success : colors.danger,
+                },
+              ]}
+              qrConfig={{
+                show: true,
+                icon: "qr-code-2",
+                iconSize: 36,
+                iconColor: colors.secondary,
+              }}
+              containerStyle={styles.productCard}
+            />
+          </View>
+        ),
+    [colors]
   );
 
   const renderFooter = () => {
@@ -473,7 +490,7 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
       animationType="none"
       onRequestClose={closeDrawer}
       statusBarTranslucent={true}
-      supportedOrientations={['portrait']}
+      supportedOrientations={["portrait"]}
       presentationStyle="overFullScreen"
     >
       <View style={styles.modalContainer}>
@@ -532,7 +549,7 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
                     style={[
                       styles.searchInput,
                       Platform.OS === "android" &&
-                      keyboardOpen && { height: 40 },
+                        keyboardOpen && { height: 40 },
                     ]}
                     placeholder="جستجوی نام یا کد محصول"
                     placeholderTextColor="#999"
@@ -625,13 +642,13 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     justifyContent: "flex-end",
     zIndex: Z_INDEX.MODAL_BACKDROP,
-    elevation: Platform.OS === 'android' ? Z_INDEX.MODAL_BACKDROP / 100 : 0,
+    elevation: Platform.OS === "android" ? Z_INDEX.MODAL_BACKDROP / 100 : 0,
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
     zIndex: Z_INDEX.MODAL_BACKDROP,
-    elevation: Platform.OS === 'android' ? Z_INDEX.MODAL_BACKDROP / 100 : 0,
+    elevation: Platform.OS === "android" ? Z_INDEX.MODAL_BACKDROP / 100 : 0,
   },
   backdropTouchable: {
     flex: 1,
@@ -645,11 +662,11 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: -3 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
-    elevation: Platform.OS === 'android' ? Z_INDEX.MODAL_CONTENT / 100 : 16,
+    elevation: Platform.OS === "android" ? Z_INDEX.MODAL_CONTENT / 100 : 16,
     height: "80%",
     paddingBottom: Platform.OS === "android" ? 20 : 0,
     zIndex: Z_INDEX.MODAL_CONTENT,
-    position: 'relative',
+    position: "relative",
   },
   header: {
     flexDirection: "row-reverse",
@@ -659,8 +676,8 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     height: 65,
     zIndex: Z_INDEX.MODAL_HEADER,
-    elevation: Platform.OS === 'android' ? Z_INDEX.MODAL_HEADER / 100 : 0,
-    position: 'relative',
+    elevation: Platform.OS === "android" ? Z_INDEX.MODAL_HEADER / 100 : 0,
+    position: "relative",
   },
   headerContent: {
     flexDirection: "row-reverse",
@@ -679,20 +696,20 @@ const styles = StyleSheet.create({
   closeButton: {
     padding: 0,
     zIndex: Z_INDEX.MODAL_BUTTONS,
-    elevation: Platform.OS === 'android' ? Z_INDEX.MODAL_BUTTONS / 100 : 0,
+    elevation: Platform.OS === "android" ? Z_INDEX.MODAL_BUTTONS / 100 : 0,
   },
   body: {
     padding: 16,
     flex: 1,
     zIndex: Z_INDEX.MODAL_CONTENT,
-    elevation: Platform.OS === 'android' ? Z_INDEX.MODAL_CONTENT / 100 : 0,
-    position: 'relative',
+    elevation: Platform.OS === "android" ? Z_INDEX.MODAL_CONTENT / 100 : 0,
+    position: "relative",
   },
   searchContainer: {
     marginBottom: 16,
     zIndex: Z_INDEX.MODAL_BUTTONS,
-    elevation: Platform.OS === 'android' ? Z_INDEX.MODAL_BUTTONS / 100 : 0,
-    position: 'relative',
+    elevation: Platform.OS === "android" ? Z_INDEX.MODAL_BUTTONS / 100 : 0,
+    position: "relative",
   },
   searchInputWrapper: {
     flexDirection: "row-reverse",
@@ -705,7 +722,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
-    elevation: Platform.OS === 'android' ? 5 : 1,
+    elevation: Platform.OS === "android" ? 5 : 1,
     height: 56,
     zIndex: Z_INDEX.MODAL_BUTTONS,
   },
@@ -726,7 +743,7 @@ const styles = StyleSheet.create({
   clearButton: {
     padding: 5,
     zIndex: Z_INDEX.MODAL_BUTTONS,
-    elevation: Platform.OS === 'android' ? Z_INDEX.MODAL_BUTTONS / 100 : 0,
+    elevation: Platform.OS === "android" ? Z_INDEX.MODAL_BUTTONS / 100 : 0,
   },
   searchButton: {
     backgroundColor: colors.primary,
@@ -738,17 +755,17 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     zIndex: Z_INDEX.MODAL_BUTTONS,
-    elevation: Platform.OS === 'android' ? Z_INDEX.MODAL_BUTTONS / 100 : 0,
+    elevation: Platform.OS === "android" ? Z_INDEX.MODAL_BUTTONS / 100 : 0,
   },
   flatList: {
     flex: 1,
     zIndex: 1,
-    elevation: Platform.OS === 'android' ? 1 : 0,
+    elevation: Platform.OS === "android" ? 1 : 0,
   },
   productItemWrapper: {
     zIndex: 1,
-    elevation: Platform.OS === 'android' ? 1 : 0,
-    position: 'relative',
+    elevation: Platform.OS === "android" ? 1 : 0,
+    position: "relative",
   },
   centerContainer: {
     flex: 1,
@@ -756,7 +773,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 40,
     zIndex: 1,
-    elevation: Platform.OS === 'android' ? 1 : 0,
+    elevation: Platform.OS === "android" ? 1 : 0,
   },
   loadingText: {
     marginTop: 10,
@@ -774,13 +791,13 @@ const styles = StyleSheet.create({
   listContainer: {
     paddingBottom: 20,
     zIndex: 1,
-    elevation: Platform.OS === 'android' ? 1 : 0,
+    elevation: Platform.OS === "android" ? 1 : 0,
   },
   productCard: {
     marginBottom: 10,
     zIndex: 1,
-    elevation: Platform.OS === 'android' ? 2 : 0,
-    position: 'relative',
+    elevation: Platform.OS === "android" ? 2 : 0,
+    position: "relative",
   },
   searchTipsContainer: {
     marginTop: 20,
@@ -830,7 +847,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginHorizontal: 5,
     zIndex: 1,
-    elevation: Platform.OS === 'android' ? 1 : 0,
+    elevation: Platform.OS === "android" ? 1 : 0,
   },
   footerLoaderText: {
     marginTop: 8,
