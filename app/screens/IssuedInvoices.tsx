@@ -415,7 +415,11 @@ const IssuedInvoices: React.FC = () => {
 
   const fetchInvoiceCounts = async () => {
     try {
-      const response = await fetch(`${appConfig.mobileApi}Invoice/GetCount`);
+      const response = await fetch(
+        `${appConfig.mobileApi}Invoice/GetCount?filterApplicationUserId=${
+          user?.UserId || 0
+        }`
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
@@ -438,7 +442,9 @@ const IssuedInvoices: React.FC = () => {
     try {
       setLoading(true);
       const response = await fetch(
-        `${appConfig.mobileApi}Invoice/GetAll?page=${currentPage}&pageSize=20`
+        `${appConfig.mobileApi}Invoice/GetAll?filterApplicationUserId=${
+          user?.UserId || 0
+        }&page=${currentPage}&pageSize=20`
       );
 
       if (!response.ok) {
@@ -478,7 +484,7 @@ const IssuedInvoices: React.FC = () => {
     try {
       console.log("filterParams:", filterParams);
 
-      let queryString = "page=1&pageSize=1000";
+      let queryString = `filterApplicationUserId=${user?.UserId || 0}`;
 
       if (filterParams) {
         if (filterParams.filterPersonId) {
@@ -498,6 +504,8 @@ const IssuedInvoices: React.FC = () => {
         }
       }
 
+      queryString += "&page=1&pageSize=1000";
+
       console.log("Query String:", queryString);
 
       const response = await axios.get(
@@ -506,24 +514,25 @@ const IssuedInvoices: React.FC = () => {
 
       const data = response.data;
       console.log("datas", data);
+      if (response.status === 200) {
+        if (data.length !== 0) {
+          const mappedItems: InspectionItem[] = data.Items.map((item: any) => ({
+            id: item.InvoiceId.toString(),
+            buyerName: item.PersonFullName.trim() || "مشتری",
+            buyerPhone: item.PersonMobile,
+            invoiceNumber: item.InvoiceId.toString(),
+            date: item.ShamsiInvoiceDate,
+            sellerName: item.ApplicationUserName,
+            sellerPhone: "",
+            description: item.Description,
+            status: stateMap[item.State] || "صادر شده",
+            amount: item.TotalAmount,
+            applicationUserId: item.ApplicationUserId,
+          }));
 
-      if (data.length !== 0) {
-        const mappedItems: InspectionItem[] = data.Items.map((item: any) => ({
-          id: item.InvoiceId.toString(),
-          buyerName: item.PersonFullName.trim() || "مشتری",
-          buyerPhone: item.PersonMobile,
-          invoiceNumber: item.InvoiceId.toString(),
-          date: item.ShamsiInvoiceDate,
-          sellerName: item.ApplicationUserName,
-          sellerPhone: "",
-          description: item.Description,
-          status: stateMap[item.State] || "صادر شده",
-          amount: item.TotalAmount,
-          applicationUserId: item.ApplicationUserId,
-        }));
-
-        setItems(mappedItems);
-      } else if (data.length === 0) setItems([]);
+          setItems(mappedItems);
+        } else if (data.length === 0) setItems([]);
+      }
     } catch (error) {
       console.log(error);
       showToast("خطا در دریافت اطلاعات فاکتور ها", "error");
@@ -534,7 +543,7 @@ const IssuedInvoices: React.FC = () => {
 
   const getInvoiceCountWithFilter = async () => {
     try {
-      let queryString = "";
+      let queryString = `filterApplicationUserId=${user?.UserId || 0}`;
 
       if (filterParams) {
         if (filterParams.filterPersonId) {
@@ -553,6 +562,7 @@ const IssuedInvoices: React.FC = () => {
           )}`;
         }
       }
+      console.log("Query String:", queryString);
 
       const response = await axios.get(
         `${appConfig.mobileApi}Invoice/GetCount?${queryString}`

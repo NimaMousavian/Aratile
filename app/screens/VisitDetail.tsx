@@ -865,6 +865,7 @@ const styles = StyleSheet.create({
     right: 0,
     left: 0,
     marginHorizontal: 15,
+    marginTop: 8,
   },
   centerContainer: {
     flex: 1,

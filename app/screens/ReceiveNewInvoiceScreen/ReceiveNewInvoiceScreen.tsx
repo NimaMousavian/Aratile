@@ -483,7 +483,7 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                         شماره فاکتور:
                       </Text>
                       <Text style={styles.invoiceNumberValue}>
-                        {toPersianDigits(invoic?.InvoiceId.toString())}
+                        {toPersianDigits(invoic?.InvoiceId?.toString())}
                       </Text>
                     </View>
                     <View style={styles.invoiceDate}>
@@ -566,7 +566,7 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                           icon: "shopping-bag",
                           label: `تعداد ${invoicItem.ProductPackaginName}:`,
                           value: toPersianDigits(
-                            invoicItem.PackagingQuantity.toString()
+                            invoicItem.PackagingQuantity?.toString()
                           ),
                         },
                         {

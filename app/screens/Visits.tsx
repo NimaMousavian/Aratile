@@ -14,6 +14,7 @@ import AppText from "../components/Text";
 import { ActivityIndicator } from "react-native-paper";
 import { getFontFamily } from "./IssuedInvoices";
 import { Feather } from "@expo/vector-icons";
+import { useAuth } from "./AuthContext";
 
 export interface IVisitItem {
   visitId: number;
@@ -78,6 +79,7 @@ const Visits = () => {
 
   const [visits, setVisits] = useState<IShowRoomVisitItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const { user } = useAuth();
 
   const [toastVisible, setToastVisible] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string>("");
@@ -98,7 +100,9 @@ const Visits = () => {
     setLoading(true);
     try {
       const response = await axios.get<{ Items: IShowRoomVisitItem[] }>(
-        `${appConfig.mobileApi}ShowroomVisit/GetAll?page=1&pageSize=1000`
+        `${appConfig.mobileApi}ShowroomVisit/GetAll?filterApplicationUserId=${
+          user?.UserId || 0
+        }&page=1&pageSize=1000`
       );
 
       setVisits(response.data.Items);

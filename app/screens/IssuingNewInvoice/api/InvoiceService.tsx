@@ -1,5 +1,6 @@
-import axios from 'axios';
-import appConfig from '../../../../config';
+import axios from "axios";
+import appConfig from "../../../../config";
+
 // تعریف اینترفیس‌های مورد نیاز
 export interface Product {
   id: number;
@@ -32,6 +33,7 @@ export interface InvoiceItem {
 }
 
 export interface InvoiceData {
+  ApplicationUserId: number;
   PersonId: number;
   Discount: number;
   Extra: number;
@@ -62,6 +64,7 @@ export default class InvoiceService {
    * @param invoiceData - اطلاعات فاکتور
    */
   static async submitInvoice(invoiceData: {
+    ApplicationUserId: number;
     personId: number;
     discount: number;
     extra: number;
@@ -78,20 +81,23 @@ export default class InvoiceService {
     try {
       // تبدیل داده‌ها به فرمت مورد نیاز API
       const apiPayload: InvoiceData = {
+        ApplicationUserId: invoiceData.ApplicationUserId || 0,
         PersonId: invoiceData.personId,
         Discount: invoiceData.discount || 0,
         Extra: invoiceData.extra || 0,
         Description: invoiceData.description || "",
-        InvoiceItemList: invoiceData.items.map(item => ({
+        InvoiceItemList: invoiceData.items.map((item) => ({
           InvoiceId: 0, // InvoiceId را سرور مشخص می‌کند
           ProductId: item.id,
           ProductVariationId: item.variationId || 0,
           Discount: item.discount || 0,
           Extra: item.extra || 0,
           ProductQuantity: parseFloat(item.quantity) || 0,
-          Description: item.note || ""
-        }))
+          Description: item.note || "",
+        })),
       };
+
+      console.log("apiPayload", apiPayload);
 
       // ارسال درخواست به API
       const response = await axios.post(
@@ -99,24 +105,27 @@ export default class InvoiceService {
         apiPayload,
         {
           headers: {
-            'Content-Type': 'application/json',
-            'Accept': '*/*'
+            "Content-Type": "application/json",
+            Accept: "*/*",
             // در صورت نیاز، هدرهای احراز هویت را اینجا اضافه کنید
             // 'Authorization': `Bearer ${token}`
-          }
+          },
         }
       );
 
       return {
         success: true,
-        data: response.data
+        data: response.data,
       };
     } catch (error: any) {
-      console.error('خطا در ثبت فاکتور:', error);
+      console.error("خطا در ثبت فاکتور:", error);
 
       return {
         success: false,
-        error: error.response?.data?.message || error.message || 'خطایی در ثبت فاکتور رخ داد'
+        error:
+          error.response?.data?.message ||
+          error.message ||
+          "خطایی در ثبت فاکتور رخ داد",
       };
     }
   }
@@ -134,7 +143,7 @@ export default class InvoiceService {
   ): InvoiceTotalData {
     let subtotal = 0;
 
-    products.forEach(product => {
+    products.forEach((product) => {
       const price = product.price || 0;
       const quantity = parseFloat(product.quantity) || 0;
       subtotal += price * quantity;
@@ -148,7 +157,7 @@ export default class InvoiceService {
       discount,
       totalWithDiscount,
       extra,
-      finalTotal
+      finalTotal,
     };
   }
 }
