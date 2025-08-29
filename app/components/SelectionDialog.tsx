@@ -276,7 +276,7 @@ const SelectionBottomSheet: React.FC<SelectionBottomSheetProps> = ({
 
   const getContentHeight = () => {
     if (loading) {
-      return height * 0.6;
+      return height * 0.85;
     }
     return Math.min(
       height * 0.8,
@@ -321,6 +321,10 @@ const SelectionBottomSheet: React.FC<SelectionBottomSheetProps> = ({
         transparent={true}
         animationType="none"
         onRequestClose={closeModal}
+        statusBarTranslucent={true}
+        supportedOrientations={['portrait']}
+        presentationStyle="overFullScreen"
+        hardwareAccelerated={true}
       >
         <View style={styles.modalContainer}>
           <Animated.View style={[styles.backdrop, backdropStyle]}>
@@ -412,16 +416,16 @@ const SelectionBottomSheet: React.FC<SelectionBottomSheetProps> = ({
                           styles.checkbox,
                           multiSelect
                             ? tempSelectedValues.includes(option) &&
-                              styles.checkboxSelected
+                            styles.checkboxSelected
                             : selectedValues[0] === option &&
-                              styles.checkboxSelected,
+                            styles.checkboxSelected,
                         ]}
                       >
                         {(multiSelect
                           ? tempSelectedValues.includes(option)
                           : selectedValues[0] === option) && (
-                          <MaterialIcons name="check" size={16} color="white" />
-                        )}
+                            <MaterialIcons name="check" size={16} color="white" />
+                          )}
                       </View>
                       <Text style={styles.optionText}>{option}</Text>
                     </TouchableOpacity>

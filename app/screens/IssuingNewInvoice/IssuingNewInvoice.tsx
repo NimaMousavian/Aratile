@@ -100,6 +100,15 @@ const IssuingNewInvoice: React.FC = () => {
   const route = useRoute();
   const navigation = useNavigation<AppNavigationProp>();
 
+  // دریافت پارامترهای ویرایش از route
+  const editParams = route.params as {
+    isEditing?: boolean;
+    invoiceId?: number;
+    customer?: Colleague;
+    products?: Product[];
+    invoiceNote?: string;
+  } | undefined;
+
   const {
     isLoading,
     selectedProducts,
@@ -108,6 +117,7 @@ const IssuingNewInvoice: React.FC = () => {
     addProduct,
     showRemoveConfirmation,
     editProduct,
+    setInitialProducts, // فرض می‌کنیم این تابع در hook موجود است
   } = useProductScanner();
 
   const [showProductSearchDrawer, setShowProductSearchDrawer] =
@@ -116,12 +126,17 @@ const IssuingNewInvoice: React.FC = () => {
     useState<boolean>(false);
   const [productToShow, setProductToShow] = useState<Product | null>(null);
   const [selectedColleague, setSelectedColleague] = useState<Colleague | null>(
-    null
+    editParams?.customer || null
   );
   const [showColleagueSheet, setShowColleagueSheet] = useState<boolean>(false);
-  const [invoiceNote, setInvoiceNote] = useState<string>("");
+  const [invoiceNote, setInvoiceNote] = useState<string>(
+    editParams?.invoiceNote || ""
+  );
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isEditingInvoice, setIsEditingInvoice] = useState<boolean>(
+    editParams?.isEditing || false
+  );
 
   // Modal state
   const [modalConfig, setModalConfig] = useState<ModalConfig>({
@@ -149,6 +164,18 @@ const IssuingNewInvoice: React.FC = () => {
     setToastType(type);
     setToastVisible(true);
   };
+
+  // بارگذاری داده‌های ویرایش
+  useEffect(() => {
+    if (editParams?.isEditing && editParams.products) {
+      // اگر تابع setInitialProducts در hook موجود نیست، از روش زیر استفاده کنید:
+      editParams.products.forEach(product => {
+        addProduct(product);
+      });
+
+      showToast("فاکتور برای ویرایش بارگذاری شد", "info");
+    }
+  }, [editParams]);
 
   // Generic modal function
   const showModal = (
@@ -369,6 +396,7 @@ const IssuingNewInvoice: React.FC = () => {
     try {
       // آماده‌سازی داده‌های فاکتور
       const invoiceData = {
+        invoiceId: isEditingInvoice ? editParams?.invoiceId : undefined,
         personId: parseInt(selectedColleague.id),
         discount: 0, // در صورت نیاز، تخفیف را از کامپوننت InvoiceTotalCalculator دریافت کنید
         extra: 0, // در صورت نیاز، هزینه اضافی را از کامپوننت InvoiceTotalCalculator دریافت کنید
@@ -385,35 +413,43 @@ const IssuingNewInvoice: React.FC = () => {
         })),
       };
 
-      const result = await InvoiceService.submitInvoice(invoiceData);
+      const result = isEditingInvoice
+        ? await InvoiceService.updateInvoice(invoiceData)
+        : await InvoiceService.submitInvoice(invoiceData);
 
       setIsSubmitting(false);
 
       if (result.success) {
-<<<<<<< Updated upstream
-        // نمایش پیام موفقیت با مدال سبز
-        showSuccessModal("موفقیت", "فاکتور با موفقیت ثبت شد.");
-=======
-        showModal("موفقیت", "فاکتور با موفقیت ثبت شد.", "check-circle", colors.success);
->>>>>>> Stashed changes
+        const successMessage = isEditingInvoice
+          ? "فاکتور با موفقیت ویرایش شد."
+          : "فاکتور با موفقیت ثبت شد.";
+
+        showSuccessModal("موفقیت", successMessage);
 
         setTimeout(() => {
-          navigation.navigate("IssuedInvoices", { refresh: true });
+          if (isEditingInvoice) {
+            navigation.navigate("ReceiveNewInvoice", {
+              invoicId: editParams?.invoiceId,
+              refresh: true
+            });
+          } else {
+            navigation.navigate("IssuedInvoices", { refresh: true });
+          }
         }, 2000);
       } else {
-<<<<<<< Updated upstream
-        // نمایش پیام خطا با مدال قرمز
-        showErrorModal("خطا در ثبت فاکتور", result.error || "خطای نامشخص");
-=======
-        showToast(`خطا در ثبت فاکتور: ${result.error}`, "error");
->>>>>>> Stashed changes
+        const errorMessage = isEditingInvoice
+          ? `خطا در ویرایش فاکتور: ${result.error}`
+          : `خطا در ثبت فاکتور: ${result.error}`;
+        showToast(errorMessage, "error");
       }
     } catch (error) {
       setIsSubmitting(false);
-      showErrorModal(
-        "خطا",
-        "خطایی در فرآیند ثبت فاکتور رخ داد. لطفاً دوباره تلاش کنید."
-      );
+      const errorTitle = isEditingInvoice ? "خطا در ویرایش" : "خطا";
+      const errorMessage = isEditingInvoice
+        ? "خطایی در فرآیند ویرایش فاکتور رخ داد. لطفاً دوباره تلاش کنید."
+        : "خطایی در فرآیند ثبت فاکتور رخ داد. لطفاً دوباره تلاش کنید.";
+
+      showErrorModal(errorTitle, errorMessage);
       console.error("خطا در ارسال فاکتور:", error);
     }
   };
@@ -495,9 +531,13 @@ const IssuingNewInvoice: React.FC = () => {
     return fields;
   };
 
+  // تعیین عنوان صفحه بر اساس حالت ویرایش
+  const screenTitle = isEditingInvoice ? "ویرایش فاکتور" : "صدور فاکتور جدید";
+  const submitButtonText = isEditingInvoice ? "ویرایش" : "ثبت";
+
   return (
     <>
-      <ScreenHeader title="صدور فاکتور جدید" />
+      <ScreenHeader title={screenTitle} />
 
       <Toast
         visible={toastVisible}
@@ -601,21 +641,16 @@ const IssuingNewInvoice: React.FC = () => {
 
         <ScrollView style={styles.scrollableContent} ref={scrollViewRef}>
           <View style={styles.productsSection}>
-            {selectedProducts.map((product) => (
+            {selectedProducts.map((product, index) => (
               <ProductCard
-                key={product.id}
+                key={`${product.id}-${index}`}
                 title={toPersianDigits(product.title)}
                 fields={getProductFields(product)}
                 note={product.note ? toPersianDigits(product.note) : ""}
-                noteConfig={{
-                  show: !!product.note && product.note !== "-",
-                  icon: "notes",
-                  iconColor: colors.secondary,
-                  label: "توضیحات:",
-                }}
+
                 qrConfig={{
                   show: true,
-                  icon: "camera", // تغییر آیکون به دوربین/عکس
+                  icon: "image",
                   iconSize: 36,
                   iconColor: colors.secondary,
                 }}
@@ -624,14 +659,14 @@ const IssuingNewInvoice: React.FC = () => {
                   size: 22,
                   color: colors.warning,
                   onPress: () => handleEditProduct(product.id),
-                  containerStyle: styles.iconCircleSmall, // اضافه کردن استایل دایره
+                  containerStyle: styles.iconCircleSmall,
                 }}
                 deleteIcon={{
                   name: "delete",
                   size: 22,
                   color: colors.danger,
                   onPress: () => handleRemoveProduct(product.id),
-                  containerStyle: styles.iconCircleSmall, // اضافه کردن استایل دایره
+                  containerStyle: styles.iconCircleSmall,
                 }}
                 containerStyle={
                   Platform.OS === "android" ? styles.androidCardAdjustment : {}
@@ -721,6 +756,8 @@ const IssuingNewInvoice: React.FC = () => {
                 onPress={() => {
                   navigation.navigate("BarCodeScanner", {
                     onReturn: (scannedProduct: Product) => {
+                      console.log("Product received from barcode scanner:", scannedProduct);
+
                       if (scannedProduct) {
                         // بررسی قیمت محصول اسکن شده
                         if (!scannedProduct.price || scannedProduct.price === 0) {
@@ -728,23 +765,25 @@ const IssuingNewInvoice: React.FC = () => {
                           return;
                         }
 
-                        // افزودن محصول اسکن شده به لیست محصولات
-                        const success = addProduct(scannedProduct);
-                        if (success) {
-                          showToast(
-                            `محصول "${scannedProduct.title}" با موفقیت به فاکتور اضافه شد`,
-                            "success"
-                          );
-
-                          // اسکرول به پایین برای نمایش محصول جدید
-                          setTimeout(() => {
-                            if (scrollViewRef.current) {
-                              scrollViewRef.current.scrollToEnd({
-                                animated: true,
-                              });
-                            }
-                          }, 500);
+                        // بررسی تکرار محصول بر اساس کد محصول
+                        const existingProduct = selectedProducts.find(p => p.code === scannedProduct.code);
+                        if (existingProduct) {
+                          showToast(`محصول "${scannedProduct.title}" قبلاً به فاکتور اضافه شده است`, "warning");
+                          return;
                         }
+
+                        // تنظیم محصول برای نمایش در مدال Properties
+                        // (دقیقاً مثل کاری که در ProductSearchDrawer انجام می‌شود)
+                        setTimeout(() => {
+                          console.log("Opening ProductProperties modal for scanned product");
+                          setProductToShow(scannedProduct);
+                          setIsEditing(false); // مطمئن شویم که در حالت افزودن است (نه ویرایش)
+                          setShowProductProperties(true);
+                          showToast(`محصول "${scannedProduct.title}" اسکن شد. لطفاً مقدار را تنظیم کنید`, "info");
+                        }, 300); // تاخیر 300ms برای اطمینان از بسته شدن کامل صفحه بارکد اسکنر
+                      } else {
+                        console.log("No product received from barcode scanner");
+                        showToast("خطا در دریافت اطلاعات محصول", "error");
                       }
                     },
                   });
@@ -770,7 +809,10 @@ const IssuingNewInvoice: React.FC = () => {
 
             <View style={styles.submitButtonContainer}>
               <TouchableOpacity
-                style={styles.submitButton}
+                style={[
+                  styles.submitButton,
+                  { backgroundColor: isEditingInvoice ? colors.warning : colors.success }
+                ]}
                 onPress={submitInvoice}
                 disabled={isSubmitting}
               >
@@ -778,8 +820,12 @@ const IssuingNewInvoice: React.FC = () => {
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
                   <>
-                    <MaterialIcons name="done" size={28} color="#FFFFFF" />
-                    <Text style={styles.submitButtonText}>ثبت</Text>
+                    <MaterialIcons
+                      name={isEditingInvoice ? "edit" : "done"}
+                      size={28}
+                      color="#FFFFFF"
+                    />
+                    <Text style={styles.submitButtonText}>{submitButtonText}</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -991,7 +1037,6 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   submitButton: {
-    backgroundColor: colors.success,
     flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",

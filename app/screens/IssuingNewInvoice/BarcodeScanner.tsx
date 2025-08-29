@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   StyleSheet,
   Text,
@@ -23,12 +23,14 @@ import { IProduct } from "../../config/types";
 import { Product } from "./IssuingNewInvoice";
 
 const { width, height } = Dimensions.get("window");
-const SQUARE_SIZE = Math.min(width, height) * 0.6; // Square size is 60% of the smaller dimension
+const SQUARE_SIZE = Math.min(width, height) * 0.6;
 
 const BarcodeScanner = () => {
   const [facing, setFacing] = useState<CameraType>("back");
   const [permission, requestPermission] = useCameraPermissions();
   const [isScanning, setIsScanning] = useState<boolean>(true);
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [lastScannedCode, setLastScannedCode] = useState<string>("");
 
   const [toastVisible, setToastVisible] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string>("");
@@ -40,9 +42,7 @@ const BarcodeScanner = () => {
   const route = useRoute();
   const { onReturn } = route.params as { onReturn: (product: Product) => void };
 
-  // useEffect(() => {
-  //   showToast("بارکد اسکنر موقتا غیر فعال است", "warning");
-  // }, []);
+  const processingRef = useRef(false);
 
   const showToast = (
     message: string,
@@ -58,6 +58,15 @@ const BarcodeScanner = () => {
   };
 
   const getProductBySKU = async (sku: string) => {
+    if (processingRef.current) {
+      console.log("Already processing, skipping...");
+      return;
+    }
+
+    processingRef.current = true;
+    setIsProcessing(true);
+    console.log("Processing SKU:", sku);
+
     try {
       const response = await axios.get<IProduct>(
         `${appConfig.mobileApi}Product/GetBySKU?sku=${sku}`
@@ -65,50 +74,200 @@ const BarcodeScanner = () => {
 
       const apiProduct = response.data;
 
-      // Transform the API response to match the Product interface
+      if (!apiProduct || !apiProduct.ProductId) {
+        showToast("محصولی با این بارکد یافت نشد", "error");
+        setTimeout(() => {
+          setIsScanning(true);
+          setIsProcessing(false);
+          processingRef.current = false;
+          setLastScannedCode("");
+        }, 2000);
+        return;
+      }
+
+      const detailResponse = await axios.get(
+        `${appConfig.mobileApi}Product/Get?id=${apiProduct.ProductId}`
+      );
+
+      let propertyValue = null;
+      let rectifiedValue = null;
+      let inventory = null;
+
+      if (
+        detailResponse.data &&
+        detailResponse.data.Product_ProductPropertyValue_List &&
+        detailResponse.data.Product_ProductPropertyValue_List.length > 0
+      ) {
+        const rectifiedProperty = detailResponse.data.Product_ProductPropertyValue_List.find(
+          (prop: any) => prop.ProductPropertyName === "رکتیفای"
+        );
+
+        if (rectifiedProperty) {
+          rectifiedValue = rectifiedProperty.Value;
+          console.log("مقدار رکتیفای یافت شد:", rectifiedValue);
+        } else {
+          console.log("ویژگی رکتیفای یافت نشد. استفاده از مقدار پیش‌فرض 1.44");
+          rectifiedValue = "1.44";
+        }
+
+        propertyValue = detailResponse.data.Product_ProductPropertyValue_List[0].Value;
+      } else {
+        console.log("هیچ ویژگی برای محصول یافت نشد. استفاده از مقدار پیش‌فرض 1.44");
+        rectifiedValue = "1.44";
+      }
+
+      if (detailResponse.data && detailResponse.data.Inventory !== undefined) {
+        inventory = detailResponse.data.Inventory.toString();
+        console.log("موجودی قابل تعهد یافت شد:", inventory);
+      } else {
+        console.log("موجودی قابل تعهد یافت نشد");
+      }
+
       const product: Product = {
         id: apiProduct.ProductId,
+        originalId: apiProduct.ProductId,
         title: apiProduct.ProductName || "Unknown Product",
         code: apiProduct.SKU || sku,
-        quantity: "1", // Default quantity, can be adjusted in IssuingNewInvoice
-        price: apiProduct.Price || 0,
-        note: apiProduct.ProductTypeStr || "",
+        quantity: "1",
+        price: apiProduct.Price !== null ? apiProduct.Price : 0,
+        note: "",
         manualCalculation: false,
         hasColorSpectrum: false,
-        measurementUnitName: apiProduct.ProductMeasurementUnitName || "",
-        propertyValue: "",
-        rectifiedValue: "",
+        measurementUnitName: apiProduct.ProductMeasurementUnitName ||
+          (detailResponse.data?.MeasurementUnit?.MeasurementUnitName || ""),
+        propertyValue: inventory,
+        rectifiedValue: rectifiedValue,
         boxCount: 0,
         totalArea: 0,
         selectedVariation: undefined,
       };
 
-      // Call the onReturn callback with the product
-      onReturn(product);
+      console.log("محصول ارسال شده به ProductPropertiesDrawer:", product);
 
-      // Navigate back to IssuingNewInvoice
+      onReturn(product);
       navigation.goBack();
-      console.log(product);
+
     } catch (error) {
-      console.log(error);
-      showToast("خطا در دریافت اطلاعات محصول", "error");
-      setIsScanning(true);
+      console.log("Error fetching product:", error);
+
+      try {
+        const basicProduct: Product = {
+          id: Date.now(),
+          originalId: undefined,
+          title: "Unknown Product",
+          code: sku,
+          quantity: "1",
+          price: 0,
+          note: "",
+          manualCalculation: false,
+          hasColorSpectrum: false,
+          measurementUnitName: "",
+          propertyValue: "0",
+          rectifiedValue: "1.44",
+          boxCount: 0,
+          totalArea: 0,
+          selectedVariation: undefined,
+        };
+
+        onReturn(basicProduct);
+        navigation.goBack();
+
+      } catch (finalError) {
+        showToast("خطا در دریافت اطلاعات محصول", "error");
+        setTimeout(() => {
+          setIsScanning(true);
+          setIsProcessing(false);
+          processingRef.current = false;
+          setLastScannedCode("");
+        }, 2000);
+      }
     }
   };
 
   const handleBarcodeScanned = (scanningResult: BarcodeScanningResult) => {
-    if (!isScanning) return; // Ignore scans if scanning is disabled
+    console.log("Barcode scanned:", scanningResult.data, "isScanning:", isScanning, "isProcessing:", isProcessing);
 
-    // Disable further scanning
+    if (scanningResult.data === lastScannedCode) {
+      console.log("Same code scanned, ignoring...");
+      return;
+    }
+
+    if (!isScanning || isProcessing || processingRef.current) {
+      console.log("Scanning disabled or processing, ignoring...");
+      return;
+    }
+
+    console.log("Processing barcode:", scanningResult.data);
+
     setIsScanning(false);
+    setLastScannedCode(scanningResult.data);
+
     getProductBySKU(scanningResult.data);
   };
+
+  const handleBackButton = () => {
+    navigation.goBack();
+  };
+
+  const resetScanner = () => {
+    console.log("Resetting scanner...");
+    setIsScanning(true);
+    setIsProcessing(false);
+    processingRef.current = false;
+    setLastScannedCode("");
+  };
+
+  useEffect(() => {
+    return () => {
+      processingRef.current = false;
+      setIsProcessing(false);
+    };
+  }, []);
 
   useEffect(() => {
     if (!permission) {
       requestPermission();
     }
   }, [permission]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!isScanning && !isProcessing) {
+        console.log("Auto-resetting scanner...");
+        resetScanner();
+      }
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [isScanning, isProcessing]);
+
+  if (!permission) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.permissionText}>در حال بررسی مجوز دوربین...</Text>
+        </View>
+      </View>
+    );
+  }
+
+  if (!permission.granted) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.permissionText}>
+            برای استفاده از بارکد اسکنر، مجوز دسترسی به دوربین لازم است.
+          </Text>
+          <AppButton
+            title="درخواست مجوز"
+            onPress={requestPermission}
+            color="primary"
+            style={styles.backButton}
+          />
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -118,11 +277,16 @@ const BarcodeScanner = () => {
         type={toastType}
         onDismiss={() => setToastVisible(false)}
       />
+
       <CameraView
         style={styles.camera}
         facing={facing}
-        onBarcodeScanned={isScanning ? handleBarcodeScanned : undefined}
-      ></CameraView>
+        onBarcodeScanned={handleBarcodeScanned}
+        barcodeScannerSettings={{
+          barcodeTypes: ["qr", "pdf417", "code128", "code39", "ean13", "ean8", "upc_a", "upc_e"],
+        }}
+      />
+
       <View style={styles.overlay}>
         <View style={styles.topOverlay} />
         <View style={styles.middleOverlay}>
@@ -134,29 +298,16 @@ const BarcodeScanner = () => {
         <Text style={styles.overlayText}>بارکد را در کادر وسط قرار دهید</Text>
       </View>
 
-      {!isScanning && (
-        <View style={styles.processingOverlay}>
-          <Text style={styles.processingText}>در حال پردازش بارکد...</Text>
-        </View>
-      )}
-      <AppButton
-        title="بازگشت"
-        onPress={() => navigation.goBack()}
-        color="danger"
-        style={styles.backButton}
-      />
+    
 
-      {/* <View style={styles.loadingContainer}>
-        <Text style={styles.permissionText}>
-          امکان استفاده از بارکد اسکنر در حال حاضر وجود ندارد.
-        </Text>
+      <View style={styles.bottomButtonsContainer}>
         <AppButton
           title="بازگشت"
-          onPress={() => navigation.goBack()}
+          onPress={handleBackButton}
           color="danger"
           style={styles.backButton}
         />
-      </View> */}
+      </View>
     </View>
   );
 };
@@ -164,8 +315,6 @@ const BarcodeScanner = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor: colors.background,
-    // justifyContent: "center",
   },
   loadingContainer: {
     flex: 1,
@@ -179,17 +328,21 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     fontFamily: "Yekan_Bakh_Regular",
   },
-  backButton: {
-    width: 200,
+  bottomButtonsContainer: {
     position: "absolute",
     bottom: 20,
-    left: 95,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+  },
+  backButton: {
+    width: 200,
   },
   camera: {
     flex: 1,
   },
   overlay: {
-    ...StyleSheet.absoluteFillObject, // Cover the entire camera view
+    ...StyleSheet.absoluteFillObject,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -230,16 +383,34 @@ const styles = StyleSheet.create({
     fontFamily: "Yekan_Bakh_Bold",
     textAlign: "center",
   },
-  processingOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
-    justifyContent: "center",
+  statusContainer: {
+    position: "absolute",
+    top: 100,
+    left: 20,
+    right: 20,
     alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    borderRadius: 8,
+    padding: 10,
   },
-  processingText: {
+  statusText: {
     color: colors.white,
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: "Yekan_Bakh_Bold",
+    textAlign: "center",
+  },
+  resetButton: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 6,
+    marginTop: 8,
+  },
+  resetButtonText: {
+    color: colors.white,
+    fontSize: 14,
+    fontFamily: "Yekan_Bakh_Bold",
+    textAlign: "center",
   },
 });
 

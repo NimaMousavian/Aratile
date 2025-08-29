@@ -304,17 +304,13 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
   return (
     <Modal
       visible={visible}
-<<<<<<< Updated upstream
-      transparent
-      animationType="none"
-      onRequestClose={onClose}
-      statusBarTranslucent
-=======
       transparent={true}
       animationType="none"
       onRequestClose={onClose}
       statusBarTranslucent={true}
->>>>>>> Stashed changes
+      supportedOrientations={['portrait']} 
+      presentationStyle="overFullScreen"    
+      hardwareAccelerated={true}             
     >
       <View style={styles.container}>
         <Animated.View style={[styles.backdrop, { opacity: backdropOpacity }]}>
@@ -330,11 +326,7 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
             styles.bottomSheet,
             {
               transform: [{ translateY }],
-<<<<<<< Updated upstream
-              paddingBottom: keyboardHeight > 0 ? keyboardHeight : 20,
-=======
               paddingBottom: Math.max(keyboardHeight, 20),
->>>>>>> Stashed changes
             },
           ]}
         >
@@ -362,133 +354,6 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
               containerStyle={styles.searchContainer}
             />
 
-<<<<<<< Updated upstream
-            {loading ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator
-                  size="large"
-                  color={colors.secondary}
-                  style={styles.spinner}
-                />
-                <Text style={styles.loadingText}>در حال بارگذاری...</Text>
-              </View>
-            ) : filteredColleagues.length > 0 ? (
-              <FlatList
-                ref={flatListRef}
-                showsVerticalScrollIndicator={false}
-                data={filteredColleagues}
-                keyExtractor={(item, index) => `${item.id}-${index}`}
-                style={styles.resultList}
-                renderItem={({ item, index }) => (
-                  <TouchableOpacity
-                    key={`colleague-${item.id}-${index}`}
-                    style={styles.productCard}
-                    onPress={() => handleSelectColleague(item)}
-                    activeOpacity={0.7}
-                  >
-                    {/* Header with name */}
-                    <View style={styles.productTitleContainer}>
-                      <View style={styles.productTitleRow}>
-                        <View style={styles.titleWithIconContainer}>
-                          {/* <MaterialIcons
-                            name="person"
-                            size={20}
-                            color={colors.primary}
-                            style={{ marginLeft: 8 }}
-                          /> */}
-                          <Text style={styles.productTitle}>
-                            {toPersianDigits(item.name)}
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-
-                    {/* Body with details */}
-                    <View style={styles.productDetailsContainer}>
-                      <View style={styles.infoWithImageContainer}>
-                   
-
-                        <View style={styles.infoSection}>
-                          {/* Phone field */}
-                          <View style={[styles.fieldContainer, styles.fieldMarginBottom]}>
-                            <MaterialIcons
-                              name="phone"
-                              size={18}
-                              color={colors.success}
-                            />
-                            <Text style={styles.secondaryLabel}>تلفن:</Text>
-                            <Text style={styles.fieldValue}>
-                              {toPersianDigits(item.phone)}
-                            </Text>
-                          </View>
-
-                          {/* Group field */}
-                          {item.groups && item.groups.length > 0 && (
-                            <View style={[styles.fieldContainer, styles.fieldMarginBottom]}>
-                              <MaterialIcons
-                                name="group"
-                                size={18}
-                                color={colors.secondary}
-                              />
-                              <Text style={styles.secondaryLabel}>گروه:</Text>
-                              <Text style={styles.fieldValue}>
-                                {toPersianDigits(item.groups[0])}
-                              </Text>
-                            </View>
-                          )}
-
-                          {/* Introducing code field */}
-                          {item.introducingCode && (
-                            <View style={styles.fieldContainer}>
-                              <MaterialIcons
-                                name="qr-code"
-                                size={18}
-                                color={colors.warning}
-                              />
-                              <Text style={styles.secondaryLabel}>کد معرف:</Text>
-                              <Text style={styles.fieldValue}>
-                                {toPersianDigits(item.introducingCode)}
-                              </Text>
-                            </View>
-                          )}
-                        </View>
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-                )}
-                onEndReached={handleLoadMore}
-                onEndReachedThreshold={0.5}
-                ListFooterComponent={renderFooter}
-                initialNumToRender={pageSize}
-                maxToRenderPerBatch={pageSize / 2}
-                windowSize={10}
-                ItemSeparatorComponent={() => <View style={styles.separator} />}
-              />
-            ) : searchPerformed ? (
-              <View style={styles.noResultsContainer}>
-                <MaterialIcons
-                  name="search-off"
-                  size={48}
-                  color={colors.medium}
-                />
-                <Text style={styles.noResultsText}>نتیجه‌ای یافت نشد</Text>
-                {isCustomer && (
-                  <AppButton
-                    title="ثبت خریدار جدید"
-                    onPress={() => navigation.navigate("CustomerInfo", {})}
-                    color="success"
-                    style={{ width: "100%", marginTop: 15 }}
-                  />
-                )}
-              </View>
-            ) : (
-              <View style={styles.initialStateContainer}>
-                <Text style={styles.initialStateText}>
-                  برای جستجو، عبارت مورد نظر را وارد کنید و دکمه جستجو را بزنید
-                </Text>
-              </View>
-            )}
-=======
             <View style={styles.contentContainer}>
               {loading ? (
                 <View style={styles.loadingContainer}>
@@ -578,7 +443,6 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
                 </View>
               )}
             </View>
->>>>>>> Stashed changes
           </View>
         </Animated.View>
       </View>
@@ -589,11 +453,7 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-<<<<<<< Updated upstream
-    justifyContent: "flex-end",
-=======
     justifyContent: 'flex-end',
->>>>>>> Stashed changes
   },
   backdrop: {
     position: 'absolute',
@@ -607,15 +467,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bottomSheet: {
-    backgroundColor: colors.background,
+  backgroundColor: colors.background,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-<<<<<<< Updated upstream
-    height: "80%",
-=======
     height: height * 0.85,
+    minHeight: height * 0.7,
+    maxHeight: height * 0.9,
     width: '100%',
->>>>>>> Stashed changes
     overflow: "hidden",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -3 },
@@ -648,11 +506,8 @@ const styles = StyleSheet.create({
   },
   body: {
     flex: 1,
-<<<<<<< Updated upstream
-=======
     paddingHorizontal: 16,
     paddingTop: 16,
->>>>>>> Stashed changes
   },
   searchContainer: {
     marginBottom: 16,
@@ -664,12 +519,9 @@ const styles = StyleSheet.create({
   },
   resultList: {
     flex: 1,
-<<<<<<< Updated upstream
-=======
   },
   resultListContent: {
     paddingBottom: 20,
->>>>>>> Stashed changes
   },
   separator: {
     height: 12,
@@ -784,13 +636,7 @@ const styles = StyleSheet.create({
   loadingContainer: {
     alignItems: "center",
     justifyContent: "center",
-<<<<<<< Updated upstream
-    padding: 30,
-    borderRadius: 8,
-    margin: 20,
-=======
     paddingVertical: 40,
->>>>>>> Stashed changes
     flex: 1,
   },
   spinner: {

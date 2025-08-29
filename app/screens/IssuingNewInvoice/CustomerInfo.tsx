@@ -494,23 +494,6 @@ const CustomerInfo: React.FC = () => {
       return;
     }
 
-<<<<<<< Updated upstream
-    if (!selectedProvince) {
-      showToast("لطفاً استان را انتخاب کنید", "error");
-      return false;
-    }
-
-    if (!selectedCity) {
-      showToast("لطفاً شهر را انتخاب کنید", "error");
-      return false;
-    }
-
-    return true;
-  };
-
-  const handleSubmit = async (data: FormValues): Promise<void> => {
-=======
->>>>>>> Stashed changes
     if (customerID) {
       setIsSubmitting(true);
       try {
@@ -573,47 +556,8 @@ const CustomerInfo: React.FC = () => {
         setIsSubmitting(false);
       }
     } else {
-<<<<<<< Updated upstream
-      // in add mode
-      // if (!validateForm()) {
-      //   console.log("form is not valid");
-
-      //   return;
-      // }
-=======
->>>>>>> Stashed changes
       setIsSubmitting(true);
       try {
-<<<<<<< Updated upstream
-        const provinceId = await LocationService.getProvinceIdByName(
-          data.province
-        );
-        if (!provinceId) {
-          showToast("خطا در دریافت شناسه استان", "error");
-          setIsSubmitting(false);
-          return;
-        }
-
-        const cityId = await PersonManagementService.getCityIdByName(
-          data.city,
-          data.province
-        );
-        if (!cityId) {
-          showToast("خطا در دریافت شناسه شهر", "error");
-          setIsSubmitting(false);
-          return;
-        }
-
-        let personGroupIds: number[] = [];
-        if (data.customerType) {
-          personGroupIds =
-            await PersonManagementService.getPersonGroupIdsByNames([
-              data.customerType,
-            ]);
-          if (personGroupIds.length === 0 && data.customerType) {
-            showToast("خطا در دریافت شناسه‌های گروه مشتری", "warning");
-          }
-=======
         let provinceId = null;
         let cityId = null;
 
@@ -639,20 +583,10 @@ const CustomerInfo: React.FC = () => {
         if (values.customerType) {
           const foundType = customerTypes.find(type => type.PersonGroupName === values.customerType);
           if (foundType) personGroupIds = [foundType.PersonGroupId];
->>>>>>> Stashed changes
         }
 
         const personData: CreatePersonDTO = {
           PersonId: 0,
-<<<<<<< Updated upstream
-          FirstName: data.firstName,
-          LastName: data.lastName,
-          Mobile: data.mobile,
-          ProvinceId: provinceId,
-          CityId: cityId,
-          MarketingChannelId: null,
-          Address: data.address,
-=======
           FirstName: values.firstName,
           LastName: values.lastName,
           Mobile: values.mobile,
@@ -660,7 +594,6 @@ const CustomerInfo: React.FC = () => {
           CityId: cityId,
           MarketingChannelId: null,
           Address: values.address,
->>>>>>> Stashed changes
           PersonGroupIdList: personGroupIds,
         };
 
@@ -936,9 +869,6 @@ const CustomerInfo: React.FC = () => {
                   )}
                   <IconButton
                     text={isSubmitting ? "در حال ثبت..." : "ثبت"}
-<<<<<<< Updated upstream
-                    onPress={formikProps.handleSubmit}
-=======
                     onPress={() => {
                       console.log("Submit button clicked!");
                       console.log("Form values:", formikProps.values);
@@ -969,7 +899,6 @@ const CustomerInfo: React.FC = () => {
                       // If validation passes, call the actual submit function
                       handleSubmit(values, {});
                     }}
->>>>>>> Stashed changes
                     iconName="done"
                     style={{ width: "100%", marginBottom: 30 }}
                     backgroundColor={colors.success}

@@ -124,6 +124,7 @@ const DynamicModal: React.FC<DynamicModalProps> = ({
       transparent={true}
       visible={visible}
       onRequestClose={onClose}
+      
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <KeyboardAvoidingView

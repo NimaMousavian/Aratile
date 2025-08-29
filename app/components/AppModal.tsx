@@ -21,6 +21,7 @@ const AppModal: React.FC<IProps> = ({
       transparent
       animationType="fade"
       onRequestClose={onClose}
+      
     >
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>

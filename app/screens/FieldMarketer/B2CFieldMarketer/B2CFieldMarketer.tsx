@@ -163,15 +163,15 @@ const B2CFieldMarketer = () => {
                     ? toPersianDigits(project.Description)
                     : ""
                 }
-                noteConfig={{
-                  show: false,
-                  icon: "notes",
-                  iconColor: colors.secondary,
-                  label: "توضیحات:",
-                }}
+                // noteConfig={{
+                //   show: false,
+                //   icon: "notes",
+                //   iconColor: colors.secondary,
+                //   label: "توضیحات:",
+                // }}
                 qrConfig={{
                   show: false,
-                  icon: "camera", // تغییر آیکون به دوربین/عکس
+                  icon: "image", // تغییر آیکون به دوربین/عکس
                   iconSize: 36,
                   iconColor: colors.secondary,
                 }}

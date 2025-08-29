@@ -359,7 +359,6 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
           quantity: item.Quantity || "1",
           price: item.Price !== null ? item.Price : 0,
           hasColorSpectrum: false,
-          note: "",
           measurementUnitName:
             item.ProductMeasurementUnitName ||
             response.data?.MeasurementUnit?.MeasurementUnitName,
@@ -381,7 +380,6 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
           quantity: item.Quantity || "1",
           price: item.Price !== null ? item.Price : 0,
           hasColorSpectrum: false,
-          note: "",
           measurementUnitName: item.ProductMeasurementUnitName,
           rectifiedValue: "1.44", // مقدار پیش‌فرض در صورت خطا
         };
@@ -401,6 +399,7 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
           key={`product-${item.ProductId}-${index}`}
           title={toPersianDigits(item.ProductName)}
           onPress={() => handleProductSelect(item)}
+          showNotes={false}
           fields={[
             {
               icon: "qr-code",
@@ -417,17 +416,11 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
                   ? toPersianDigits(item.Price.toLocaleString()) + " ریال"
                   : "0 ریال",
             },
-            {
-              icon: "check-circle",
-              iconColor: colors.secondary,
-              label: "وضعیت:",
-              value: item.ActiveStr,
-              valueColor: item.Active ? colors.success : colors.danger,
-            },
+
           ]}
           qrConfig={{
             show: true,
-            icon: "qr-code-2",
+            icon: "image",
             iconSize: 36,
             iconColor: colors.secondary,
           }}
@@ -475,6 +468,7 @@ const ProductSearchDrawer: React.FC<ProductSearchDrawerProps> = ({
       statusBarTranslucent={true}
       supportedOrientations={['portrait']}
       presentationStyle="overFullScreen"
+      hardwareAccelerated={true}
     >
       <View style={styles.modalContainer}>
         <Toast
@@ -646,7 +640,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: Platform.OS === 'android' ? Z_INDEX.MODAL_CONTENT / 100 : 16,
-    height: "80%",
+    height: height * 0.85,
+    minHeight: height * 0.7,
+    maxHeight: height * 0.9,
     paddingBottom: Platform.OS === "android" ? 20 : 0,
     zIndex: Z_INDEX.MODAL_CONTENT,
     position: 'relative',

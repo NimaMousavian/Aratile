@@ -296,7 +296,7 @@ const ProductInputField: React.FC<{
                 }}
               >
                 <MaterialIcons
-                  name="camera-alt"
+                  name="image"
                   size={22}
                   color={colors.secondary}
                 />

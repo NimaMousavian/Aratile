@@ -1,5 +1,4 @@
-// src/components/ProductCard.tsx
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,10 +8,10 @@ import {
   StyleProp,
   ViewStyle,
   TextStyle,
+  TextInput,
 } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import colors from "../config/colors";
-import StatusCircle from "../screens/TaskManagment/StatusCircle";
 
 type FontWeight = "700" | "600" | "500" | "bold" | "semi-bold" | string;
 
@@ -57,6 +56,15 @@ interface FieldItem {
   divider?: boolean;
   customStyle?: StyleProp<ViewStyle>;
   isPriceField?: boolean;
+  editable?: boolean;
+}
+
+interface QrConfig {
+  show?: boolean;
+  icon?: React.ComponentProps<typeof MaterialIcons>["name"];
+  iconSize?: number;
+  iconColor?: string;
+  containerStyle?: StyleProp<ViewStyle>;
 }
 
 interface NoteConfig {
@@ -70,24 +78,15 @@ interface NoteConfig {
   containerStyle?: StyleProp<ViewStyle>;
 }
 
-interface QrConfig {
-  show?: boolean;
-  icon?: React.ComponentProps<typeof MaterialIcons>["name"];
-  iconSize?: number;
-  iconColor?: string;
-  containerStyle?: StyleProp<ViewStyle>;
-}
-
 interface ProductCardProps {
-  title?: string | React.ReactNode; // تغییر به ReactNode برای پشتیبانی از کامپوننت‌های پیچیده‌تر
+  title?: string | React.ReactNode;
   titleIcon?: IconConfig;
   fields: FieldItem[];
-  note?: string | React.ReactNode; // تغییر به ReactNode
-
+  note?: string | React.ReactNode;
   noteConfig?: NoteConfig;
   qrConfig?: QrConfig;
 
-  // New action icons configuration
+  // Action icons configuration
   editIcon?: ActionIconConfig;
   deleteIcon?: ActionIconConfig;
   callIcon?: ActionIconConfig;
@@ -99,11 +98,20 @@ interface ProductCardProps {
   onPress?: () => void;
   onLongPress?: () => void;
 
-  // اضافه کردن props جدید برای دایره وضعیت
+  // Props برای دایره وضعیت
   status?: string;
   onStatusChange?: (status: string) => void;
 
   showTitle?: boolean;
+  showNotes?: boolean;
+
+  // Edit mode props
+  isEditMode?: boolean;
+  onDataChange?: (data: {
+    title?: string;
+    fields?: FieldItem[];
+    note?: string;
+  }) => void;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({
@@ -111,7 +119,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
   titleIcon,
   fields = [],
   note,
-
   noteConfig = {
     show: true,
     icon: "notes",
@@ -127,7 +134,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     iconColor: colors.secondary,
   },
 
-  // New action icons with default values
+  // Action icons
   editIcon,
   deleteIcon,
   callIcon,
@@ -139,21 +146,58 @@ const ProductCard: React.FC<ProductCardProps> = ({
   onPress,
   onLongPress,
 
-  // پارامترهای جدید وضعیت
+  // پارامترهای وضعیت
   status,
   onStatusChange,
 
   showTitle = true,
-}) => {
-  // Separate fields into regular fields and dividers
-  const regularFields = fields.filter((field) => !field.divider);
+  showNotes = true,
 
-  // Find the index of the price field (if marked with isPriceField)
+  // Edit mode
+  isEditMode = false,
+  onDataChange,
+}) => {
+  const [editableTitle, setEditableTitle] = useState<string>(
+    typeof title === "string" ? title : ""
+  );
+  const [editableFields, setEditableFields] = useState<FieldItem[]>(fields);
+  const [editableNote, setEditableNote] = useState<string>(
+    typeof note === "string" ? note : ""
+  );
+
+  // Update local state when props change
+  useEffect(() => {
+    setEditableTitle(typeof title === "string" ? title : "");
+    setEditableFields(fields);
+    setEditableNote(typeof note === "string" ? note : "");
+  }, [title, fields, note]);
+
+  // Notify parent component of changes
+  useEffect(() => {
+    if (onDataChange) {
+      onDataChange({
+        title: editableTitle,
+        fields: editableFields,
+        note: editableNote,
+      });
+    }
+  }, [editableTitle, editableFields, editableNote, onDataChange]);
+
+  const updateFieldValue = (index: number, newValue: string) => {
+    const updatedFields = [...editableFields];
+    updatedFields[index] = { ...updatedFields[index], value: newValue };
+    setEditableFields(updatedFields);
+  };
+
+  // Separate fields into regular fields and dividers
+  const regularFields = editableFields.filter((field) => !field.divider);
+
+  // Find the index of the price field
   const priceFieldIndex = regularFields.findIndex(
     (field) => field.isPriceField
   );
 
-  // Organize fields into sections for rendering
+  // Organize fields into sections
   const fieldsBeforePrice =
     priceFieldIndex > 0
       ? regularFields.slice(0, priceFieldIndex)
@@ -166,6 +210,119 @@ const ProductCard: React.FC<ProductCardProps> = ({
       ? regularFields.slice(priceFieldIndex + 1)
       : [];
 
+  const renderEditableField = (field: FieldItem, index: number) => {
+    const isEditable = isEditMode && (field.editable !== false) && !field.isPriceField;
+
+    if (isEditable) {
+      return (
+        <TextInput
+          style={[styles.fieldEditableValue, field.valueStyle]}
+          value={field.value}
+          onChangeText={(text) => updateFieldValue(index, text)}
+          placeholder={field.label}
+          placeholderTextColor={colors.medium}
+          textAlign="right"
+        />
+      );
+    } else {
+      return (
+        <Text
+          style={[
+            field.isPriceField ? styles.priceValue : styles.fieldValue,
+            { color: field.valueColor || colors.dark },
+            field.valueStyle,
+          ]}
+        >
+          {field.value}
+        </Text>
+      );
+    }
+  };
+
+  const renderTitle = () => {
+    if (isEditMode && typeof title === "string") {
+      return (
+        <TextInput
+          style={styles.editableTitle}
+          value={editableTitle}
+          onChangeText={setEditableTitle}
+          placeholder="نام محصول"
+          placeholderTextColor={colors.medium}
+          multiline
+          textAlign="right"
+        />
+      );
+    } else if (typeof title === "string") {
+      return (
+        <Text style={[styles.productTitle, titleStyle]}>{editableTitle}</Text>
+      );
+    } else {
+      return title;
+    }
+  };
+
+  const renderNote = () => {
+    if (isEditMode) {
+      return (
+        <TextInput
+          style={styles.editableNote}
+          value={editableNote}
+          onChangeText={setEditableNote}
+          placeholder="توضیحات محصول"
+          placeholderTextColor={colors.medium}
+          multiline
+          textAlign="right"
+        />
+      );
+    } else if (typeof note === "string") {
+      return (
+        <Text style={[styles.regularNoteContent, noteConfig.valueStyle]}>
+          {editableNote || "-"}
+        </Text>
+      );
+    } else {
+      return note;
+    }
+  };
+
+  const renderFieldSection = (fieldsToRender: FieldItem[], startIndex: number = 0) => {
+    return fieldsToRender.map((field, index) => {
+      const actualIndex = startIndex + index;
+      return (
+        <View
+          key={`field-${actualIndex}`}
+          style={[
+            styles.fieldContainer,
+            field.containerStyle,
+            index < fieldsToRender.length - 1 && styles.fieldMarginBottom,
+          ]}
+        >
+          {field.icon && (
+            <MaterialIcons
+              name={field.icon}
+              size={field.iconSize || 18}
+              color={field.iconColor || colors.secondary}
+            />
+          )}
+
+          {field.label && (
+            <Text
+              style={[
+                styles.secondaryLabel,
+                styles.iconTextSpacing,
+                field.labelStyle,
+              ]}
+            >
+              {field.label}
+            </Text>
+          )}
+
+          {renderEditableField(field, actualIndex)}
+        </View>
+      );
+    });
+  };
+
   return (
     <TouchableOpacity
       activeOpacity={onPress ? 0.7 : 1}
@@ -176,67 +333,71 @@ const ProductCard: React.FC<ProductCardProps> = ({
         Platform.OS === "android" && styles.androidCardAdjustment,
         containerStyle,
       ]}
+      disabled={isEditMode}
     >
       {showTitle && title && (
         <View style={[styles.productTitleContainer, titleContainerStyle]}>
           <View style={styles.productTitleRow}>
-            <View style={styles.actionIconsContainer}>
-              {/* Edit Icon */}
-              {editIcon && (
-                <TouchableOpacity
-                  onPress={editIcon.onPress}
-                  style={[
-                    styles.iconCircle,
-                    { backgroundColor: "#fef2e0" },
-                    editIcon.containerStyle,
-                  ]}
-                >
-                  <MaterialIcons
-                    name={editIcon.name || "edit"}
-                    size={editIcon.size || 22}
-                    color={editIcon.color || colors.warning}
-                  />
-                </TouchableOpacity>
-              )}
+            {!isEditMode && (
+              <View style={styles.actionIconsContainer}>
+                {/* Edit Icon */}
+                {editIcon && (
+                  <TouchableOpacity
+                    onPress={editIcon.onPress}
+                    style={[
+                      styles.iconCircle,
+                      { backgroundColor: "#fef2e0" },
+                      editIcon.containerStyle,
+                    ]}
+                  >
+                    <MaterialIcons
+                      name={editIcon.name || "edit"}
+                      size={editIcon.size || 22}
+                      color={editIcon.color || colors.warning}
+                    />
+                  </TouchableOpacity>
+                )}
 
-              {/* Delete Icon */}
-              {deleteIcon && (
-                <TouchableOpacity
-                  onPress={deleteIcon.onPress}
-                  style={[
-                    styles.iconCircle,
-                    { backgroundColor: "#fee2e0" },
-                    deleteIcon.containerStyle,
-                  ]}
-                >
-                  <MaterialIcons
-                    name={deleteIcon.name || "delete"}
-                    size={deleteIcon.size || 22}
-                    color={deleteIcon.color || colors.danger}
-                  />
-                </TouchableOpacity>
-              )}
-              {callIcon && (
-                <TouchableOpacity
-                  onPress={callIcon.onPress}
-                  style={[
-                    styles.iconCircle,
-                    {
-                      backgroundColor: "#ffffff",
-                      borderColor: colors.success,
-                      borderWidth: 2,
-                    },
-                    callIcon.containerStyle,
-                  ]}
-                >
-                  <MaterialIcons
-                    name={callIcon.name || "call"}
-                    size={callIcon.size || 22}
-                    color={callIcon.color || colors.success}
-                  />
-                </TouchableOpacity>
-              )}
-            </View>
+                {/* Delete Icon */}
+                {deleteIcon && (
+                  <TouchableOpacity
+                    onPress={deleteIcon.onPress}
+                    style={[
+                      styles.iconCircle,
+                      { backgroundColor: "#fee2e0" },
+                      deleteIcon.containerStyle,
+                    ]}
+                  >
+                    <MaterialIcons
+                      name={deleteIcon.name || "delete"}
+                      size={deleteIcon.size || 22}
+                      color={deleteIcon.color || colors.danger}
+                    />
+                  </TouchableOpacity>
+                )}
+
+                {callIcon && (
+                  <TouchableOpacity
+                    onPress={callIcon.onPress}
+                    style={[
+                      styles.iconCircle,
+                      {
+                        backgroundColor: "#ffffff",
+                        borderColor: colors.success,
+                        borderWidth: 2,
+                      },
+                      callIcon.containerStyle,
+                    ]}
+                  >
+                    <MaterialIcons
+                      name={callIcon.name || "call"}
+                      size={callIcon.size || 22}
+                      color={callIcon.color || colors.success}
+                    />
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
 
             <View style={styles.titleWithIconContainer}>
               {titleIcon && (
@@ -247,11 +408,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                   style={{ marginLeft: 8 }}
                 />
               )}
-              {typeof title === "string" ? (
-                <Text style={[styles.productTitle, titleStyle]}>{title}</Text>
-              ) : (
-                title // اگر title یک ReactNode باشد، مستقیماً رندر می‌شود
-              )}
+              {renderTitle()}
             </View>
           </View>
         </View>
@@ -265,7 +422,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
               style={[styles.productImagePlaceholder, qrConfig.containerStyle]}
             >
               <MaterialIcons
-                name={qrConfig.icon || "qr-code-2"}
+                name={qrConfig.icon || "image"}
                 size={qrConfig.iconSize}
                 color={qrConfig.iconColor}
               />
@@ -274,57 +431,16 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
           <View style={styles.infoSection}>
             {/* Render fields before price field */}
-            {fieldsBeforePrice.map((field, index) => (
-              <View
-                key={`field-before-${index}`}
-                style={[
-                  styles.fieldContainer,
-                  field.containerStyle,
-                  index < fieldsBeforePrice.length - 1 &&
-                    styles.fieldMarginBottom,
-                ]}
-              >
-                {field.icon && (
-                  <MaterialIcons
-                    name={field.icon}
-                    size={field.iconSize || 18}
-                    color={field.iconColor || colors.secondary}
-                  />
-                )}
-
-                {field.label && (
-                  <Text
-                    style={[
-                      styles.secondaryLabel,
-                      styles.iconTextSpacing,
-                      field.labelStyle,
-                    ]}
-                  >
-                    {field.label}
-                  </Text>
-                )}
-
-                <Text
-                  style={[
-                    styles.fieldValue,
-                    { color: field.valueColor || colors.dark },
-                    field.valueStyle,
-                  ]}
-                >
-                  {field.value}
-                </Text>
-              </View>
-            ))}
+            {renderFieldSection(fieldsBeforePrice, 0)}
           </View>
         </View>
 
-        {/* Divider before price field - full width outside of infoWithImageContainer */}
+        {/* Divider before price field */}
         {priceField && <View style={styles.fullWidthDivider} />}
 
-        {/* Price field - rendered separately to ensure it's after the divider */}
+        {/* Price field */}
         {priceField && (
           <View style={styles.infoWithImageContainer}>
-            {/* Empty space to align with other fields */}
             {qrConfig.show && <View style={{ width: 80, marginRight: 12 }} />}
 
             <View style={styles.infoSection}>
@@ -355,15 +471,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                   </Text>
                 )}
 
-                <Text
-                  style={[
-                    styles.fieldValue,
-                    { color: priceField.valueColor || colors.dark },
-                    priceField.valueStyle,
-                  ]}
-                >
-                  {priceField.value}
-                </Text>
+                {renderEditableField(priceField, priceFieldIndex)}
               </View>
             </View>
           </View>
@@ -372,57 +480,16 @@ const ProductCard: React.FC<ProductCardProps> = ({
         {/* Render fields after price field */}
         {fieldsAfterPrice.length > 0 && (
           <View style={styles.infoWithImageContainer}>
-            {/* Empty space to align with other fields */}
             {qrConfig.show && <View style={{ width: 80, marginRight: 12 }} />}
 
             <View style={styles.infoSection}>
-              {fieldsAfterPrice.map((field, index) => (
-                <View
-                  key={`field-after-${index}`}
-                  style={[
-                    styles.fieldContainer,
-                    field.containerStyle,
-                    index < fieldsAfterPrice.length - 1 &&
-                      styles.fieldMarginBottom,
-                  ]}
-                >
-                  {field.icon && (
-                    <MaterialIcons
-                      name={field.icon}
-                      size={field.iconSize || 18}
-                      color={field.iconColor || colors.secondary}
-                    />
-                  )}
-
-                  {field.label && (
-                    <Text
-                      style={[
-                        styles.secondaryLabel,
-                        styles.iconTextSpacing,
-                        field.labelStyle,
-                      ]}
-                    >
-                      {field.label}
-                    </Text>
-                  )}
-
-                  <Text
-                    style={[
-                      styles.fieldValue,
-                      { color: field.valueColor || colors.dark },
-                      field.valueStyle,
-                    ]}
-                  >
-                    {field.value}
-                  </Text>
-                </View>
-              ))}
+              {renderFieldSection(fieldsAfterPrice, priceFieldIndex + 1)}
             </View>
           </View>
         )}
 
-        {/* Render divider fields that are explicitly added */}
-        {fields
+        {/* Render explicit divider fields */}
+        {editableFields
           .filter((field) => field.divider)
           .map((field, index) => (
             <View
@@ -431,7 +498,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             />
           ))}
 
-        {noteConfig.show && (
+        {showNotes && noteConfig.show && (
           <View
             style={[styles.productCodeContainer, noteConfig.containerStyle]}
           >
@@ -457,27 +524,23 @@ const ProductCard: React.FC<ProductCardProps> = ({
               )}
             </View>
 
-            {typeof note === "string" ? (
-              <Text style={[styles.regularNoteContent, noteConfig.valueStyle]}>
-                {note ? note : "-"}
-              </Text>
-            ) : (
-              note // اگر note یک ReactNode باشد، مستقیماً رندر می‌شود
-            )}
+            {renderNote()}
           </View>
         )}
       </View>
 
-      {/* دایره وضعیت (چپ کارت) */}
-      {status && onStatusChange && (
+      {/* دایره وضعیت */}
+      {status && onStatusChange && !isEditMode && (
         <View style={styles.statusCircleContainer}>
-          <StatusCircle
-            status={status}
+          <TouchableOpacity
             onPress={(e) => {
-              e.stopPropagation(); // جلوگیری از اجرای onPress کارت
+              e.stopPropagation();
               onStatusChange(status);
             }}
-          />
+            style={styles.statusCircle}
+          >
+            <Text style={styles.statusText}>{status}</Text>
+          </TouchableOpacity>
         </View>
       )}
     </TouchableOpacity>
@@ -496,7 +559,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderWidth: 1,
     borderColor: "#e1e1e1",
-    position: "relative", // برای اضافه کردن دایره در موقعیت absolute
+    position: "relative",
   },
   androidCardAdjustment: {
     borderWidth: 1.5,
@@ -525,6 +588,21 @@ const styles = StyleSheet.create({
     fontFamily: getFontFamily("Yekan_Bakh_Bold", "600"),
     textAlign: "right",
     flex: 1,
+  },
+  editableTitle: {
+    fontSize: 18,
+    color: colors.primary,
+    fontFamily: getFontFamily("Yekan_Bakh_Bold", "600"),
+    textAlign: "right",
+    flex: 1,
+    backgroundColor: colors.light,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: colors.medium,
+    minHeight: 50,
+    textAlignVertical: "top",
   },
   actionIconsContainer: {
     flexDirection: "row-reverse",
@@ -580,19 +658,53 @@ const styles = StyleSheet.create({
   fieldValue: {
     fontSize: 15,
     fontFamily: getFontFamily("Yekan_Bakh_Bold", "500"),
+    flex: 1,
+    textAlign: "right",
   },
-  divider: {
-    borderBottomWidth: 1,
-    borderBottomColor: colors.gray,
-    marginVertical: 10,
-    width: "100%",
-    alignSelf: "stretch",
+  fieldEditableValue: {
+    fontSize: 15,
+    color: colors.dark,
+    fontFamily: getFontFamily("Yekan_Bakh_Bold", "500"),
+    flex: 1,
+    textAlign: "right",
+    backgroundColor: colors.light,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: colors.medium,
+  },
+  priceValue: {
+    fontSize: 15,
+    color: colors.primary,
+    fontFamily: getFontFamily("Yekan_Bakh_Bold", "600"),
+    flex: 1,
+    textAlign: "right",
   },
   fullWidthDivider: {
     borderBottomWidth: 1,
     borderBottomColor: colors.gray,
     marginVertical: 10,
     width: "100%",
+  },
+  statusCircleContainer: {
+    position: "absolute",
+    left: 10,
+    bottom: 3,
+    zIndex: 10,
+  },
+  statusCircle: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: colors.info,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  statusText: {
+    color: colors.white,
+    fontSize: 10,
+    fontFamily: getFontFamily("Yekan_Bakh_Bold", "500"),
   },
   productCodeContainer: {
     flexDirection: "column",
@@ -618,12 +730,21 @@ const styles = StyleSheet.create({
     width: "100%",
     paddingRight: 22,
   },
-  // استایل جدید برای دایره وضعیت
-  statusCircleContainer: {
-    position: "absolute",
-    left: 10,
-    bottom: 3, // به جای top: "50%" از bottom استفاده می‌کنیم
-    zIndex: 10,
+  editableNote: {
+    fontSize: 15,
+    color: colors.dark,
+    fontFamily: getFontFamily("Yekan_Bakh_Bold", "500"),
+    textAlign: "right",
+    width: "100%",
+    paddingRight: 22,
+    backgroundColor: colors.light,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: colors.medium,
+    minHeight: 60,
+    textAlignVertical: "top",
   },
 });
 
