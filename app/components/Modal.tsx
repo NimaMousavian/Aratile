@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
-  KeyboardAvoidingView,
   Platform,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -110,106 +109,107 @@ const ReusableModal: React.FC<ReusableModalProps> = ({
       animationType="fade"
       onRequestClose={handleClose}
       statusBarTranslucent={true}
-      presentationStyle={Platform.OS === "ios" ? "overFullScreen" : undefined}
-      supportedOrientations={['portrait', 'landscape']}
-      
+      presentationStyle="overFullScreen"
+      supportedOrientations={["portrait", "landscape"]}
+      avoidKeyboard={true} // 👈 مهم: کیبورد روی مدال باز میشه
     >
       <View style={styles.rootContainer}>
+        {/* پس‌زمینه نیمه‌شفاف */}
         <TouchableOpacity
           style={styles.overlay}
           activeOpacity={1}
           onPress={handleClose}
         >
-          <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={styles.keyboardAvoid}
-            keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
+          {/* بدنه مدال */}
+          <TouchableOpacity
+            activeOpacity={1}
+            style={styles.modalContainer}
+            onPress={(e) => e.stopPropagation()} // جلوگیری از بسته شدن مدال با کلیک داخلش
           >
-            <TouchableOpacity
-              activeOpacity={1}
-              style={styles.modalContainer}
-              onPress={(e) => e.stopPropagation()} // جلوگیری از انتشار لمس به لایه زیرین
+            {/* هدر مدال */}
+            <LinearGradient
+              colors={headerConfig.colors}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.modalHeader}
             >
-              {/* هدر مدال */}
-              <LinearGradient
-                colors={headerConfig.colors}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.modalHeader}
-              >
-                <View style={styles.headerContent}>
-                  <MaterialIcons
-                    name={headerConfig.icon}
-                    size={24}
-                    color="white"
-                  />
-                  <Text style={styles.headerTitle}>{headerConfig.title}</Text>
-                </View>
-                <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                  <MaterialIcons name="close" size={24} color="white" />
-                </TouchableOpacity>
-              </LinearGradient>
-
-              <ScrollView style={styles.modalBody}>
-                {/* پیام‌ها */}
-                {messages.map((message, index) => (
-                  <View key={index} style={styles.messageContainer}>
-                    {message.icon && (
-                      <MaterialIcons
-                        name={message.icon}
-                        size={20}
-                        color={message.iconColor || colors.medium}
-                        style={styles.messageIcon}
-                      />
-                    )}
-                    <Text style={styles.messageText}>{message.text}</Text>
-                  </View>
-                ))}
-
-                {/* ورودی‌ها */}
-                {inputs.filter(input => input.show).map((input) => (
-                  <View key={input.id} style={styles.inputContainer}>
-                    <Text style={styles.inputLabel}>{input.label}</Text>
-                    <TextInput
-                      style={[
-                        styles.input,
-                        input.multiline && { height: input.numberOfLines ? input.numberOfLines * 24 : 100 }
-                      ]}
-                      placeholder={input.placeholder}
-                      value={inputValues[input.id] || ""}
-                      onChangeText={(text) => handleInputChange(input.id, text)}
-                      secureTextEntry={input.secureTextEntry}
-                      multiline={input.multiline}
-                      numberOfLines={input.numberOfLines}
-                      textAlign="right"
-                      placeholderTextColor={colors.medium}
-                    />
-                  </View>
-                ))}
-              </ScrollView>
-
-              {/* دکمه‌ها */}
-              <View style={styles.buttonContainer}>
-                {buttons.map((button) => (
-                  <TouchableOpacity
-                    key={button.id}
-                    style={[styles.button, { backgroundColor: button.color }]}
-                    onPress={() => handleButtonPress(button)}
-                  >
-                    {button.icon && (
-                      <MaterialIcons
-                        name={button.icon}
-                        size={20}
-                        color="white"
-                        style={styles.buttonIcon}
-                      />
-                    )}
-                    <Text style={styles.buttonText}>{button.text}</Text>
-                  </TouchableOpacity>
-                ))}
+              <View style={styles.headerContent}>
+                <MaterialIcons
+                  name={headerConfig.icon}
+                  size={24}
+                  color="white"
+                />
+                <Text style={styles.headerTitle}>{headerConfig.title}</Text>
               </View>
-            </TouchableOpacity>
-          </KeyboardAvoidingView>
+              <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
+                <MaterialIcons name="close" size={24} color="white" />
+              </TouchableOpacity>
+            </LinearGradient>
+
+            {/* بدنه اصلی */}
+            <ScrollView style={styles.modalBody}>
+              {/* پیام‌ها */}
+              {messages.map((message, index) => (
+                <View key={index} style={styles.messageContainer}>
+                  {message.icon && (
+                    <MaterialIcons
+                      name={message.icon}
+                      size={20}
+                      color={message.iconColor || colors.medium}
+                      style={styles.messageIcon}
+                    />
+                  )}
+                  <Text style={styles.messageText}>{message.text}</Text>
+                </View>
+              ))}
+
+              {/* ورودی‌ها */}
+              {inputs.filter((input) => input.show).map((input) => (
+                <View key={input.id} style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>{input.label}</Text>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      input.multiline && {
+                        height: input.numberOfLines
+                          ? input.numberOfLines * 24
+                          : 100,
+                      },
+                    ]}
+                    placeholder={input.placeholder}
+                    value={inputValues[input.id] || ""}
+                    onChangeText={(text) => handleInputChange(input.id, text)}
+                    secureTextEntry={input.secureTextEntry}
+                    multiline={input.multiline}
+                    numberOfLines={input.numberOfLines}
+                    textAlign="right"
+                    placeholderTextColor={colors.medium}
+                  />
+                </View>
+              ))}
+            </ScrollView>
+
+            {/* دکمه‌ها */}
+            <View style={styles.buttonContainer}>
+              {buttons.map((button) => (
+                <TouchableOpacity
+                  key={button.id}
+                  style={[styles.button, { backgroundColor: button.color }]}
+                  onPress={() => handleButtonPress(button)}
+                >
+                  {button.icon && (
+                    <MaterialIcons
+                      name={button.icon}
+                      size={20}
+                      color="white"
+                      style={styles.buttonIcon}
+                    />
+                  )}
+                  <Text style={styles.buttonText}>{button.text}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </TouchableOpacity>
         </TouchableOpacity>
       </View>
     </Modal>
@@ -221,14 +221,14 @@ const styles = StyleSheet.create({
     flex: 1,
     ...Platform.select({
       ios: {
-        position: 'absolute',
+        position: "absolute",
         top: 0,
         bottom: 0,
         left: 0,
         right: 0,
         zIndex: 9999,
-      }
-    })
+      },
+    }),
   },
   overlay: {
     flex: 1,
@@ -236,12 +236,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     zIndex: 1000,
-  },
-  keyboardAvoid: {
-    width: "100%",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 1001,
   },
   modalContainer: {
     width: "90%",

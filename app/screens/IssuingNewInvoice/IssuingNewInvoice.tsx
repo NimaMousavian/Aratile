@@ -472,6 +472,25 @@ const IssuingNewInvoice: React.FC = () => {
   }, [showProductSearchDrawer]);
 
   const getProductFields = (product: Product) => {
+    // محاسبه totalAreaText
+    let totalAreaText = "";
+    if (product.boxCount !== undefined && product.boxCount > 0) {
+      if (product.rectifiedValue) {
+        const rectifiedValue = parseFloat(product.rectifiedValue);
+        if (!isNaN(rectifiedValue) && rectifiedValue > 0) {
+          const totalArea = product.totalArea || product.boxCount * rectifiedValue;
+          totalAreaText = `${toPersianDigits(totalArea.toFixed(2))}${product.measurementUnitName ? ` ${product.measurementUnitName}` : ""
+            }`;
+        }
+      }
+    }
+
+    // اگر totalAreaText موجود نباشد، از quantity استفاده کن
+    const displayQuantity = totalAreaText || (
+      toPersianDigits(product.quantity) +
+      (product.measurementUnitName ? ` ${product.measurementUnitName}` : "")
+    );
+
     const fields = [
       {
         icon: "qr-code",
@@ -483,11 +502,7 @@ const IssuingNewInvoice: React.FC = () => {
         icon: "straighten",
         iconColor: colors.secondary,
         label: "مقدار:",
-        value:
-          toPersianDigits(product.quantity) +
-          (product.measurementUnitName
-            ? ` ${product.measurementUnitName}`
-            : ""),
+        value: displayQuantity,
       },
       {
         icon: "attach-money",
@@ -498,24 +513,11 @@ const IssuingNewInvoice: React.FC = () => {
     ];
 
     if (product.boxCount !== undefined && product.boxCount > 0) {
-      let totalAreaText = "";
-      if (product.rectifiedValue) {
-        const rectifiedValue = parseFloat(product.rectifiedValue);
-        if (!isNaN(rectifiedValue) && rectifiedValue > 0) {
-          const totalArea =
-            product.totalArea || product.boxCount * rectifiedValue;
-          totalAreaText = ` (${toPersianDigits(totalArea.toFixed(2))}${
-            product.measurementUnitName ? ` ${product.measurementUnitName}` : ""
-          })`;
-        }
-      }
-
       fields.push({
         icon: "shopping-bag",
         iconColor: colors.secondary,
         label: "تعداد کارتن:",
-        value:
-          toPersianDigits(product.boxCount.toString()) + " عدد" + totalAreaText,
+        value: toPersianDigits(product.boxCount.toString()) + " کارتن",
       });
 
       // اصلاح محاسبه قیمت نهایی
@@ -878,7 +880,7 @@ const IssuingNewInvoice: React.FC = () => {
         onSelectColleague={(colleague) => {
           setSelectedColleague(colleague);
           setShowColleagueSheet(false);
-          showToast(`مشتری ${colleague.name} انتخاب شد`, "success");
+ 
         }}
       />
     </>

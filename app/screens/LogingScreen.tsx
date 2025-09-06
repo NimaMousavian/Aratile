@@ -1,13 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   View,
   Image,
   TouchableOpacity,
   Keyboard,
-  KeyboardAvoidingView,
   Platform,
-  ScrollView,
+  StatusBar,
+  Dimensions,
 } from "react-native";
 import AppButton from "../components/Button";
 import colors from "../config/colors";
@@ -24,6 +24,8 @@ import { useAuth } from "./AuthContext";
 import { useNavigation } from "@react-navigation/native";
 import { MaterialIcons } from "@expo/vector-icons";
 
+const { height: screenHeight } = Dimensions.get('window');
+
 export const getLoginResponse = async (): Promise<ILoginResponse | null> => {
   try {
     const jsonValue = await AsyncStorage.getItem("loginResponse");
@@ -39,6 +41,7 @@ const LoginScreen = () => {
   const [password, setPassword] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [keyboardVisible, setKeyboardVisible] = useState<boolean>(false);
   const { login } = useAuth();
   const navigation = useNavigation();
 
@@ -47,6 +50,20 @@ const LoginScreen = () => {
   const [toastType, setToastType] = useState<
     "success" | "error" | "warning" | "info"
   >("error");
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+      setKeyboardVisible(true);
+    });
+    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardVisible(false);
+    });
+
+    return () => {
+      keyboardDidShowListener?.remove();
+      keyboardDidHideListener?.remove();
+    };
+  }, []);
 
   const showToast = (
     message: string,
@@ -111,28 +128,23 @@ const LoginScreen = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        keyboardShouldPersistTaps="handled"
-      >
-        <LinearGradient
-          colors={[colors.secondary, colors.primary]}
-          style={styles.container}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        >
-          <Toast
-            visible={toastVisible}
-            message={toastMessage}
-            type={toastType}
-            onDismiss={() => setToastVisible(false)}
-          />
+    <View style={styles.rootContainer}>
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent={true} />
 
+      <LinearGradient
+        colors={[colors.secondary, colors.primary]}
+        style={[styles.gradientContainer, keyboardVisible && styles.gradientKeyboardActive]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
+        <Toast
+          visible={toastVisible}
+          message={toastMessage}
+          type={toastType}
+          onDismiss={() => setToastVisible(false)}
+        />
+
+        <View style={[styles.contentContainer, keyboardVisible && styles.contentKeyboardActive]}>
           <View style={styles.logoContainer}>
             <Image
               style={styles.logo}
@@ -189,7 +201,6 @@ const LoginScreen = () => {
                 </TouchableOpacity>
               </View>
 
-              {/* فضای خالی بین فیلدها و دکمه */}
               <View style={{ height: 20 }} />
 
               <View style={styles.buttonContainer}>
@@ -204,22 +215,39 @@ const LoginScreen = () => {
               </View>
             </BlurView>
           </View>
-        </LinearGradient>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </View>
+      </LinearGradient>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  scrollContainer: {
-    flexGrow: 1,
+  rootContainer: {
+    flex: 1,
+    backgroundColor: colors.primary, // fallback color
   },
-  container: {
+  gradientContainer: {
+    flex: 1,
+    width: '100%',
+    height: screenHeight,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  gradientKeyboardActive: {
+    height: screenHeight * 1.5, // بزرگتر کردن ارتفاع وقت باز شدن کیبورد
+  },
+  contentContainer: {
     flex: 1,
     padding: 25,
     justifyContent: "center",
     alignItems: "center",
-    position: "relative",
+  },
+  contentKeyboardActive: {
+    justifyContent: "flex-start",
+    paddingTop: 10, // فاصله از بالا وقت باز شدن کیبورد
   },
   logoContainer: {
     alignItems: "center",
@@ -227,14 +255,14 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   logo: {
-    height: 150,
-    width: 150,
+    height: 120,
+    width: 120,
     marginBottom: 10,
   },
   headerTitle: {
     color: colors.white,
     fontFamily: "Yekan_Bakh_Bold",
-    fontSize: 32,
+    fontSize: 28,
     textAlign: "center",
     textShadowColor: "rgba(0, 0, 0, 0.2)",
     textShadowOffset: { width: 0, height: 1 },

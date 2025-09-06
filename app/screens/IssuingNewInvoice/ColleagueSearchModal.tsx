@@ -43,9 +43,11 @@ interface ColleagueBottomSheetProps {
   isCustomer?: boolean;
 }
 
-const { height } = Dimensions.get("window");
+const { height, width } = Dimensions.get("window");
 
 const DEFAULT_PAGE_SIZE = 20;
+const DRAWER_HEIGHT = height * 0.8; // ثابت 80 درصد
+const DRAWER_TOP_POSITION = height * 0.2; // موقعیت از بالا
 
 const getFontFamily = (baseFont: string, weight: string): string => {
   if (Platform.OS === "android") {
@@ -78,7 +80,6 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
   const [colleagues, setColleagues] = useState<Colleague[]>([]);
   const [filteredColleagues, setFilteredColleagues] = useState<Colleague[]>([]);
   const [loading, setLoading] = useState(false);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -92,11 +93,15 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
 
   useEffect(() => {
     if (visible) {
+      // ابتدا کیبورد رو ببند
+      Keyboard.dismiss();
+
+      // انیمیشن ورود
       Animated.parallel([
         Animated.timing(translateY, {
-          toValue: 0,
+          toValue: DRAWER_TOP_POSITION, // موقعیت ثابت از بالا
           duration: 300,
-          useNativeDriver: true,
+          useNativeDriver: false, // تغییر به false
         }),
         Animated.timing(backdropOpacity, {
           toValue: 1,
@@ -105,8 +110,8 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
         }),
       ]).start();
 
+      // ریست کردن state ها
       setSearchQuery("");
-
       setColleagues([]);
       setFilteredColleagues([]);
       setCurrentPage(1);
@@ -114,11 +119,12 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
       setLoading(false);
       setSearchPerformed(false);
     } else {
+      // انیمیشن خروج
       Animated.parallel([
         Animated.timing(translateY, {
           toValue: height,
           duration: 300,
-          useNativeDriver: true,
+          useNativeDriver: false, // تغییر به false
         }),
         Animated.timing(backdropOpacity, {
           toValue: 0,
@@ -151,22 +157,6 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
       loadingAnimation.setValue(0);
     }
   }, [loading, loadingAnimation]);
-
-  useEffect(() => {
-    const keyboardWillShowListener = Keyboard.addListener(
-      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
-      (e) => setKeyboardHeight(e.endCoordinates.height)
-    );
-    const keyboardWillHideListener = Keyboard.addListener(
-      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
-      () => setKeyboardHeight(0)
-    );
-
-    return () => {
-      keyboardWillShowListener.remove();
-      keyboardWillHideListener.remove();
-    };
-  }, []);
 
   const convertToEnglishNumbers = (text: string) => {
     return toEnglishDigits(text);
@@ -293,7 +283,6 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
       return (
         <View style={styles.loaderContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
-
         </View>
       );
     }
@@ -306,12 +295,15 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
   return (
     <Modal
       visible={visible}
-      transparent
+      transparent={true}
       animationType="none"
       onRequestClose={onClose}
-      statusBarTranslucent
+      statusBarTranslucent={true}
+      supportedOrientations={['portrait']}
+      presentationStyle="overFullScreen"
+      hardwareAccelerated={true}
     >
-      <View style={styles.container}>
+      <View style={styles.modalContainer} pointerEvents="box-none">
         <Animated.View style={[styles.backdrop, { opacity: backdropOpacity }]}>
           <TouchableOpacity
             style={styles.backdropTouchable}
@@ -324,10 +316,10 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
           style={[
             styles.bottomSheet,
             {
-              transform: [{ translateY }],
-              paddingBottom: keyboardHeight > 0 ? keyboardHeight : 20,
+              top: translateY, // استفاده از top به جای transform
             },
           ]}
+          pointerEvents="box-none"
         >
           <LinearGradient
             colors={[colors.secondary, colors.primary]}
@@ -344,7 +336,7 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
             </TouchableOpacity>
           </LinearGradient>
 
-          <View style={styles.body}>
+          <View style={styles.body} pointerEvents="box-none">
             <SearchInput
               placeholder="نام یا شماره تماس را وارد کنید"
               value={searchQuery}
@@ -353,144 +345,97 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
               containerStyle={styles.searchContainer}
             />
 
-            {loading ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator
-                  size="large"
-                  color={colors.secondary}
-                  style={styles.spinner}
-                />
-                <Text style={styles.loadingText}>در حال بارگذاری...</Text>
-              </View>
-            ) : filteredColleagues.length > 0 ? (
-              <FlatList
-                ref={flatListRef}
-                showsVerticalScrollIndicator={false}
-                data={filteredColleagues}
-                keyExtractor={(item, index) => `${item.id}-${index}`}
-                style={styles.resultList}
-                renderItem={({ item, index }) => (
-                  <TouchableOpacity
-                    key={`colleague-${item.id}-${index}`}
-                    style={styles.productCard}
-                    onPress={() => handleSelectColleague(item)}
-                    activeOpacity={0.7}
-                  >
-                    {/* Header with name */}
-                    <View style={styles.productTitleContainer}>
-                      <View style={styles.productTitleRow}>
-                        <View style={styles.titleWithIconContainer}>
-                          {/* <MaterialIcons
-
-
-                            name="person"
-                            size={20}
-                            color={colors.primary}
-                            style={{ marginLeft: 8 }}
-                          /> */}
-                          <Text style={styles.productTitle}>
+            <View style={styles.contentContainer} pointerEvents="box-none">
+              {loading ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator
+                    size="large"
+                    color={colors.secondary}
+                    style={styles.spinner}
+                  />
+                  <Text style={styles.loadingText}>در حال بارگذاری...</Text>
+                </View>
+              ) : filteredColleagues.length > 0 ? (
+                <FlatList
+                  ref={flatListRef}
+                  showsVerticalScrollIndicator={false}
+                  data={filteredColleagues}
+                  keyExtractor={(item, index) => `${item.id}-${index}`}
+                  style={styles.resultList}
+                  contentContainerStyle={styles.resultListContent}
+                  renderItem={({ item, index }) => (
+                    <TouchableOpacity
+                      key={`colleague-${item.id}-${index}`}
+                      style={styles.resultItem}
+                      onPress={() => handleSelectColleague(item)}
+                    >
+                      <View style={styles.resultItemContent}>
+                        <View style={styles.nameSection}>
+                          <Text style={styles.resultName}>
                             {toPersianDigits(item.name)}
+                          </Text>
+                          <View style={styles.groupContainer}>
+                            <MaterialIcons
+                              name="person"
+                              size={18}
+                              color={colors.secondary}
+                              style={styles.personIcon}
+                            />
+                            {item.groups && item.groups.length > 0 && (
+                              <Text style={styles.resultGroups}>
+                                {toPersianDigits(item.groups[0])}
+                              </Text>
+                            )}
+                          </View>
+                        </View>
+                        <View style={styles.phoneSection}>
+                          <MaterialIcons
+                            name="smartphone"
+                            size={18}
+                            color={colors.secondary}
+                            style={styles.phoneIcon}
+                          />
+                          <Text style={styles.resultPhone}>
+                            {toPersianDigits(item.phone)}
                           </Text>
                         </View>
                       </View>
-                    </View>
-
-                    {/* Body with details */}
-                    <View style={styles.productDetailsContainer}>
-                      <View style={styles.infoWithImageContainer}>
-
-
-                        <View style={styles.infoSection}>
-                          {/* Phone field */}
-                          <View style={[styles.fieldContainer, styles.fieldMarginBottom]}>
-                            <MaterialIcons
-                              name="phone"
-                              size={18}
-                              color={colors.success}
-                            />
-                            <Text style={styles.secondaryLabel}>تلفن:</Text>
-                            <Text style={styles.fieldValue}>
-                              {toPersianDigits(item.phone)}
-                            </Text>
-                          </View>
-
-                          {/* Group field */}
-                          {item.groups && item.groups.length > 0 && (
-                            <View style={[styles.fieldContainer, styles.fieldMarginBottom]}>
-                              <MaterialIcons
-                                name="group"
-                                size={18}
-                                color={colors.secondary}
-                              />
-                              <Text style={styles.secondaryLabel}>گروه:</Text>
-                              <Text style={styles.fieldValue}>
-                                {toPersianDigits(item.groups[0])}
-                              </Text>
-                            </View>
-                          )}
-
-                          {/* Introducing code field */}
-                          {item.introducingCode && (
-                            <View style={styles.fieldContainer}>
-                              <MaterialIcons
-                                name="qr-code"
-                                size={18}
-                                color={colors.warning}
-                              />
-                              <Text style={styles.secondaryLabel}>کد معرف:</Text>
-                              <Text style={styles.fieldValue}>
-                                {toPersianDigits(item.introducingCode)}
-                              </Text>
-                            </View>
-                          )}
-                        </View>
-                      </View>
-
-
-
-
-
-
-
-
-
-
-
-                    </View>
-                  </TouchableOpacity>
-                )}
-                onEndReached={handleLoadMore}
-                onEndReachedThreshold={0.5}
-                ListFooterComponent={renderFooter}
-                initialNumToRender={pageSize}
-                maxToRenderPerBatch={pageSize / 2}
-                windowSize={10}
-                ItemSeparatorComponent={() => <View style={styles.separator} />}
-              />
-            ) : searchPerformed ? (
-              <View style={styles.noResultsContainer}>
-                <MaterialIcons
-                  name="search-off"
-                  size={48}
-                  color={colors.medium}
+                    </TouchableOpacity>
+                  )}
+                  onEndReached={handleLoadMore}
+                  onEndReachedThreshold={0.5}
+                  ListFooterComponent={renderFooter}
+                  initialNumToRender={pageSize}
+                  maxToRenderPerBatch={pageSize / 2}
+                  windowSize={10}
+                  keyboardShouldPersistTaps="handled"
+                  keyboardDismissMode="on-drag"
                 />
-                <Text style={styles.noResultsText}>نتیجه‌ای یافت نشد</Text>
-                {isCustomer && (
-                  <AppButton
-                    title="ثبت خریدار جدید"
-                    onPress={() => navigation.navigate("CustomerInfo", {})}
-                    color="success"
-                    style={{ width: "100%", marginTop: 15 }}
+              ) : searchPerformed ? (
+                <View style={styles.noResultsContainer}>
+                  <MaterialIcons
+                    name="search-off"
+                    size={48}
+                    color={colors.medium}
                   />
-                )}
-              </View>
-            ) : (
-              <View style={styles.initialStateContainer}>
-                <Text style={styles.initialStateText}>
-                  برای جستجو، عبارت مورد نظر را وارد کنید و دکمه جستجو را بزنید
-                </Text>
-              </View>
-            )}
+                  <Text style={styles.noResultsText}>نتیجه‌ای یافت نشد</Text>
+                  {isCustomer && (
+                    <AppButton
+                      title="ثبت خریدار جدید"
+                      onPress={() => navigation.navigate("CustomerInfo", {})}
+                      color="success"
+                      style={{ width: "100%", marginTop: 15 }}
+                    />
+                  )}
+                </View>
+              ) : (
+                <View style={styles.initialStateContainer}>
+                  <Text style={styles.initialStateText}>
+                    برای جستجو، عبارت مورد نظر را وارد کنید و دکمه جستجو را بزنید
+                  </Text>
+                </View>
+              )}
+            </View>
           </View>
         </Animated.View>
       </View>
@@ -499,28 +444,38 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
+  modalContainer: {
     flex: 1,
-    justifyContent: "flex-end",
+    position: 'relative',
   },
   backdrop: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
+    zIndex: 1,
   },
   backdropTouchable: {
     flex: 1,
   },
   bottomSheet: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
     backgroundColor: colors.background,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    height: "80%",
+    height: DRAWER_HEIGHT, // ارتفاع ثابت
+    width: '100%',
     overflow: "hidden",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -3 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 16,
+    zIndex: 2,
   },
   header: {
     flexDirection: "row-reverse",
@@ -546,106 +501,76 @@ const styles = StyleSheet.create({
     left: 5,
   },
   body: {
-    padding: 16,
     flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 10,
   },
   searchContainer: {
     marginBottom: 16,
     width: "100%",
   },
+  contentContainer: {
+    flex: 1,
+    minHeight: 200,
+  },
   resultList: {
     flex: 1,
   },
-  separator: {
-    height: 12,
-
-
-
-
-
+  resultListContent: {
+    paddingBottom: 20,
   },
-  // ProductCard styles
-  productCard: {
+  resultItem: {
     backgroundColor: colors.white,
     borderRadius: 12,
     marginBottom: 12,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    overflow: "hidden",
+    padding: 16,
+
     borderWidth: 1,
     borderColor: "#e1e1e1",
   },
-  productTitleContainer: {
-    padding: 12,
-    backgroundColor: colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e1e1e1",
+  resultItemContent: {
+    flexDirection: "column",
   },
-  productTitleRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-
+  nameSection: {
+    marginBottom: 8,
   },
-  titleWithIconContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-  productTitle: {
-    fontSize: 18,
+  resultName: {
+    fontSize: 16,
+    fontFamily: "Yekan_Bakh_Bold",
     color: colors.primary,
-    fontFamily: getFontFamily("Yekan_Bakh_Bold", "600"),
     textAlign: "right",
-    flex: 1,
+    marginBottom: 4,
   },
-  productDetailsContainer: {
-    padding: 12,
-  },
-  infoWithImageContainer: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-  },
-  infoSection: {
-    flex: 1,
-  },
-  productImagePlaceholder: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    backgroundColor: "#f8f8f8",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
-  },
-  fieldContainer: {
+  groupContainer: {
     flexDirection: "row-reverse",
     alignItems: "center",
-    height: 25,
   },
-  fieldMarginBottom: {
-    marginBottom: 12,
+  personIcon: {
+    marginLeft: 4,
   },
-  secondaryLabel: {
-    fontSize: 15,
+  resultGroups: {
+    fontSize: 14,
     color: colors.medium,
-    fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
-    marginLeft: 8,
-    marginRight: 10,
-
+    fontFamily: "Yekan_Bakh_Regular",
   },
-  fieldValue: {
-    fontSize: 15,
-    fontFamily: getFontFamily("Yekan_Bakh_Bold", "500"),
+  phoneSection: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+  },
+  phoneIcon: {
+    marginLeft: 8,
+  },
+  resultPhone: {
+    fontSize: 14,
     color: colors.dark,
+    fontFamily: "Yekan_Bakh_Regular",
   },
   noResultsContainer: {
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 40,
+    flex: 1,
   },
   noResultsText: {
     fontSize: 16,
@@ -672,19 +597,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
   },
-
-
-
-
-
-
-
   loadingContainer: {
     alignItems: "center",
     justifyContent: "center",
-    padding: 30,
-    borderRadius: 8,
-    margin: 20,
+    paddingVertical: 40,
     flex: 1,
   },
   spinner: {
