@@ -43,7 +43,7 @@ interface ColleagueBottomSheetProps {
   isCustomer?: boolean;
 }
 
-const { height, width } = Dimensions.get("window");
+const { height } = Dimensions.get("window");
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -106,6 +106,7 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
       ]).start();
 
       setSearchQuery("");
+
       setColleagues([]);
       setFilteredColleagues([]);
       setCurrentPage(1);
@@ -305,13 +306,10 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
   return (
     <Modal
       visible={visible}
-      transparent={true}
+      transparent
       animationType="none"
       onRequestClose={onClose}
-      statusBarTranslucent={true}
-      supportedOrientations={['portrait']} 
-      presentationStyle="overFullScreen"    
-      hardwareAccelerated={true}             
+      statusBarTranslucent
     >
       <View style={styles.container}>
         <Animated.View style={[styles.backdrop, { opacity: backdropOpacity }]}>
@@ -327,7 +325,7 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
             styles.bottomSheet,
             {
               transform: [{ translateY }],
-              paddingBottom: Math.max(keyboardHeight, 20),
+              paddingBottom: keyboardHeight > 0 ? keyboardHeight : 20,
             },
           ]}
         >
@@ -406,13 +404,26 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
                           {/* Phone field */}
                           <View style={[styles.fieldContainer, styles.fieldMarginBottom]}>
                             <MaterialIcons
-                              name="person"
+                              name="phone"
                               size={18}
-                              color="#bfbfbf"
-                              style={styles.personIcon}
+                              color={colors.success}
                             />
-                            {item.groups && item.groups.length > 0 && (
-                              <Text style={styles.resultGroups}>
+                            <Text style={styles.secondaryLabel}>تلفن:</Text>
+                            <Text style={styles.fieldValue}>
+                              {toPersianDigits(item.phone)}
+                            </Text>
+                          </View>
+
+                          {/* Group field */}
+                          {item.groups && item.groups.length > 0 && (
+                            <View style={[styles.fieldContainer, styles.fieldMarginBottom]}>
+                              <MaterialIcons
+                                name="group"
+                                size={18}
+                                color={colors.secondary}
+                              />
+                              <Text style={styles.secondaryLabel}>گروه:</Text>
+                              <Text style={styles.fieldValue}>
                                 {toPersianDigits(item.groups[0])}
                               </Text>
                             </View>
@@ -490,27 +501,20 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: "flex-end",
   },
   backdrop: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   backdropTouchable: {
     flex: 1,
   },
   bottomSheet: {
-  backgroundColor: colors.background,
+    backgroundColor: colors.background,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    height: height * 0.85,
-    minHeight: height * 0.7,
-    maxHeight: height * 0.9,
-    width: '100%',
+    height: "80%",
     overflow: "hidden",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -3 },
@@ -542,23 +546,15 @@ const styles = StyleSheet.create({
     left: 5,
   },
   body: {
+    padding: 16,
     flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 16,
   },
   searchContainer: {
     marginBottom: 16,
     width: "100%",
   },
-  contentContainer: {
-    flex: 1,
-    minHeight: 200,
-  },
   resultList: {
     flex: 1,
-  },
-  resultListContent: {
-    paddingBottom: 20,
   },
   separator: {
     height: 12,
@@ -650,7 +646,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 40,
-    flex: 1,
   },
   noResultsText: {
     fontSize: 16,
@@ -687,7 +682,9 @@ const styles = StyleSheet.create({
   loadingContainer: {
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 40,
+    padding: 30,
+    borderRadius: 8,
+    margin: 20,
     flex: 1,
   },
   spinner: {
