@@ -30,11 +30,12 @@
     "formik": "^2.4.6",
     "install": "^0.13.0",
     "react": "19.0.0",
-    "react-native": "0.79.2",
+    "react-native": "^0.79.2",
     "react-native-gesture-handler": "~2.24.0",
     "react-native-paper": "^5.14.4",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.10.0",
+    "start": "^5.1.0",
     "yup": "^1.6.1"
   },
   "devDependencies": {

@@ -65,7 +65,7 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
     isEditing
   );
 
-  const [quantity, setQuantity] = useState<string>("1");
+  const [quantity, setQuantity] = useState<string>("");
   const [displayQuantity, setDisplayQuantity] = useState<string>("");
   const [note, setNote] = useState<string>("");
   const [manualCalculation, setManualCalculation] = useState<boolean>(false);
@@ -89,7 +89,7 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
       // تنظیم مقادیر اولیه با توجه به وضعیت ویرایش یا اضافه کردن
       if (isEditing) {
         // در حالت ویرایش، مقادیر موجود محصول را استفاده می‌کنیم
-        setQuantity(product.quantity || "1");
+        setQuantity(product.quantity || "");
         setDisplayQuantity(toPersianDigits(product.quantity || ""));
         setNote(product.note || "");
         setManualCalculation(product.manualCalculation || false);
@@ -101,15 +101,15 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
           setBoxCount(null);
         }
       } else {
-        // در حالت افزودن، مقادیر پیش‌فرض را تنظیم می‌کنیم
-        // setQuantity("1");
-        // setDisplayQuantity("۱");
+        // در حالت افزودن، مقادیر پیش‌فرض را تنظیم می‌کنیم (خالی)
+        setQuantity(""); // خالی
+        setDisplayQuantity(""); // خالی
         setNote(product.note || "");
         setManualCalculation(product.manualCalculation || false);
         setBoxCount(null);
       }
 
-      // پارس کردن مقدار موجودی قابل تعهد
+      // باقی کد همان است...
       if (product.propertyValue) {
         const stockValue = parseFloat(product.propertyValue);
         if (!isNaN(stockValue)) {
@@ -121,7 +121,6 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
         setAvailableStock(0);
       }
 
-      // پارس کردن مقدار رکتیفای
       if (product.rectifiedValue) {
         const rectValue = parseFloat(product.rectifiedValue);
         if (!isNaN(rectValue) && rectValue > 0) {
@@ -186,8 +185,8 @@ const ProductPropertiesDrawer: React.FC<ProductPropertiesDrawerProps> = ({
   const closeDrawer = () => {
     if (
       product &&
-      (quantity !== product.quantity ||
-        note !== product.note ||
+      (quantity !== (product.quantity || "") ||
+        note !== (product.note || "") ||
         manualCalculation !== (product.manualCalculation || false))
     ) {
       setUnsavedChangesModalVisible(true);

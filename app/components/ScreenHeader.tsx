@@ -63,8 +63,6 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     height: 110,
     backgroundColor: colors.background,
-    // borderBottomLeftRadius: 20,
-    // borderBottomRightRadius: 20,
   },
   headerText: {
     fontFamily: "Yekan_Bakh_Fat",

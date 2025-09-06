@@ -112,6 +112,7 @@ const ReusableModal: React.FC<ReusableModalProps> = ({
       statusBarTranslucent={true}
       presentationStyle={Platform.OS === "ios" ? "overFullScreen" : undefined}
       supportedOrientations={['portrait', 'landscape']}
+      
     >
       <View style={styles.rootContainer}>
         <TouchableOpacity

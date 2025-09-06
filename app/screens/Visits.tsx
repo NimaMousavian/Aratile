@@ -207,7 +207,7 @@ const Visits = () => {
                 }}
                 qrConfig={{
                   show: false,
-                  icon: "camera", // تغییر آیکون به دوربین/عکس
+                  icon: "image", // تغییر آیکون به دوربین/عکس
                   iconSize: 36,
                   iconColor: colors.secondary,
                 }}

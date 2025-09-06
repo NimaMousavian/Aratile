@@ -66,10 +66,8 @@ export const NumberConverterInput: React.FC<NumberConverterInputProps> = ({
   const [selection, setSelection] = useState({ start: 0, end: 0 });
   const [isComposing, setIsComposing] = useState(false);
 
-  // متنی که در فیلد نمایش داده می‌شود
   const [displayValue, setDisplayValue] = useState<string>("");
 
-  // تنظیم مقدار نمایشی اولیه و به‌روزرسانی آن هنگام تغییر value
   useEffect(() => {
     if (value !== undefined) {
       setDisplayValue(convertTo === "persian" ? toPersianDigits(value) : toEnglishDigits(value));
@@ -139,7 +137,6 @@ export const NumberConverterInput: React.FC<NumberConverterInputProps> = ({
         {...props}
       />
 
-      {/* نمایش معادل در فرمت دیگر اگر درخواست شده باشد */}
       {showRealTimeConversion && displayValue && (
         <Text style={styles.conversionText}>
           {convertTo === "persian"
@@ -151,7 +148,6 @@ export const NumberConverterInput: React.FC<NumberConverterInputProps> = ({
   );
 };
 
-// استایل‌های پیش‌فرض
 const styles = StyleSheet.create({
   input: {
     borderWidth: 1,

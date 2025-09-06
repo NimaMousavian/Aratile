@@ -608,13 +608,13 @@ const TaskCard = ({ task, onStatusChange, isStatusChangeable, statusUpdateLoadin
           </View>
         }
         fields={fields}
-        note=""
-        noteConfig={{
-          show: false,
-          icon: "notes",
-          iconColor: colors.secondary,
-          label: "",
-        }}
+        // note=""
+        // noteConfig={{
+        //   show: false,
+        //   icon: "notes",
+        //   iconColor: colors.secondary,
+        //   label: "",
+        // }}
         qrConfig={{
           show: false,
           icon: "camera",

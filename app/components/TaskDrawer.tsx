@@ -114,6 +114,11 @@ const TaskDrawer: React.FC<TaskDrawerProps> = ({
       transparent={true}
       animationType="none"
       onRequestClose={closeDrawer}
+       statusBarTranslucent={true}        
+  supportedOrientations={['portrait']}  
+  presentationStyle="overFullScreen"    
+  hardwareAccelerated={true}             
+      
     >
       <Toast
         visible={toastVisible}
@@ -189,7 +194,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 16,
-    height: "80%",
+    height: height * 0.85,
+    minHeight: height * 0.7,
+    maxHeight: height * 0.9,
     paddingBottom: Platform.OS === "android" ? 20 : 0,
   },
   header: {

@@ -1,16 +1,41 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
+  TextInput,
   Platform,
-  Linking,
-  ViewStyle,
 } from "react-native";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { LinearGradient } from "expo-linear-gradient";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import colors from "../config/colors";
+
+interface Person {
+  name: string;
+  phone: string;
+}
+
+type StatusType = "تایید نهایی" | "تعلیق" | "بسته نشده" | "لغو شده" | undefined;
+
+interface PurchaseInfoCardProps {
+  headerTitle?: string;
+  headerIcon?: keyof typeof MaterialIcons.glyphMap;
+  buyer?: Person;
+  seller?: Person;
+  address?: string;
+  note?: string;
+  gradientColors?: string[];
+  containerStyle?: ViewStyle;
+  status?: StatusType;
+  isEditMode?: boolean;
+  onDataChange?: (data: {
+    buyer?: Person;
+    seller?: Person;
+    address?: string;
+    note?: string;
+  }) => void;
+}
 
 type FontWeight = "700" | "600" | "500" | "bold" | "semi-bold" | string;
 
@@ -31,25 +56,6 @@ const getFontFamily = (baseFont: string, weight: FontWeight): string => {
   return baseFont;
 };
 
-interface Person {
-  name: string;
-  phone: string;
-}
-
-type StatusType = "تایید نهایی" | "تعلیق" | "بسته نشده" | "لغو شده" | undefined;
-
-interface PurchaseInfoCardProps {
-  headerTitle?: string;
-  headerIcon?: keyof typeof MaterialIcons.glyphMap;
-  buyer?: Person;
-  seller?: Person;
-  address?: string;
-  note?: string;
-  gradientColors?: string[];
-  containerStyle?: ViewStyle;
-  status?: StatusType;
-}
-
 const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
   headerTitle = "اطلاعات خرید",
   headerIcon = "person",
@@ -60,7 +66,34 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
   gradientColors = [colors.secondary, colors.primary],
   containerStyle,
   status,
+  isEditMode = false,
+  onDataChange,
 }) => {
+  const [editableBuyer, setEditableBuyer] = useState<Person>(buyer);
+  const [editableSeller, setEditableSeller] = useState<Person | undefined>(seller);
+  const [editableAddress, setEditableAddress] = useState<string>(address);
+  const [editableNote, setEditableNote] = useState<string>(note);
+
+  // Update local state when props change
+  useEffect(() => {
+    setEditableBuyer(buyer);
+    setEditableSeller(seller);
+    setEditableAddress(address);
+    setEditableNote(note);
+  }, [buyer, seller, address, note]);
+
+  // Notify parent component of changes
+  useEffect(() => {
+    if (onDataChange) {
+      onDataChange({
+        buyer: editableBuyer,
+        seller: editableSeller,
+        address: editableAddress,
+        note: editableNote,
+      });
+    }
+  }, [editableBuyer, editableSeller, editableAddress, editableNote, onDataChange]);
+
   const handlePhoneCall = (phoneNumber: string): void => {
     if (phoneNumber) {
       Linking.openURL(`tel:${phoneNumber}`);
@@ -82,6 +115,39 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
     }
   };
 
+  const renderEditableField = (
+    value: string,
+    onChangeText: (text: string) => void,
+    placeholder: string,
+    keyboardType: "default" | "phone-pad" = "default",
+    multiline: boolean = false
+  ) => {
+    if (isEditMode) {
+      return (
+        <TextInput
+          style={[
+            styles.editableInput,
+            multiline && styles.multilineInput
+          ]}
+          value={value}
+          onChangeText={onChangeText}
+          placeholder={placeholder}
+          placeholderTextColor={colors.medium}
+          keyboardType={keyboardType}
+          multiline={multiline}
+          numberOfLines={multiline ? 3 : 1}
+          textAlign="right"
+        />
+      );
+    } else {
+      return (
+        <Text style={styles.secondaryValue}>
+          {value || "-"}
+        </Text>
+      );
+    }
+  };
+
   return (
     <View
       style={[
@@ -91,7 +157,6 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
       ]}
     >
       <LinearGradient
-        // @ts-ignore: type issues with LinearGradient colors prop
         colors={gradientColors}
         style={styles.purchaseHeader}
         start={{ x: 0, y: 0 }}
@@ -112,7 +177,7 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
       </LinearGradient>
 
       <View style={styles.purchaseContent}>
-        {buyer.name && (
+        {editableBuyer.name && (
           <>
             <View style={styles.purchaseRow}>
               <View style={styles.purchaseItem}>
@@ -123,23 +188,37 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
                 />
                 <View style={styles.purchaseTextContainer}>
                   <Text style={styles.secondaryLabel}>خریدار:</Text>
-                  <Text style={styles.secondaryValue}>{buyer.name}</Text>
+                  {renderEditableField(
+                    editableBuyer.name,
+                    (text) => setEditableBuyer(prev => ({ ...prev, name: text })),
+                    "نام خریدار"
+                  )}
                 </View>
               </View>
-              {buyer.phone && (
+              {editableBuyer.phone && !isEditMode && (
                 <TouchableOpacity
                   style={styles.callButtonCircle}
-                  onPress={() => handlePhoneCall(buyer.phone)}
+                  onPress={() => handlePhoneCall(editableBuyer.phone)}
                 >
                   <MaterialIcons name="call" size={25} color={colors.success} />
                 </TouchableOpacity>
+              )}
+              {isEditMode && (
+                <View style={styles.phoneEditContainer}>
+                  {renderEditableField(
+                    editableBuyer.phone,
+                    (text) => setEditableBuyer(prev => ({ ...prev, phone: text })),
+                    "شماره تلفن",
+                    "phone-pad"
+                  )}
+                </View>
               )}
             </View>
             <View style={styles.divider} />
           </>
         )}
 
-        {seller.name && (
+        {editableSeller?.name && (
           <>
             <View style={styles.purchaseRow}>
               <View style={styles.purchaseItem}>
@@ -150,23 +229,19 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
                 />
                 <View style={styles.purchaseTextContainer}>
                   <Text style={styles.secondaryLabel}>فروشنده:</Text>
-                  <Text style={styles.secondaryValue}>{seller.name}</Text>
+                  {renderEditableField(
+                    editableSeller.name,
+                    (text) => setEditableSeller(prev => prev ? { ...prev, name: text } : { name: text, phone: "" }),
+                    "نام فروشنده"
+                  )}
                 </View>
               </View>
-              {/* {seller.phone && (
-                <TouchableOpacity
-                  style={styles.callButtonCircle}
-                  onPress={() => handlePhoneCall(seller.phone)}
-                >
-                  <MaterialIcons name="call" size={25} color={colors.success} />
-                </TouchableOpacity>
-              )} */}
             </View>
             <View style={styles.divider} />
           </>
         )}
 
-        {address && (
+        {(editableAddress || isEditMode) && (
           <>
             <View style={styles.addressContainer}>
               <MaterialIcons
@@ -176,7 +251,13 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
               />
               <View style={styles.purchaseTextContainer}>
                 <Text style={styles.secondaryLabel}>آدرس:</Text>
-                <Text style={styles.addressValue}>{address}</Text>
+                {renderEditableField(
+                  editableAddress,
+                  setEditableAddress,
+                  "آدرس را وارد کنید",
+                  "default",
+                  true
+                )}
               </View>
             </View>
             <View style={styles.divider} />
@@ -191,7 +272,13 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
           />
           <View style={styles.noteTextContainer}>
             <Text style={styles.noteLabel}>توضیحات:</Text>
-            <Text style={styles.noteContent}>{note ? note : "-"}</Text>
+            {renderEditableField(
+              editableNote,
+              setEditableNote,
+              "توضیحات را وارد کنید",
+              "default",
+              true
+            )}
           </View>
         </View>
       </View>
@@ -233,7 +320,6 @@ const styles = StyleSheet.create({
     color: colors.white,
     marginRight: 4,
   },
-
   statusBadge: {
     borderRadius: 12,
     paddingHorizontal: 10,
@@ -270,7 +356,7 @@ const styles = StyleSheet.create({
   },
   addressContainer: {
     flexDirection: "row-reverse",
-    alignItems: "center",
+    alignItems: "flex-start",
   },
   secondaryLabel: {
     fontSize: 15,
@@ -279,11 +365,6 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   secondaryValue: {
-    fontSize: 15,
-    color: colors.dark,
-    fontFamily: getFontFamily("Yekan_Bakh_Bold", "500"),
-  },
-  addressValue: {
     fontSize: 15,
     color: colors.dark,
     fontFamily: getFontFamily("Yekan_Bakh_Bold", "500"),
@@ -302,12 +383,6 @@ const styles = StyleSheet.create({
     fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
     marginLeft: 8,
   },
-  noteContent: {
-    fontSize: 15,
-    fontFamily: getFontFamily("Yekan_Bakh_Bold", "500"),
-    flex: 1,
-    textAlign: "right",
-  },
   callButtonCircle: {
     width: 40,
     height: 40,
@@ -317,6 +392,26 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     justifyContent: "center",
     alignItems: "center",
+  },
+  phoneEditContainer: {
+    minWidth: 120,
+  },
+  editableInput: {
+    flex: 1,
+    fontSize: 15,
+    color: colors.dark,
+    fontFamily: getFontFamily("Yekan_Bakh_Bold", "500"),
+    backgroundColor: colors.light,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    textAlign: "right",
+    borderWidth: 1,
+    borderColor: colors.medium,
+  },
+  multilineInput: {
+    minHeight: 60,
+    textAlignVertical: "top",
   },
 });
 
