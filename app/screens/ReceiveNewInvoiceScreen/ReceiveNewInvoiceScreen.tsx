@@ -64,12 +64,12 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
   const navigation = useNavigation<ReceiveNewInvoiceNavigationProp>();
   const route = useRoute();
   const params = route.params as { invoicId: number };
-  const invoicId = params.invoicId;
+  const invoicId = params?.invoicId;
   const { user } = useAuth();
 
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [modalType, setModalType] = useState<ModalType>(ModalType.None);
-  const [isEditMode, setIsEditMode] = useState<boolean>(false);
+  const [canEdit, setCanEdit] = useState<boolean>(false);
 
   const [modalData, setModalData] = useState<{
     title: string;
@@ -100,13 +100,46 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
   };
 
   const getInvoic = async () => {
+    if (!invoicId) {
+      showToast("شناسه فاکتور نامعتبر است", "error");
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const response = await axios.get<IInvoic>(
+      const response = await axios.get<{ Invoice: IInvoic, CanEditInMobileApp: boolean }>(
         `${appConfig.mobileApi}Invoice/Get?id=${invoicId}`
       );
-      setInvoic(response.data);
+
+      // بررسی امن داده‌های دریافتی
+      if (!response.data || !response.data.Invoice) {
+        showToast("اطلاعات فاکتور دریافت نشد", "error");
+        return;
+      }
+
+      // استخراج داده‌های فاکتور از پاسخ API
+      const invoiceData = response.data.Invoice;
+
+      // ذخیره وضعیت قابلیت ویرایش
+      setCanEdit(response.data.CanEditInMobileApp || false);
+
+      // بررسی که InvoiceItemList موجود و آرایه باشد
+      if (!invoiceData.InvoiceItemList || !Array.isArray(invoiceData.InvoiceItemList)) {
+        console.warn("InvoiceItemList is not a valid array, setting to empty array");
+        invoiceData.InvoiceItemList = [];
+      }
+
+      // بررسی و تمیز کردن آیتم‌های فاکتور
+      invoiceData.InvoiceItemList = invoiceData.InvoiceItemList.filter(item => {
+        return item &&
+          typeof item === 'object' &&
+          item.InvoiceItemId !== null &&
+          item.InvoiceItemId !== undefined;
+      });
+
+      setInvoic(invoiceData);
     } catch (error) {
+      console.error("Error fetching invoice:", error);
       showToast("خطا در دریافت اطلاعات فاکتور", "error");
     } finally {
       setIsLoading(false);
@@ -120,38 +153,39 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
 
   // تابع جدید برای هدایت به صفحه ویرایش فاکتور
   const handleEditInvoice = () => {
-    if (!invoic) return;
+    if (!invoic || !invoic.InvoiceItemList) return;
 
-    // تبدیل اطلاعات فاکتور به فرمت مورد نیاز صفحه صدور فاکتور
-    const editData = {
-      isEditing: true,
-      invoiceId: invoic.InvoiceId,
-      customer: {
-        id: invoic.PersonId?.toString() || "",
-        name: invoic.PersonFullName,
-      },
-      products: invoic.InvoiceItemList.map((item) => ({
-        id: item.ProductId,
-        title: item.ProductName,
-        code: item.ProductSKU,
-        quantity: item.ProductQuantity.toString(),
-        price: item.PerPackagePrice,
-        note: item.Description || "",
-        measurementUnitName: item.ProductMeasurementUnitName,
-        boxCount: item.PackagingQuantity,
-        selectedVariation: item.ProductVariationId ? {
-          id: item.ProductVariationId
-        } : undefined,
-      })),
-      invoiceNote: invoic.Description || "",
-    };
+    try {
+      // تبدیل اطلاعات فاکتور به فرمت مورد نیاز صفحه صدور فاکتور
+      const editData = {
+        isEditing: true,
+        invoiceId: invoic.InvoiceId,
+        customer: {
+          id: invoic.PersonId?.toString() || "",
+          name: invoic.PersonFullName || "",
+        },
+        products: invoic.InvoiceItemList.map((item) => ({
+          id: item.ProductId || 0,
+          title: item.ProductName || "",
+          code: item.ProductSKU || "",
+          quantity: (item.ProductQuantity || 0).toString(),
+          price: item.PerPackagePrice || 0,
+          note: item.Description || "",
+          measurementUnitName: item.ProductMeasurementUnitName || "",
+          boxCount: item.PackagingQuantity || 0,
+          selectedVariation: item.ProductVariationId ? {
+            id: item.ProductVariationId
+          } : undefined,
+        })),
+        invoiceNote: invoic.Description || "",
+      };
 
-    // هدایت به صفحه صدور فاکتور با داده‌های ویرایش
-    navigation.navigate("IssuingNewInvoice", editData);
-  };
-
-  const handleEditToggle = () => {
-    setIsEditMode(!isEditMode);
+      // هدایت به صفحه صدور فاکتور با داده‌های ویرایش
+      navigation.navigate("IssuingNewInvoice", editData);
+    } catch (error) {
+      console.error("Error preparing edit data:", error);
+      showToast("خطا در آماده‌سازی اطلاعات ویرایش", "error");
+    }
   };
 
   useEffect(() => {
@@ -159,7 +193,9 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
   }, []);
 
   const handlePhoneCall = (phoneNumber: string) => {
-    Linking.openURL(`tel:${phoneNumber}`);
+    if (phoneNumber && phoneNumber.trim() !== "") {
+      Linking.openURL(`tel:${phoneNumber}`);
+    }
   };
 
   const handleConfirmation = (inputValues: Record<string, string>) => {
@@ -434,8 +470,8 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
     }
   };
 
-  // تغییر دکمه ویرایش برای هدایت به صفحه صدور فاکتور
-  const editButton = (
+  // دکمه ویرایش برای هدایت به صفحه صدور فاکتور
+  const editButton = canEdit ? (
     <TouchableOpacity
       style={styles.editButton}
       onPress={handleEditInvoice}
@@ -446,7 +482,7 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
         color={colors.background}
       />
     </TouchableOpacity>
-  );
+  ) : null;
 
   return (
     <>
@@ -483,7 +519,7 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                         شماره فاکتور:
                       </Text>
                       <Text style={styles.invoiceNumberValue}>
-                        {toPersianDigits(invoic?.InvoiceId?.toString())}
+                        {toPersianDigits(invoic?.InvoiceId?.toString() || "0")}
                       </Text>
                     </View>
                     <View style={styles.invoiceDate}>
@@ -493,7 +529,7 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                         color={colors.medium}
                       />
                       <Text style={styles.dateValue}>
-                        {toPersianDigits(invoic.ShamsiInvoiceDate)}
+                        {toPersianDigits(invoic?.ShamsiInvoiceDate || "")}
                       </Text>
                     </View>
                   </View>
@@ -504,14 +540,16 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                     headerTitle="اطلاعات خرید"
                     headerIcon="person"
                     buyer={{
-                      name: invoic.PersonFullName,
-                      phone: invoic.PersonMobile,
+                      name: invoic?.PersonFullName || "نامشخص",
+                      phone: invoic?.PersonMobile || "",
                     }}
-                    seller={{ name: invoic.ApplicationUserName, phone: "" }}
+                    seller={{
+                      name: invoic?.ApplicationUserName || "نامشخص",
+                      phone: ""
+                    }}
                     address={""}
-                    note={invoic.Description}
+                    note={invoic?.Description || ""}
                     gradientColors={[colors.secondary, colors.primary]}
-                    isEditMode={isEditMode}
                   />
                 )}
 
@@ -520,13 +558,12 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                     headerTitle="اطلاعات خریدار"
                     headerIcon="person"
                     buyer={{
-                      name: invoic.PersonFullName,
-                      phone: invoic.PersonMobile,
+                      name: invoic?.PersonFullName || "نامشخص",
+                      phone: invoic?.PersonMobile || "",
                     }}
                     address={""}
-                    note={invoic.Description}
+                    note={invoic?.Description || ""}
                     gradientColors={[colors.secondary, colors.primary]}
-                    isEditMode={isEditMode}
                   />
                 )}
 
@@ -542,61 +579,86 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                     </Text>
                   </View>
 
-                  {invoic.InvoiceItemList.map((invoicItem) => (
-                    <ProductCard
-                      key={invoicItem.InvoiceItemId}
-                      title={invoicItem.ProductName}
-                      fields={[
-                        {
-                          icon: "qr-code",
-                          iconColor: colors.secondary,
-                          label: "کد:",
-                          value: invoicItem.ProductSKU,
-                        },
-                        {
-                          icon: "straighten",
-                          iconColor: colors.secondary,
-                          label: "مقدار:",
-                          value: `${invoicItem.ProductQuantity.toFixed(
-                            2
-                          ).toString()} ${invoicItem.ProductMeasurementUnitName
-                            }`,
-                        },
-                        {
-                          icon: "shopping-bag",
-                          label: `تعداد ${invoicItem.ProductPackaginName}:`,
-                          value: toPersianDigits(
-                            invoicItem.PackagingQuantity?.toString()
-                          ),
-                        },
-                        {
-                          icon: "attach-money",
-                          label: "مبلغ:",
-                          value: toPersianDigits(
-                            (
-                              invoicItem.PackagingQuantity *
-                              invoicItem.PerPackagePrice
-                            ).toLocaleString() + " ریال"
-                          ),
-                          isPriceField: true,
-                          containerStyle: { marginVertical: 7 },
-                        },
-                      ]}
-                      note={invoicItem.Description}
-                      qrConfig={{
-                        show: true,
-                        icon: "qr-code-2",
-                        iconSize: 36,
-                        iconColor: colors.secondary,
-                      }}
-                      containerStyle={
-                        Platform.OS === "android"
-                          ? styles.androidCardAdjustment
-                          : {}
+                  {/* بررسی امن InvoiceItemList قبل از map */}
+                  {invoic?.InvoiceItemList &&
+                    Array.isArray(invoic.InvoiceItemList) &&
+                    invoic.InvoiceItemList.length > 0 ? (
+                    invoic.InvoiceItemList.map((invoicItem, index) => {
+                      // بررسی هر آیتم قبل از رندر
+                      if (!invoicItem || !invoicItem.InvoiceItemId) {
+                        console.warn(`Invalid invoice item at index ${index}`);
+                        return null;
                       }
-                      isEditMode={isEditMode}
-                    />
-                  ))}
+
+                      try {
+                        return (
+                          <ProductCard
+                            key={invoicItem.InvoiceItemId || `item-${index}`}
+                            title={invoicItem.ProductName || "محصول نامشخص"}
+                            fields={[
+                              {
+                                icon: "qr-code",
+                                iconColor: colors.secondary,
+                                label: "کد:",
+                                value: invoicItem.ProductSKU || "نامشخص",
+                              },
+                              {
+                                icon: "straighten",
+                                iconColor: colors.secondary,
+                                label: "مقدار:",
+                                value: `${(invoicItem.ProductQuantity || 0).toFixed(2)} ${invoicItem.ProductMeasurementUnitName || ""
+                                  }`,
+                              },
+                              {
+                                icon: "shopping-bag",
+                                label: `تعداد ${invoicItem.ProductPackaginName || "بسته"}:`,
+                                value: toPersianDigits(
+                                  (invoicItem.PackagingQuantity || 0).toString()
+                                ),
+                              },
+                              {
+                                icon: "attach-money",
+                                label: "مبلغ:",
+                                value: toPersianDigits(
+                                  (
+                                    (invoicItem.PackagingQuantity || 0) *
+                                    (invoicItem.PerPackagePrice || 0)
+                                  ).toLocaleString() + " ریال"
+                                ),
+                                isPriceField: true,
+                                containerStyle: { marginVertical: 7 },
+                              },
+                            ]}
+                            note={invoicItem.Description || ""}
+                            qrConfig={{
+                              show: true,
+                              icon: "qr-code-2",
+                              iconSize: 36,
+                              iconColor: colors.secondary,
+                            }}
+                            containerStyle={
+                              Platform.OS === "android"
+                                ? styles.androidCardAdjustment
+                                : {}
+                            }
+                          />
+                        );
+                      } catch (error) {
+                        console.error(`Error rendering product card for item ${index}:`, error);
+                        return (
+                          <View key={`error-${index}`} style={{ padding: 10, backgroundColor: '#ffcccc' }}>
+                            <Text>خطا در نمایش محصول</Text>
+                          </View>
+                        );
+                      }
+                    })
+                  ) : (
+                    <View style={styles.emptyProductsContainer}>
+                      <Text style={styles.emptyProductsText}>
+                        محصولی برای این فاکتور یافت نشد
+                      </Text>
+                    </View>
+                  )}
                 </View>
 
                 {invoic && (
@@ -607,7 +669,6 @@ const ReceiveNewInvoiceScreen: React.FC = () => {
                         ? styles.androidCardAdjustment
                         : {}
                     }
-                    isEditMode={isEditMode}
                   />
                 )}
 
@@ -708,6 +769,19 @@ const styles = StyleSheet.create({
     marginRight: 8,
     color: colors.primary,
     fontFamily: getFontFamily("Yekan_Bakh_Bold", "600"),
+  },
+  emptyProductsContainer: {
+    padding: 20,
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  emptyProductsText: {
+    fontSize: 14,
+    color: colors.medium,
+    fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
+    textAlign: "center",
   },
   bottomSpacer: {
     height: 200,

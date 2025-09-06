@@ -106,19 +106,86 @@ export const getFontFamily = (baseFont: string, weight: FontWeight): string => {
   return baseFont;
 };
 
-const convertToPersianNumbers = (text: string | number): string => {
-  if (!text && text !== 0) return "";
+// تابع کاملاً امن برای تبدیل اعداد انگلیسی به فارسی
+const toPersianDigits = (input: any): string => {
+  // بررسی کامل همه حالات ممکن
+  if (input === null || input === undefined) {
+    return "";
+  }
+
+  if (input === 0) {
+    return "۰";
+  }
+
+  if (input === "") {
+    return "";
+  }
+
   const persianDigits = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
-  return String(text).replace(
-    /[0-9]/g,
-    (digit) => persianDigits[parseInt(digit)]
-  );
+
+  try {
+    // تبدیل به string به صورت امن
+    let stringValue = "";
+
+    if (typeof input === 'number') {
+      if (isNaN(input) || !isFinite(input)) {
+        return "";
+      }
+      stringValue = input.toString();
+    } else if (typeof input === 'string') {
+      stringValue = input;
+    } else if (typeof input === 'boolean') {
+      stringValue = input.toString();
+    } else {
+      // برای سایر انواع، سعی کن تبدیل کن
+      try {
+        stringValue = String(input);
+      } catch (e) {
+        return "";
+      }
+    }
+
+    // تبدیل اعداد انگلیسی به فارسی
+    return stringValue.replace(/[0-9]/g, (digit) => {
+      const digitIndex = parseInt(digit);
+      return persianDigits[digitIndex] || digit;
+    });
+
+  } catch (error) {
+    console.error("Error in toPersianDigits:", error, "Input:", input);
+    return "";
+  }
 };
 
-const formatCurrency = (amount: number): string => {
-  return convertToPersianNumbers(
-    amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-  );
+// تابع امن برای فرمت کردن ارز
+const formatCurrency = (amount: any): string => {
+  if (amount === null || amount === undefined) {
+    return "۰";
+  }
+
+  let numericAmount = 0;
+
+  if (typeof amount === 'string') {
+    numericAmount = parseFloat(amount);
+  } else if (typeof amount === 'number') {
+    numericAmount = amount;
+  } else {
+    return "۰";
+  }
+
+  if (isNaN(numericAmount) || !isFinite(numericAmount)) {
+    return "۰";
+  }
+
+  try {
+    const formattedAmount = Math.floor(numericAmount)
+      .toString()
+      .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return toPersianDigits(formattedAmount);
+  } catch (error) {
+    console.error("Error in formatCurrency:", error, "Input:", amount);
+    return "۰";
+  }
 };
 
 interface Person {
@@ -180,6 +247,16 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
     }
   };
 
+  // بررسی و تمیز کردن مقادیر قبل از نمایش
+  const safeInvoiceNumber = invoiceNumber || "0";
+  const safeBuyerName = buyer?.name || "نامشخص";
+  const safeSellerName = seller?.name || "نامشخص";
+  const safeDate = date || "";
+  const safeNote = note || "";
+  const safeAmount = typeof amount === 'number' ? amount : 0;
+  const safeBuyerPhone = buyer?.phone || "";
+  const safeSellerPhone = seller?.phone || "";
+
   return (
     <TouchableOpacity
       activeOpacity={0.8}
@@ -207,7 +284,7 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
             />
             <Text style={styles.purchaseHeaderText}>
               {isCurrentUserSeller
-                ? `فاکتور ${convertToPersianNumbers(invoiceNumber)}`
+                ? `فاکتور ${toPersianDigits(safeInvoiceNumber)}`
                 : headerTitle}
             </Text>
           </View>
@@ -233,14 +310,14 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
                   {isCurrentUserSeller ? "خریدار:" : "خریدار:"}
                 </Text>
                 <Text style={styles.secondaryValue}>
-                  {buyer.name || "نامشخص"}
+                  {safeBuyerName}
                 </Text>
               </View>
             </View>
-            {buyer.phone && (
+            {safeBuyerPhone && (
               <TouchableOpacity
                 style={styles.callButtonCircle}
-                onPress={() => handlePhoneCall(buyer.phone)}
+                onPress={() => handlePhoneCall(safeBuyerPhone)}
               >
                 <MaterialIcons
                   name="call"
@@ -252,7 +329,7 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
           </View>
           <View style={styles.divider} />
 
-          {date && (
+          {safeDate && (
             <>
               <View style={styles.purchaseRow}>
                 <View style={styles.purchaseItem}>
@@ -264,7 +341,7 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
                   <View style={styles.purchaseTextContainer}>
                     <Text style={styles.secondaryLabel}>تاریخ:</Text>
                     <Text style={styles.secondaryValue}>
-                      {convertToPersianNumbers(date)}
+                      {toPersianDigits(safeDate)}
                     </Text>
                   </View>
                 </View>
@@ -284,13 +361,13 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
                   />
                   <View style={styles.purchaseTextContainer}>
                     <Text style={styles.secondaryLabel}>فروشنده:</Text>
-                    <Text style={styles.secondaryValue}>{seller.name}</Text>
+                    <Text style={styles.secondaryValue}>{safeSellerName}</Text>
                   </View>
                 </View>
-                {seller.phone && (
+                {safeSellerPhone && (
                   <TouchableOpacity
                     style={styles.callButtonCircle}
-                    onPress={() => handlePhoneCall(seller.phone)}
+                    onPress={() => handlePhoneCall(safeSellerPhone)}
                   >
                     <MaterialIcons
                       name="call"
@@ -303,7 +380,7 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
             </>
           )}
 
-          {amount > 0 && (
+          {safeAmount > 0 && (
             <>
               <View style={styles.divider} />
               <View style={styles.purchaseRow}>
@@ -316,7 +393,7 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
                   <View style={styles.purchaseTextContainer}>
                     <Text style={styles.secondaryLabel}>مبلغ کل:</Text>
                     <Text style={styles.secondaryValue}>
-                      {formatCurrency(amount)} ریال
+                      {formatCurrency(safeAmount)} ریال
                     </Text>
                   </View>
                 </View>
@@ -341,7 +418,7 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
             </>
           )}
 
-          {note && note.trim() !== "" && (
+          {safeNote && safeNote.trim() !== "" && (
             <>
               <View style={styles.divider} />
               <View style={styles.noteContainer}>
@@ -352,7 +429,7 @@ const PurchaseInfoCard: React.FC<PurchaseInfoCardProps> = ({
                 />
                 <View style={styles.noteTextContainer}>
                   <Text style={styles.noteLabel}>توضیحات:</Text>
-                  <Text style={styles.noteContent}>{note}</Text>
+                  <Text style={styles.noteContent}>{safeNote}</Text>
                 </View>
               </View>
             </>
@@ -416,8 +493,7 @@ const IssuedInvoices: React.FC = () => {
   const fetchInvoiceCounts = async () => {
     try {
       const response = await fetch(
-        `${appConfig.mobileApi}Invoice/GetCount?filterApplicationUserId=${
-          user?.UserId || 0
+        `${appConfig.mobileApi}Invoice/GetCount?filterApplicationUserId=${user?.UserId || 0
         }`
       );
 
@@ -428,9 +504,13 @@ const IssuedInvoices: React.FC = () => {
       const data: InvoiceCountItem[] = await response.json();
 
       const countsRecord: Record<number, number> = {};
-      data.forEach((item) => {
-        countsRecord[item.State] = item.InvoiceCount;
-      });
+      if (Array.isArray(data)) {
+        data.forEach((item) => {
+          if (item && typeof item.State === 'number' && typeof item.InvoiceCount === 'number') {
+            countsRecord[item.State] = item.InvoiceCount;
+          }
+        });
+      }
 
       setStatusCounts(countsRecord);
     } catch (error) {
@@ -441,11 +521,8 @@ const IssuedInvoices: React.FC = () => {
   const fetchInvoices = async () => {
     try {
       setLoading(true);
-      const response = await fetch(
-        `${appConfig.mobileApi}Invoice/GetAll?filterApplicationUserId=${
-          user?.UserId || 0
-        }&page=${currentPage}&pageSize=20`
-      );
+      const response = await fetch(`${appConfig.mobileApi}Invoice/GetAll?filterApplicationUserId=${user?.UserId || 0
+        }&page=${currentPage}&pageSize=20`);
 
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
@@ -453,29 +530,87 @@ const IssuedInvoices: React.FC = () => {
 
       const data: InvoiceApiResponse = await response.json();
 
-      if (data.length !== 0) {
-        const mappedItems: InspectionItem[] = data.Items.map((item) => ({
-          id: item.InvoiceId.toString(),
-          buyerName: item.PersonFullName.trim() || "مشتری",
-          buyerPhone: item.PersonMobile,
-          invoiceNumber: item.InvoiceId.toString(),
-          date: item.ShamsiInvoiceDate,
-          sellerName: item.ApplicationUserName,
-          sellerPhone: "",
-          description: item.Description,
-          status: stateMap[item.State] || "صادر شده",
-          amount: item.TotalAmount,
-          applicationUserId: item.ApplicationUserId,
-        }));
-
-        setItems(mappedItems);
-        setTotalPages(data.TotalPages);
+      // بررسی دقیق‌تر و امن‌تر داده‌ها
+      if (!data) {
+        console.warn('No data received from API');
+        setItems([]);
+        return;
       }
+
+      // بررسی که Items موجود و آرایه باشد
+      if (!data.Items || !Array.isArray(data.Items)) {
+        console.warn('Invalid Items array in API response');
+        setItems([]);
+        return;
+      }
+
+      const mappedItems: InspectionItem[] = data.Items
+        .filter((item): item is InvoiceItem => {
+          // فیلتر قوی‌تر برای حذف موارد نامعتبر
+          return item &&
+            typeof item === 'object' &&
+            item.InvoiceId !== null &&
+            item.InvoiceId !== undefined &&
+            typeof item.InvoiceId === 'number';
+        })
+        .map((item, index) => {
+          try {
+            return {
+              id: String(item.InvoiceId),
+              buyerName: (item.PersonFullName && typeof item.PersonFullName === 'string')
+                ? item.PersonFullName.trim() || "نامشخص"
+                : "نامشخص",
+              buyerPhone: (item.PersonMobile && typeof item.PersonMobile === 'string')
+                ? item.PersonMobile.trim()
+                : "",
+              invoiceNumber: String(item.InvoiceId),
+              date: (item.ShamsiInvoiceDate && typeof item.ShamsiInvoiceDate === 'string')
+                ? item.ShamsiInvoiceDate
+                : "",
+              sellerName: (item.ApplicationUserName && typeof item.ApplicationUserName === 'string')
+                ? item.ApplicationUserName.trim() || "نامشخص"
+                : "نامشخص",
+              sellerPhone: "",
+              description: (item.Description && typeof item.Description === 'string')
+                ? item.Description
+                : "",
+              status: (item.State && typeof item.State === 'number' && stateMap[item.State])
+                ? stateMap[item.State]
+                : "صادر شده",
+              amount: (item.TotalAmount && typeof item.TotalAmount === 'number')
+                ? item.TotalAmount
+                : 0,
+              applicationUserId: (item.ApplicationUserId && typeof item.ApplicationUserId === 'number')
+                ? item.ApplicationUserId
+                : 0,
+            };
+          } catch (mappingError) {
+            console.error(`Error mapping item at index ${index}:`, mappingError);
+            // برگرداندن یک آیتم پیش‌فرض در صورت خطا
+            return {
+              id: `error_${index}_${Date.now()}`,
+              buyerName: "خطا در دریافت اطلاعات",
+              buyerPhone: "",
+              invoiceNumber: "0",
+              date: "",
+              sellerName: "نامشخص",
+              sellerPhone: "",
+              description: "",
+              status: "صادر شده" as StatusType,
+              amount: 0,
+              applicationUserId: 0,
+            };
+          }
+        });
+
+      setItems(mappedItems);
+
     } catch (error) {
       console.error("Error fetching invoices:", error);
+      setItems([]);
+      showToast("خطا در دریافت اطلاعات فاکتورها", "error");
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
@@ -514,28 +649,86 @@ const IssuedInvoices: React.FC = () => {
 
       const data = response.data;
       console.log("datas", data);
-      if (response.status === 200) {
-        if (data.length !== 0) {
-          const mappedItems: InspectionItem[] = data.Items.map((item: any) => ({
-            id: item.InvoiceId.toString(),
-            buyerName: item.PersonFullName.trim() || "مشتری",
-            buyerPhone: item.PersonMobile,
-            invoiceNumber: item.InvoiceId.toString(),
-            date: item.ShamsiInvoiceDate,
-            sellerName: item.ApplicationUserName,
-            sellerPhone: "",
-            description: item.Description,
-            status: stateMap[item.State] || "صادر شده",
-            amount: item.TotalAmount,
-            applicationUserId: item.ApplicationUserId,
-          }));
 
-          setItems(mappedItems);
-        } else if (data.length === 0) setItems([]);
+      if (response.status === 200) {
+        // بررسی امن‌تر داده‌های فیلتر شده
+        if (!data) {
+          setItems([]);
+          return;
+        }
+
+        if (!data.Items || !Array.isArray(data.Items)) {
+          setItems([]);
+          return;
+        }
+
+        if (data.Items.length === 0) {
+          setItems([]);
+          return;
+        }
+
+        const mappedItems: InspectionItem[] = data.Items
+          .filter((item: any): item is InvoiceItem => {
+            return item &&
+              typeof item === 'object' &&
+              item.InvoiceId !== null &&
+              item.InvoiceId !== undefined;
+          })
+          .map((item: any, index: number) => {
+            try {
+              return {
+                id: item?.InvoiceId ? String(item.InvoiceId) : `unknown_${index}_${Date.now()}`,
+                buyerName: (item?.PersonFullName && typeof item.PersonFullName === 'string')
+                  ? item.PersonFullName.trim() || "مشتری"
+                  : "مشتری",
+                buyerPhone: (item?.PersonMobile && typeof item.PersonMobile === 'string')
+                  ? item.PersonMobile.trim()
+                  : "",
+                invoiceNumber: item?.InvoiceId ? String(item.InvoiceId) : "0",
+                date: (item?.ShamsiInvoiceDate && typeof item.ShamsiInvoiceDate === 'string')
+                  ? item.ShamsiInvoiceDate
+                  : "",
+                sellerName: (item?.ApplicationUserName && typeof item.ApplicationUserName === 'string')
+                  ? item.ApplicationUserName.trim() || "نامشخص"
+                  : "نامشخص",
+                sellerPhone: "",
+                description: (item?.Description && typeof item.Description === 'string')
+                  ? item.Description
+                  : "",
+                status: (item?.State && typeof item.State === 'number' && stateMap[item.State])
+                  ? stateMap[item.State]
+                  : "صادر شده" as StatusType,
+                amount: (item?.TotalAmount && typeof item.TotalAmount === 'number')
+                  ? item.TotalAmount
+                  : 0,
+                applicationUserId: (item?.ApplicationUserId && typeof item.ApplicationUserId === 'number')
+                  ? item.ApplicationUserId
+                  : 0,
+              };
+            } catch (error) {
+              console.error(`Error mapping filtered item ${index}:`, error);
+              return {
+                id: `error_${index}_${Date.now()}`,
+                buyerName: "خطا در دریافت اطلاعات",
+                buyerPhone: "",
+                invoiceNumber: "0",
+                date: "",
+                sellerName: "نامشخص",
+                sellerPhone: "",
+                description: "",
+                status: "صادر شده" as StatusType,
+                amount: 0,
+                applicationUserId: 0,
+              };
+            }
+          });
+
+        setItems(mappedItems);
       }
     } catch (error) {
       console.log(error);
       showToast("خطا در دریافت اطلاعات فاکتور ها", "error");
+      setItems([]);
     } finally {
       setLoading(false);
     }
@@ -576,9 +769,13 @@ const IssuedInvoices: React.FC = () => {
       console.log("data", data);
 
       const countsRecord: Record<number, number> = {};
-      data.forEach((item) => {
-        countsRecord[item.State] = item.InvoiceCount;
-      });
+      if (Array.isArray(data)) {
+        data.forEach((item) => {
+          if (item && typeof item.State === 'number' && typeof item.InvoiceCount === 'number') {
+            countsRecord[item.State] = item.InvoiceCount;
+          }
+        });
+      }
 
       setStatusCounts(countsRecord);
     } catch (error) {
@@ -605,40 +802,63 @@ const IssuedInvoices: React.FC = () => {
   };
 
   const getFilteredItems = () => {
+    // بررسی امن آرایه
+    if (!Array.isArray(items)) {
+      return [];
+    }
+
     let filtered = items;
 
     if (activeTab === "issued") {
-      filtered = items.filter((item) => item.status === "صادر شده");
+      filtered = items.filter((item) => item && item.status === "صادر شده");
     } else if (activeTab === "referred") {
-      filtered = items.filter((item) => item.status === "ارجاع از صندوق");
+      filtered = items.filter((item) => item && item.status === "ارجاع از صندوق");
     } else if (activeTab === "quote") {
-      filtered = items.filter((item) => item.status === "پیش فاکتور");
+      filtered = items.filter((item) => item && item.status === "پیش فاکتور");
     } else if (activeTab === "canceled") {
-      filtered = items.filter((item) => item.status === "لغو شده");
+      filtered = items.filter((item) => item && item.status === "لغو شده");
     }
 
-    if (searchText) {
-      filtered = filtered.filter(
-        (item) =>
-          (item.buyerName && item.buyerName.includes(searchText)) ||
-          (item.sellerName && item.sellerName.includes(searchText)) ||
+    if (searchText && searchText.trim() !== "") {
+      filtered = filtered.filter((item) => {
+        if (!item) return false;
+
+        const searchLower = searchText.toLowerCase();
+        return (
+          (item.buyerName && item.buyerName.toLowerCase().includes(searchLower)) ||
+          (item.sellerName && item.sellerName.toLowerCase().includes(searchLower)) ||
           (item.invoiceNumber && item.invoiceNumber.includes(searchText))
-      );
+        );
+      });
     }
 
     return filtered;
   };
 
-  const getCountByStatus = (status: StatusType | null) => {
-    if (status === null) {
-      return Object.values(statusCounts).reduce((sum, count) => sum + count, 0);
+  // تابع کاملاً امن برای گرفتن تعداد بر اساس وضعیت
+  const getCountByStatus = (status: StatusType | null): number => {
+    try {
+      if (status === null) {
+        const counts = Object.values(statusCounts || {});
+        return counts.reduce((sum, count) => {
+          const safeCount = (typeof count === 'number' && !isNaN(count)) ? count : 0;
+          return sum + safeCount;
+        }, 0);
+      }
+
+      const stateNumber = Object.entries(stateMap).find(
+        ([_, stateName]) => stateName === status
+      )?.[0];
+
+      if (!stateNumber) return 0;
+
+      const count = statusCounts[Number(stateNumber)];
+      return (typeof count === 'number' && !isNaN(count)) ? count : 0;
+
+    } catch (error) {
+      console.error("Error in getCountByStatus:", error, "Status:", status);
+      return 0;
     }
-
-    const stateNumber = Object.entries(stateMap).find(
-      ([_, stateName]) => stateName === status
-    )?.[0];
-
-    return stateNumber ? statusCounts[Number(stateNumber)] || 0 : 0;
   };
 
   const getColorsByStatus = (status?: StatusType): string[] => {
@@ -656,29 +876,64 @@ const IssuedInvoices: React.FC = () => {
     }
   };
 
-  const renderItem = ({ item }: { item: InspectionItem }) => {
-    const isSeller = isCurrentUserSeller(item.applicationUserId);
+  const renderItem = ({ item, index }: { item: InspectionItem; index: number }) => {
+    try {
+      // بررسی اولیه که item موجود است
+      if (!item || !item.id) {
+        console.warn(`Item at index ${index} is null or undefined`);
+        return (
+          <View style={{ padding: 10, margin: 5, backgroundColor: '#ffcccc' }}>
+            <Text>خطا در نمایش فاکتور</Text>
+          </View>
+        );
+      }
 
-    return (
-      <PurchaseInfoCard
-        headerTitle={`فاکتور ${convertToPersianNumbers(item.invoiceNumber)}`}
-        headerIcon="receipt"
-        buyer={{ name: item.buyerName, phone: item.buyerPhone }}
-        seller={{ name: item.sellerName, phone: item.sellerPhone }}
-        invoiceNumber={item.invoiceNumber}
-        date={item.date}
-        note={item.description}
-        status={item.status}
-        amount={item.amount}
-        gradientColors={getColorsByStatus(item.status)}
-        isCurrentUserSeller={isSeller}
-        onPress={() =>
-          navigation.navigate("ReceiveNewInvoice", {
-            invoicId: Number(item.id),
-          })
-        }
-      />
-    );
+      const isSeller = isCurrentUserSeller(item.applicationUserId || 0);
+
+      // بررسی مقادیر قبل از ارسال به کامپوننت
+      const safeItem = {
+        ...item,
+        buyerName: item.buyerName || "نامشخص",
+        sellerName: item.sellerName || "نامشخص",
+        invoiceNumber: item.invoiceNumber || "0",
+        date: item.date || "",
+        description: item.description || "",
+        amount: typeof item.amount === 'number' ? item.amount : 0,
+        buyerPhone: item.buyerPhone || "",
+        sellerPhone: item.sellerPhone || "",
+        status: item.status || "صادر شده" as StatusType,
+        id: item.id || `unknown-${index}`,
+      };
+
+      return (
+        <PurchaseInfoCard
+          headerTitle={`فاکتور ${toPersianDigits(safeItem.invoiceNumber)}`}
+          headerIcon="receipt"
+          buyer={{ name: safeItem.buyerName, phone: safeItem.buyerPhone }}
+          seller={{ name: safeItem.sellerName, phone: safeItem.sellerPhone }}
+          invoiceNumber={safeItem.invoiceNumber}
+          date={safeItem.date}
+          note={safeItem.description}
+          status={safeItem.status}
+          amount={safeItem.amount}
+          gradientColors={getColorsByStatus(safeItem.status)}
+          isCurrentUserSeller={isSeller}
+          onPress={() =>
+            navigation.navigate("ReceiveNewInvoice", {
+              invoicId: Number(safeItem.id) || 0,
+            })
+          }
+        />
+      );
+    } catch (error) {
+      console.error("Error rendering item:", error, item);
+
+      return (
+        <View style={{ padding: 10, margin: 5, backgroundColor: '#ffcccc' }}>
+          <Text>خطا در نمایش فاکتور</Text>
+        </View>
+      );
+    }
   };
 
   const renderFooter = () => {
@@ -811,7 +1066,15 @@ const IssuedInvoices: React.FC = () => {
                 { color: "#EF5350" },
               ]}
             >
-              {convertToPersianNumbers(getCountByStatus("لغو شده"))}
+              {(() => {
+                try {
+                  const count = getCountByStatus("لغو شده");
+                  return toPersianDigits(count);
+                } catch (error) {
+                  console.error("Error converting canceled count:", error);
+                  return "۰";
+                }
+              })()}
             </Text>
           </TouchableOpacity>
 
@@ -837,7 +1100,15 @@ const IssuedInvoices: React.FC = () => {
                 { color: "#FFA500" },
               ]}
             >
-              {convertToPersianNumbers(getCountByStatus("ارجاع از صندوق"))}
+              {(() => {
+                try {
+                  const count = getCountByStatus("ارجاع از صندوق");
+                  return toPersianDigits(count);
+                } catch (error) {
+                  console.error("Error converting referred count:", error);
+                  return "۰";
+                }
+              })()}
             </Text>
           </TouchableOpacity>
 
@@ -863,7 +1134,15 @@ const IssuedInvoices: React.FC = () => {
                 { color: "#4CAF50" },
               ]}
             >
-              {convertToPersianNumbers(getCountByStatus("صادر شده"))}
+              {(() => {
+                try {
+                  const count = getCountByStatus("صادر شده");
+                  return toPersianDigits(count);
+                } catch (error) {
+                  console.error("Error converting issued count:", error);
+                  return "۰";
+                }
+              })()}
             </Text>
           </TouchableOpacity>
 
@@ -886,7 +1165,15 @@ const IssuedInvoices: React.FC = () => {
                 { color: "#3498db" },
               ]}
             >
-              {convertToPersianNumbers(getCountByStatus("پیش فاکتور"))}
+              {(() => {
+                try {
+                  const count = getCountByStatus("پیش فاکتور");
+                  return toPersianDigits(count);
+                } catch (error) {
+                  console.error("Error converting quote count:", error);
+                  return "۰";
+                }
+              })()}
             </Text>
           </TouchableOpacity>
 
@@ -909,7 +1196,15 @@ const IssuedInvoices: React.FC = () => {
                 { color: "#6B7280" },
               ]}
             >
-              {convertToPersianNumbers(getCountByStatus(null))}
+              {(() => {
+                try {
+                  const count = getCountByStatus(null);
+                  return toPersianDigits(count);
+                } catch (error) {
+                  console.error("Error converting total count:", error);
+                  return "۰";
+                }
+              })()}
             </Text>
           </TouchableOpacity>
         </View>
@@ -1190,9 +1485,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.gray,
     borderRadius: 8,
-    padding: 100,
+    padding: 10,
     flexDirection: "row-reverse",
     marginBottom: 10,
+    alignItems: "center",
   },
 });
 
