@@ -293,6 +293,7 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
       return (
         <View style={styles.loaderContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
+
         </View>
       );
     }
@@ -380,6 +381,8 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
                       <View style={styles.productTitleRow}>
                         <View style={styles.titleWithIconContainer}>
                           {/* <MaterialIcons
+
+
                             name="person"
                             size={20}
                             color={colors.primary}
@@ -395,7 +398,7 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
                     {/* Body with details */}
                     <View style={styles.productDetailsContainer}>
                       <View style={styles.infoWithImageContainer}>
-                   
+
 
                         <View style={styles.infoSection}>
                           {/* Phone field */}
@@ -442,6 +445,17 @@ const ColleagueBottomSheet: React.FC<ColleagueBottomSheetProps> = ({
                           )}
                         </View>
                       </View>
+
+
+
+
+
+
+
+
+
+
+
                     </View>
                   </TouchableOpacity>
                 )}
@@ -544,6 +558,11 @@ const styles = StyleSheet.create({
   },
   separator: {
     height: 12,
+
+
+
+
+
   },
   // ProductCard styles
   productCard: {
@@ -568,6 +587,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+
   },
   titleWithIconContainer: {
     flexDirection: "row",
@@ -615,6 +635,7 @@ const styles = StyleSheet.create({
     fontFamily: getFontFamily("Yekan_Bakh_Regular", "normal"),
     marginLeft: 8,
     marginRight: 10,
+
   },
   fieldValue: {
     fontSize: 15,
@@ -651,6 +672,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
   },
+
+
+
+
+
+
+
   loadingContainer: {
     alignItems: "center",
     justifyContent: "center",
